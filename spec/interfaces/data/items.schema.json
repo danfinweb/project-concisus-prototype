@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/items.schema.json",
+  "title": "Items",
+  "description": "Weapons, calibres, ammunition, armour, vests, belts, backpacks, medical, barter and faction items (data/items.json).",
+  "version": "0.1.0",
+  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "properties": { "id": { "type": "string" } },
+    "required": ["id"],
+    "additionalProperties": true
+  }
+}

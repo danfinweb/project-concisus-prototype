@@ -1,0 +1,18 @@
+# No build output or dependencies exist (no Node.js); keep them out if they ever appear
+node_modules/
+dist/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Personal Claude Code settings (shared .claude/settings.json and launch.json stay in the repo)
+.claude/settings.local.json
+**/.claude/settings.local.json

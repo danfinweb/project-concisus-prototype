@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle_result.schema.json",
+  "title": "Battle result",
+  "description": "Outcome of a tactical engagement: survivors, casualties, wounds, loot carried out, objectives met, time spent.",
+  "version": "0.1.0",
+  "x-producer": "modules/tactical",
+  "x-consumers": ["modules/strategic", "modules/management"],
+  "$comment": "Skeleton: fields are defined by /update-spec.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}

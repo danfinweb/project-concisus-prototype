@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strategic_perception_view.schema.json",
+  "title": "Strategic perception view",
+  "description": "What one faction knows under fog of war at its action.",
+  "version": "0.1.0",
+  "x-producer": "modules/strategic",
+  "x-consumers": ["modules/strategic-ai"],
+  "$comment": "Skeleton: fields are defined by /update-spec.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}

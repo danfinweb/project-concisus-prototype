@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concisus Test Lab</title>
+  <style>
+    :root { --bg: #15170f; --panel: #1f2219; --text: #d8d4c0; --muted: #8d8a78; --good: #7cc46a; --bad: #e0614a; --line: #33372a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 ui-monospace, Consolas, monospace; }
+    header { position: sticky; top: 0; background: var(--panel); padding: 10px 16px; border-bottom: 1px solid var(--line);
+             display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+    h1 { font-size: 16px; margin: 0; letter-spacing: 1px; }
+    select, input, button { font: inherit; background: var(--bg); color: var(--text); border: 1px solid var(--line); padding: 4px 8px; }
+    button { cursor: pointer; }
+    #summary { font-weight: bold; }
+    .good { color: var(--good); } .bad { color: var(--bad); } .muted { color: var(--muted); }
+    main { padding: 8px 16px 40px; max-width: 1100px; }
+    h2 { font-size: 14px; color: var(--muted); margin: 18px 0 4px; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+    .t { padding: 2px 0; }
+    .t pre { margin: 4px 0 8px 22px; white-space: pre-wrap; color: var(--bad); font-size: 12px; }
+    .t .log { color: var(--muted); margin-left: 22px; font-size: 12px; white-space: pre-wrap; }
+    .spec { color: var(--muted); font-size: 12px; }
+    .sim { margin: 6px 0; }
+    table { border-collapse: collapse; margin: 6px 0 10px; font-size: 12px; }
+    td, th { border: 1px solid var(--line); padding: 2px 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CONCISUS · TEST LAB</h1>
+    <label>Target <select id="target"></select></label>
+    <label>Seed <input id="seed" type="number" value="1" style="width:6em"></label>
+    <button id="run">Run scenarios</button>
+    <label><input type="checkbox" id="failedOnly"> failed only</label>
+    <span id="summary" class="muted">loading…</span>
+    <a href="../../" class="muted">hub</a>
+  </header>
+  <main id="out"></main>
+  <script type="module">
+    // URL: ?module=all (default) | shared | tactical | … ; &seed=N. Results are exposed as
+    // window.testResults and the promise window.testsDone = { pass, fail, ms, results, loadErrors },
+    // so a Claude session can run tests in the browser preview and read them.
+    import { TARGETS, loadTarget, runScenario, runSim } from './runner.js';
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const qs = new URLSearchParams(location.search);
+    $('target').innerHTML = ['all', ...TARGETS].map((t) => `<option>${t}</option>`).join('');
+    $('target').value = qs.get('module') ?? 'all';
+    $('seed').value = qs.get('seed') ?? 1;
+    $('failedOnly').onchange = () => document.body.classList.toggle('failed-only', $('failedOnly').checked);
+    document.head.insertAdjacentHTML('beforeend', '<style>.failed-only .t.ok{display:none}</style>');
+
+    let resolveDone;
+    window.testsDone = new Promise((r) => { resolveDone = r; });
+
+    async function runAll() {
+      const out = $('out');
+      out.innerHTML = '';
+      const chosen = $('target').value;
+      const seed = Number($('seed').value) || 1;
+      const targets = chosen === 'all' ? TARGETS : [chosen];
+      let pass = 0, fail = 0;
+      const results = [], loadErrors = [];
+      const t0 = performance.now();
+      for (const target of targets) {
+        const t = await loadTarget(target);
+        out.insertAdjacentHTML('beforeend', `<h2>${esc(target)} <span class="muted">— ${t.scenarios.length} scenario(s), ${t.sims.length} sim(s)</span></h2>`);
+        for (const e of t.errors) { loadErrors.push({ target, error: e }); fail++; out.insertAdjacentHTML('beforeend', `<div class="t bad">✖ could not load ${esc(e)}</div>`); }
+        if (!t.scenarios.length && !t.errors.length) out.insertAdjacentHTML('beforeend', '<div class="t ok muted">no scenarios yet</div>');
+        for (const sc of t.scenarios) {
+          const r = await runScenario(target, sc, { seed });
+          results.push(r);
+          r.ok ? pass++ : fail++;
+          out.insertAdjacentHTML('beforeend',
+            `<div class="t ${r.ok ? 'ok' : 'fail'}"><span class="${r.ok ? 'good' : 'bad'}">${r.ok ? '✔' : '✖'}</span> ${esc(r.name ?? r.id)}` +
+            ` <span class="spec">${esc(r.spec.join(' '))}</span> <span class="muted">(${r.ms.toFixed(0)} ms)</span>` +
+            (r.logs.length ? `<div class="log">${esc(r.logs.join('\n'))}</div>` : '') +
+            (r.ok ? '' : `<pre>${esc(r.error)}</pre>`) + '</div>');
+          $('summary').textContent = `running… ${pass} passed, ${fail} failed`;
+        }
+        for (const sim of t.sims) {
+          const id = `sim-${target}-${sim.id}`;
+          out.insertAdjacentHTML('beforeend', `<div class="sim">▶ <b>${esc(sim.name ?? sim.id)}</b> <span class="spec">${esc((sim.spec ?? []).join(' '))}</span>
+            <button data-sim="${esc(id)}">run ${sim.seeds ?? 50} seeds</button><div id="${esc(id)}"></div></div>`);
+          out.querySelector(`[data-sim="${id}"]`).onclick = async () => {
+            const box = document.getElementById(id);
+            box.textContent = 'running…';
+            const rows = await runSim(target, sim, { onProgress: (n, total) => { box.textContent = `running… ${n}/${total}`; } });
+            box.innerHTML = summarize(rows, sim.metrics ?? []);
+          };
+        }
+      }
+      const ms = performance.now() - t0;
+      $('summary').className = fail ? 'bad' : 'good';
+      $('summary').textContent = `${pass} passed, ${fail} failed (${ms.toFixed(0)} ms)`;
+      window.testResults = { pass, fail, ms, results, loadErrors };
+      resolveDone(window.testResults);
+      window.testsDone = Promise.resolve(window.testResults);
+    }
+
+    // Mean and range of numeric metrics, counts of the others, per params combination.
+    function summarize(rows, metrics) {
+      const groups = new Map();
+      for (const r of rows) { const k = JSON.stringify(r.params); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r.metrics); }
+      let html = `<table><tr><th>params</th><th>runs</th>${metrics.map((m) => `<th>${esc(m)}</th>`).join('')}</tr>`;
+      for (const [k, ms] of groups) {
+        html += `<tr><td>${esc(k)}</td><td>${ms.length}</td>`;
+        for (const m of metrics) {
+          const vals = ms.map((x) => x?.[m]);
+          if (vals.every((v) => typeof v === 'number')) {
+            const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+            html += `<td>${mean.toFixed(2)} <span class="muted">[${Math.min(...vals)}–${Math.max(...vals)}]</span></td>`;
+          } else {
+            const c = {}; for (const v of vals) c[v] = (c[v] ?? 0) + 1;
+            html += `<td>${esc(Object.entries(c).map(([v, n]) => `${v}: ${n}`).join(', '))}</td>`;
+          }
+        }
+        html += '</tr>';
+      }
+      return html + '</table>';
+    }
+
+    $('run').onclick = () => { window.testsDone = new Promise((r) => { resolveDone = r; }); runAll(); };
+    runAll();
+  </script>
+</body>
+</html>

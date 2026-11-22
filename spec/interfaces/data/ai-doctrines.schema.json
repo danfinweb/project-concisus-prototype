@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/ai-doctrines.schema.json",
+  "title": "AI doctrines and weights",
+  "description": "Utility weights, response curves and faction doctrines (data/ai/doctrines.json).",
+  "version": "0.1.0",
+  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "properties": { "id": { "type": "string" } },
+    "required": ["id"],
+    "additionalProperties": true
+  }
+}

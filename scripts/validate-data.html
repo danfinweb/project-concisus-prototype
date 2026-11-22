@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concisus Data validation</title>
+  <style>body { margin: 0; padding: 16px; background: #15170f; color: #d8d4c0; font: 13px/1.45 ui-monospace, Consolas, monospace; } pre { white-space: pre-wrap; }</style>
+</head>
+<body>
+  <h1 style="font-size:16px">CONCISUS · DATA VALIDATION</h1>
+  <pre id="out">running…</pre>
+  <script type="module">
+    import { validateData } from './validate-data.js';
+    window.validationDone = validateData().then((r) => { document.getElementById('out').textContent = JSON.stringify(r, null, 2); return r; })
+      .catch((e) => { document.getElementById('out').textContent = e.stack; return { ok: false, error: e.message }; });
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tactical_map_request.schema.json",
+  "title": "Tactical map request",
+  "description": "Everything the tactical generator needs: seed, biome, urbanization, weather, objective type, structures on the strategic tile, battle goal and acceptable-loss threshold.",
+  "version": "0.1.0",
+  "x-producer": "modules/strategic",
+  "x-consumers": ["modules/tactical"],
+  "$comment": "Skeleton: fields are defined by /update-spec.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}

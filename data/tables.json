@@ -1,0 +1,11 @@
+{
+  "$comment": "Every /data table: path (relative to the data base, no .json) → schema in spec/interfaces/data/. Read by shared/registry.js and scripts/validate-data.js.",
+  "items": "items.schema.json",
+  "presets": "presets.schema.json",
+  "prefabs": "prefabs.schema.json",
+  "terrain": "terrain.schema.json",
+  "missions": "missions.schema.json",
+  "mapgen/strategic": "mapgen-strategic.schema.json",
+  "mapgen/tactical": "mapgen-tactical.schema.json",
+  "ai/doctrines": "ai-doctrines.schema.json"
+}

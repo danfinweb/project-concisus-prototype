@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/terrain.schema.json",
+  "title": "Terrain and props",
+  "description": "Terrain types and props used by prefabs and map generation (data/terrain.json).",
+  "version": "0.1.0",
+  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "properties": { "id": { "type": "string" } },
+    "required": ["id"],
+    "additionalProperties": true
+  }
+}

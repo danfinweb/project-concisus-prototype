@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(/design/**)",
+      "Write(/design/**)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-edits.ps1\""
+          }
+        ]
+      }
+    ]
+  }
+}

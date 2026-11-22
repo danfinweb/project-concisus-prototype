@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(../design/**)",
+      "Write(../design/**)",
+      "Edit(../spec/**)",
+      "Write(../spec/**)",
+      "Edit(../shared/**)",
+      "Write(../shared/**)",
+      "Edit(../game/**)",
+      "Write(../game/**)",
+      "Edit(../scripts/**)",
+      "Write(../scripts/**)",
+      "Edit(../modules/*/core/**)",
+      "Write(../modules/*/core/**)",
+      "Edit(../modules/*/adapter/**)",
+      "Write(../modules/*/adapter/**)",
+      "Bash(npm *)",
+      "Bash(node *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          { "type": "command", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"$CLAUDE_PROJECT_DIR/../.claude/hooks/guard-edits.ps1\"" }
+        ]
+      }
+    ]
+  }
+}

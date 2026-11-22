@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tactical_commands.schema.json",
+  "title": "Tactical commands",
+  "description": "Commands a tactical controller returns for an activation. Same commands a player issues.",
+  "version": "0.1.0",
+  "x-producer": "modules/tactical-ai",
+  "x-consumers": ["modules/tactical"],
+  "$comment": "Skeleton: fields are defined by /update-spec.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}

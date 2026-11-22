@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tactical_perception_view.schema.json",
+  "title": "Tactical perception view",
+  "description": "What one unit or side knows under fog of war at an activation.",
+  "version": "0.1.0",
+  "x-producer": "modules/tactical",
+  "x-consumers": ["modules/tactical-ai"],
+  "$comment": "Skeleton: fields are defined by /update-spec.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}
