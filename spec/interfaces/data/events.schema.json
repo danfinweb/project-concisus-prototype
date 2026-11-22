@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/events.schema.json",
+  "title": "World events and measures",
+  "description": "World events, desperate measures and flavour events (spec STR-050..STR-081).",
+  "version": "0.2.0",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": ["id", "kind"],
+    "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "kind": { "enum": ["event", "measure", "flavour"], "description": "STR-050" },
+      "factions": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "STR-070, who may run a measure" },
+      "typicalSigns": { "type": "array", "description": "STR-070" },
+      "trigger": { "type": "object", "description": "STR-050" },
+      "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "STR-050" },
+      "chanceModifiers": { "type": "array", "description": "STR-050" },
+      "duration": { "type": "object", "description": "STR-050" },
+      "warned": { "type": "boolean", "description": "STR-052" },
+      "warningLeadDays": { "type": "object", "description": "STR-052" },
+      "warningSigns": { "type": "array", "description": "STR-052" },
+      "preventedBy": { "type": "object", "description": "STR-053" },
+      "effects": { "type": "array", "description": "STR-055..STR-080" },
+      "contracts": { "type": "array", "description": "STR-053" },
+      "oncePerCampaign": { "type": "boolean", "description": "STR-080" },
+      "params": { "type": "object", "description": "event-specific values (compensation price, bounty pay-off, resistance squads)" }
+    }
+  }
+}

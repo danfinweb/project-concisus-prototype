@@ -2,12 +2,73 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
-  "description": "Everything the tactical generator needs: seed, biome, urbanization, weather, objective type, structures on the strategic tile, battle goal and acceptable-loss threshold.",
-  "version": "0.1.0",
+  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAI-009.",
+  "version": "0.2.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
-  "$comment": "Skeleton: fields are defined by /update-spec.",
   "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "required": ["encounterId", "seed", "time", "region", "sides", "objectives"],
+  "properties": {
+    "encounterId": { "type": "string" },
+    "seed": { "type": "integer", "description": "Seed for map generation and the battle RNG" },
+    "rulesVersion": { "type": "string", "description": "Version of data/mapgen/tactical.json, so a rules tweak never changes maps in an existing save" },
+    "time": {
+      "type": "object", "required": ["day", "hour"],
+      "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } },
+      "description": "Strategic clock at battle start; sets day or night (TAC-003)"
+    },
+    "region": {
+      "type": "object", "required": ["id", "terrain"],
+      "properties": {
+        "id": { "type": "string" },
+        "terrain": { "type": "string", "description": "Strategic terrain type → biome for the tactical generator" },
+        "urbanization": { "type": "number", "minimum": 0, "maximum": 1 },
+        "weather": { "type": "string" },
+        "poi": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "type": { "type": "string", "x-ref": "poi" }, "state": { "type": "string" } } },
+        "structures": { "type": "array", "items": { "type": "string" }, "description": "Structures on the strategic tile (prefab tags)" },
+        "flags": { "type": "array", "items": { "enum": ["hazard", "contaminated", "mined", "ceasefire", "martialLaw"] } }
+      }
+    },
+    "sides": {
+      "type": "array", "minItems": 2,
+      "description": "Every faction present. The player side lists soldiers by roster ID with full state (from Management); AI sides list soldiers or strength/gear tiers.",
+      "items": {
+        "type": "object", "required": ["faction", "controller", "units"],
+        "properties": {
+          "faction": { "type": "string" },
+          "controller": { "enum": ["player", "ai"] },
+          "doctrine": { "type": "string" },
+          "role": { "enum": ["attacker", "defender", "convoy", "vip", "neutral", "ally"] },
+          "morale": { "type": "number" },
+          "vehicle": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "storageKg": { "type": "number" }, "fuel": { "type": "number" } } },
+          "units": { "type": "array", "items": { "$ref": "#/$defs/unit" } }
+        }
+      }
+    },
+    "hostility": { "type": "object", "description": "faction → faction → hostile (boolean) for the factions present" },
+    "objectives": { "type": "array", "items": { "type": "object", "required": ["id", "type"], "properties": {
+      "id": { "type": "string" }, "missionId": { "type": "string" },
+      "type": { "type": "string", "description": "e.g. capture VIP, escort cargo, hold position, scavenge" },
+      "targets": { "type": "array", "items": { "type": "string" } } } } },
+    "battleGoal": { "type": "object", "description": "Per AI side: goal and acceptable-loss threshold from the strategic layer (TAI-009)" },
+    "exits": { "type": "array", "items": { "type": "object", "properties": {
+      "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] }, "params": { "type": "object" } } } },
+    "vip": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "rank": { "enum": ["major", "colonel", "general", "leader"] } } }
+  },
+  "$defs": {
+    "unit": {
+      "type": "object", "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "description": "Roster ID (player) or generated ID (AI)" },
+        "presetId": { "type": "string", "x-ref": "presets" },
+        "attributes": { "type": "object" },
+        "nerve": { "type": "number" },
+        "zoneHp": { "type": "object" },
+        "conditions": { "type": "array", "items": { "type": "object" } },
+        "stamina": { "type": "integer" },
+        "equipment": { "type": "object", "description": "Slot → item instance (item ID, condition, durability, contents)" },
+        "tier": { "type": "string", "description": "AI only: strength/gear tier when no full soldier record exists" }
+      }
+    }
+  }
 }

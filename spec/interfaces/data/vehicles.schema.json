@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/vehicles.schema.json",
+  "title": "Vehicles",
+  "description": "Ground vehicles and helicopters (spec DAT-024..DAT-029).",
+  "version": "0.2.0",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": ["id", "name", "vehicleType", "costUsd", "seats", "storageKg", "fuelRangeRegions", "offRoad", "noise", "profile", "features"],
+    "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "name": { "type": "string", "description": "Display name" },
+      "vehicleType": { "enum": ["ground", "helicopter"], "description": "DAT-024" },
+      "costUsd": { "type": "number", "description": "DAT-024" },
+      "seats": { "type": "integer", "description": "DAT-024" },
+      "storageKg": { "type": "number", "description": "DAT-024" },
+      "fuelRangeRegions": { "type": "integer", "description": "DAT-024" },
+      "offRoad": { "enum": ["poor", "good", "veryGood", "ignoresTerrain"], "description": "DAT-024" },
+      "armourClass": { "type": "integer", "description": "DAT-024, 1-6 or absent" },
+      "mineProtection": { "type": "boolean", "description": "DAT-026" },
+      "noise": { "enum": ["low", "medium", "high", "veryHigh", "extreme"], "description": "DAT-024" },
+      "profile": { "enum": ["civilian", "military"], "description": "DAT-024 / STR-033" },
+      "features": { "type": "array", "description": "DAT-026" },
+      "availability": { "type": "object", "description": "DAT-027: where, standing gate" },
+      "requiresPilot": { "type": "boolean", "description": "DAT-028" },
+      "pilotTechnicalMin": { "type": "integer", "description": "DAT-028, design 50" },
+      "hoursPerRegion": { "type": "integer", "description": "DAT-028, design 1" }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/callsigns.schema.json",
+  "title": "Callsigns",
+  "description": "Generation callsigns, generic list and (optional) deeds (spec MGT-013..MGT-020).",
+  "version": "0.2.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
+  "type": "object",
+  "properties": {
+    "generation": { "type": "object", "description": "MGT-013: attribute → {\"40-59\", \"60-79\", \"80-100\": [names]}" },
+    "generic": { "type": "array", "description": "MGT-014: names used when no attribute is 40 or above" },
+    "tieMargin": { "type": "integer", "description": "MGT-013, design 5" },
+    "minValue": { "type": "integer", "description": "MGT-014, design 40" },
+    "deeds": { "type": "array", "description": "MGT-017 (optional): {id, prestige 1-5, condition, callsigns}" }
+  },
+  "additionalProperties": false
+}

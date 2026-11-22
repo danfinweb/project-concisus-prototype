@@ -2,12 +2,31 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_perception_view.schema.json",
   "title": "Strategic perception view",
-  "description": "What one faction knows under fog of war at its action.",
-  "version": "0.1.0",
+  "description": "What one faction knows under fog of war at its hourly action. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-020, STR-021, SAI-002, SAI-003, SAI-005.",
+  "version": "0.2.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/strategic-ai"],
-  "$comment": "Skeleton: fields are defined by /update-spec.",
   "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "required": ["faction", "time", "ownSquads", "knownRegions"],
+  "properties": {
+    "faction": { "type": "string", "x-ref": "factions" },
+    "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+    "doctrine": { "type": "string", "x-ref": "ai/doctrines" },
+    "ownRegions": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "poi": { "type": "string" }, "output": { "type": "object" }, "loyalty": { "type": "number" } } } },
+    "ownSquads": { "type": "array", "items": { "type": "object", "required": ["id", "region"], "properties": {
+      "id": { "type": "string" }, "region": { "type": "string" }, "goal": { "type": "string" }, "target": { "type": "string" },
+      "strength": { "type": "number" }, "supplies": { "type": "number" }, "fuel": { "type": "number" }, "morale": { "type": "number" }, "inTransit": { "type": "boolean" } } } },
+    "knownRegions": { "type": "array", "items": { "type": "object", "required": ["id"], "properties": {
+      "id": { "type": "string" }, "terrain": { "type": "string" }, "poi": { "type": "string" }, "controller": { "type": ["string", "null"] }, "loyalty": { "type": "number" },
+      "flags": { "type": "array" }, "observed": { "type": "object", "description": "Day and hour this information is from" } } } },
+    "knownSquads": { "type": "array", "description": "Noticed foreign squads, the player's included", "items": { "type": "object", "properties": {
+      "faction": { "type": "string" }, "region": { "type": "string" }, "estimatedStrength": { "type": "number" }, "seen": { "type": "object" }, "knownGoal": { "type": "string" } } } },
+    "vips": { "type": "array", "items": { "type": "object" }, "description": "Own VIPs and known enemy VIPs with intel expiry" },
+    "relations": { "type": "object", "description": "faction → -100..100" },
+    "reputationWithPlayer": { "type": "object", "properties": { "value": { "type": "number" }, "standing": { "enum": ["hostile", "unfriendly", "neutral", "friendly", "trusted"] } } },
+    "contracts": { "type": "array", "items": { "type": "object" }, "description": "Contracts this faction posted, with status" },
+    "events": { "type": "array", "items": { "type": "object" }, "description": "Active events and measures that affect it" },
+    "crisisSigns": { "type": "array", "items": { "type": "string" } },
+    "availableMeasures": { "type": "array", "items": { "type": "string", "x-ref": "events" } }
+  }
 }

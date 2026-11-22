@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "management_requests.schema.json",
+  "title": "Management requests",
+  "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: player services at a location, op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request. Spec: STR-004, STR-015, STR-029, STR-039..STR-043, MGT-002..MGT-005, MGT-039..MGT-051, MGT-056..MGT-064, MGT-068, MGT-070.",
+  "version": "0.1.0",
+  "x-producer": "modules/strategic",
+  "x-consumers": ["modules/management"],
+  "type": "object",
+  "required": ["time", "requests"],
+  "properties": {
+    "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+    "requests": { "type": "array", "items": { "$ref": "#/$defs/request" } }
+  },
+  "$defs": {
+    "request": {
+      "type": "object", "required": ["type"],
+      "properties": {
+        "type": { "enum": [
+          "hire", "trade", "barter", "vehicleTrade", "acceptContract", "handOver", "handIn", "hospital", "repair", "refuel",
+          "buyFob", "buyIntel", "payCompensation", "payOffBounty", "payKrugPass",
+          "opReturn", "soldierFate", "healingTick", "plantOutput", "dailyRollover", "priceModifier", "localRecruits",
+          "reputationAct", "missionOutcome", "contractEnded"
+        ] },
+        "location": { "type": "string", "description": "Region or POI where it happens" },
+        "squad": { "type": "string" },
+        "faction": { "type": "string", "x-ref": "factions" },
+        "soldiers": { "type": "array", "items": { "type": "string" } },
+        "items": { "type": "array", "items": { "type": "object", "properties": { "item": { "type": "string", "x-ref": "items" }, "count": { "type": "integer" } } } },
+        "contractId": { "type": "string" },
+        "missionId": { "type": "string" },
+        "amountUsd": { "type": "number" },
+        "act": { "type": "string", "description": "reputationAct: the act type (MGT-056..MGT-059)" },
+        "attributed": { "type": "boolean" },
+        "hours": { "type": "integer", "minimum": 1 },
+        "atFob": { "type": "boolean" },
+        "params": { "type": "object" }
+      }
+    }
+  }
+}

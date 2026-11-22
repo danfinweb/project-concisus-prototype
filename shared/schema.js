@@ -65,9 +65,31 @@ function walk(s, v, path, root, errors, refs) {
     }
   }
   if (s.allOf) for (const sub of s.allOf) walk(sub, v, path, root, errors, refs);
-  if (s.anyOf && !s.anyOf.some((sub) => passes(sub, v, root))) err('matches none of anyOf');
-  if (s.oneOf) {
-    const n = s.oneOf.filter((sub) => passes(sub, v, root)).length;
-    if (n !== 1) err(`must match exactly one of oneOf (matched ${n})`);
+  // anyOf / oneOf: pick the matching branch, then walk it again so its ID references are collected.
+  if (s.anyOf) {
+    const hit = s.anyOf.find((sub) => passes(sub, v, root));
+    if (hit === undefined) err('matches none of anyOf');
+    else if (refs) walk(hit, v, path, root, [], refs);
   }
+  if (s.oneOf) {
+    const hits = s.oneOf.filter((sub) => passes(sub, v, root));
+    if (hits.length === 1) { if (refs) walk(hits[0], v, path, root, [], refs); }
+    else if (hits.length === 0) err(`must match exactly one of oneOf (matched 0)${branchHint(s.oneOf, v, root)}`);
+    else err(`must match exactly one of oneOf (matched ${hits.length})`);
+  }
+}
+
+// When oneOf branches are told apart by a const (e.g. kind), name the errors of the branch whose const
+// matches, so "matched 0" says what is actually wrong.
+function branchHint(branches, v, root) {
+  if (typeOf(v) !== 'object') return '';
+  for (const b of branches) {
+    const sub = b.$ref ? root.$defs?.[/^#\/\$defs\/(.+)$/.exec(b.$ref)?.[1]] : b;
+    const consts = Object.entries(sub?.properties ?? {}).filter(([, p]) => p && 'const' in p);
+    if (consts.length && consts.every(([k, p]) => JSON.stringify(v[k]) === JSON.stringify(p.const))) {
+      const e = []; walk(sub, v, '', root, e);
+      return `: ${e.map((x) => `${x.path} ${x.message}`).join('; ')}`;
+    }
+  }
+  return '';
 }

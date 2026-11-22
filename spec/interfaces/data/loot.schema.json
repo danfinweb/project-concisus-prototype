@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/loot.schema.json",
+  "title": "Loot",
+  "description": "Loot roll weights and location tags (spec ITM-024).",
+  "version": "0.2.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
+  "type": "object",
+  "properties": {
+    "rarityWeights": { "type": "object", "description": "ITM-024, design common 60 / uncommon 30 / rare 10" },
+    "rareLocations": { "type": "array", "description": "ITM-024: apartments, safes, churches, bodies" },
+    "locationTags": { "type": "array", "description": "ITM-024, full list not designed" }
+  },
+  "additionalProperties": false
+}

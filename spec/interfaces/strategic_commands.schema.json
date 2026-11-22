@@ -2,12 +2,44 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_commands.schema.json",
   "title": "Strategic commands",
-  "description": "Commands a faction controller returns: set a goal, move a squad, offer a contract. Same commands a player issues.",
-  "version": "0.1.0",
+  "description": "Commands a faction controller returns for its hourly action: the same commands a player issues. The strategic layer validates and resolves them; contract offers go on to Management. Spec: STR-020, STR-021, STR-044, SAI-004, SAI-011, SAI-014.",
+  "version": "0.2.0",
   "x-producer": "modules/strategic-ai",
   "x-consumers": ["modules/strategic", "modules/management"],
-  "$comment": "Skeleton: fields are defined by /update-spec.",
   "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "required": ["faction", "commands"],
+  "properties": {
+    "faction": { "type": "string", "x-ref": "factions" },
+    "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } },
+    "log": { "type": "array", "description": "Decision log: time, faction, tier, chosen option, top-N options with per-consideration scores (SAI-011)", "items": { "type": "object" } }
+  },
+  "$defs": {
+    "command": {
+      "type": "object", "required": ["type"],
+      "properties": {
+        "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "pickMeasure", "recruit", "pass"] },
+        "squad": { "type": "string" },
+        "goal": { "enum": ["patrol", "supplyRun", "attackPoi", "holdPoi", "escort", "tradeRoute", "hunt"] },
+        "target": { "type": "string" },
+        "toRegion": { "type": "string", "description": "Must be adjacent to the squad's region" },
+        "measure": { "type": "string", "x-ref": "events" },
+        "contract": { "$ref": "#/$defs/contractOffer" }
+      }
+    },
+    "contractOffer": {
+      "type": "object", "required": ["employer", "missions"],
+      "properties": {
+        "employer": { "type": "string", "x-ref": "factions" },
+        "sourceGoal": { "type": "string" },
+        "missions": { "type": "array", "items": { "type": "object", "properties": { "missionId": { "type": "string", "x-ref": "missions" }, "targets": { "type": "array" }, "location": { "type": "string" } } } },
+        "deadline": { "type": "object", "properties": { "day": { "type": "integer" }, "hour": { "type": "integer" } } },
+        "payInputs": { "type": "object", "description": "Distance, danger, urgency (MGT-046)" },
+        "intelLevel": { "type": "string" },
+        "deniable": { "type": "boolean" },
+        "reputationGate": { "type": "string" },
+        "boardLocation": { "type": "string" },
+        "counterContractOf": { "type": ["string", "null"] }
+      }
+    }
+  }
 }

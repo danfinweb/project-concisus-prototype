@@ -2,14 +2,19 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/mapgen-tactical.schema.json",
   "title": "Tactical map generation rules",
-  "description": "Stage rules for terrain → roads → prefab placement → cover scatter → spawns and objectives → validate (data/mapgen/tactical.json).",
-  "version": "0.1.0",
-  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "description": "Rules per stage of the tactical generation pipeline (spec TAC; stages from the workflow: terrain, roads, prefab placement, cover scatter, spawns and objectives, validate).",
+  "version": "0.2.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
-  "additionalProperties": {
-    "type": "object",
-    "properties": { "id": { "type": "string" } },
-    "required": ["id"],
-    "additionalProperties": true
-  }
+  "properties": {
+    "pipeline": { "type": "object", "description": "stage order and attempts" },
+    "terrain": { "type": "object", "description": "terrain stage rules" },
+    "roads": { "type": "object", "description": "roads stage rules" },
+    "prefabs": { "type": "object", "description": "prefab placement tables per biome" },
+    "cover": { "type": "object", "description": "cover scatter rules" },
+    "spawns": { "type": "object", "description": "spawns and objectives" },
+    "exits": { "type": "array", "description": "TAC-038: {count, condition: fuel | boatAtTurn | paidCrossing}" },
+    "validate": { "type": "object", "description": "playability checks" }
+  },
+  "additionalProperties": false
 }

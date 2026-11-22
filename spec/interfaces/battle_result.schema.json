@@ -2,12 +2,52 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "battle_result.schema.json",
   "title": "Battle result",
-  "description": "Outcome of a tactical engagement: survivors, casualties, wounds, loot carried out, objectives met, time spent.",
-  "version": "0.1.0",
+  "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
+  "version": "0.2.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/strategic", "modules/management"],
-  "$comment": "Skeleton: fields are defined by /update-spec.",
   "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "required": ["encounterId", "outcome", "gameTimeHours", "soldiers"],
+  "properties": {
+    "encounterId": { "type": "string" },
+    "outcome": { "enum": ["goalMet", "goalFailed", "retreat", "wiped"] },
+    "winnerFaction": { "type": ["string", "null"] },
+    "gameTimeHours": { "const": 1, "description": "A battle always takes 1 hour (TAC-003)" },
+    "turns": { "type": "integer", "minimum": 0 },
+    "objectives": { "type": "array", "items": { "type": "object", "required": ["id", "met"], "properties": { "id": { "type": "string" }, "met": { "type": "boolean" } } } },
+    "soldiers": {
+      "type": "array", "description": "Every player soldier who took part",
+      "items": {
+        "type": "object", "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["active", "leftMap", "dead", "mia", "captured"] },
+          "exitId": { "type": ["string", "null"] },
+          "zoneHp": { "type": "object" },
+          "conditions": { "type": "array", "items": { "type": "object" } },
+          "stamina": { "type": "integer" },
+          "equipment": { "type": "object", "description": "Slot → item instance after the battle (ammo used, durability, condition)" },
+          "skillUse": { "type": "array", "items": { "type": "object" }, "description": "Skill-use events for growth (MGT-023)" },
+          "kills": { "type": "array", "items": { "type": "object", "properties": { "faction": { "type": "string" }, "distanceTiles": { "type": "number" }, "activation": { "type": "integer" } } } },
+          "deedEvents": { "type": "array", "items": { "type": "object" }, "description": "Optional deeds (MGT-017): rescues, carries under fire, lowest head/thorax HP %" },
+          "underFire": { "type": "boolean" }
+        }
+      }
+    },
+    "squadMorale": { "type": "number" },
+    "loot": { "type": "array", "description": "Items carried out (on soldiers or in the vehicle)", "items": { "type": "object", "required": ["item", "count"], "properties": {
+      "item": { "type": "string", "x-ref": "items" }, "count": { "type": "integer", "minimum": 1 }, "condition": { "type": "number" }, "carrier": { "type": "string" } } } },
+    "leftBehind": { "type": "array", "items": { "type": "object" }, "description": "Gear left on the map or on bodies" },
+    "casualties": { "type": "array", "description": "Killed and wounded per faction, including AI sides", "items": { "type": "object", "required": ["faction"], "properties": {
+      "faction": { "type": "string" }, "killed": { "type": "integer", "minimum": 0 }, "wounded": { "type": "integer", "minimum": 0 }, "captured": { "type": "integer", "minimum": 0 } } } },
+    "acts": { "type": "array", "description": "Reputation-relevant acts: attack on non-hostile, civilian or prisoner kills, cargo destroyed or stolen, VIP captured or killed (MGT-056..MGT-059)", "items": { "type": "object", "required": ["type"], "properties": {
+      "type": { "type": "string" }, "faction": { "type": "string" }, "count": { "type": "integer" } } } },
+    "witnesses": { "type": "object", "description": "faction → surviving witnesses (count); only witnessed acts are attributed (MGT-064)" },
+    "playerAttributed": { "type": "boolean" },
+    "vip": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "fate": { "enum": ["escaped", "killed", "captured", "restrained"] } } },
+    "poiControl": { "type": ["string", "null"], "description": "Faction holding the point of interest after the battle" },
+    "intelFound": { "type": "array", "items": { "type": "string", "x-ref": "items" } },
+    "vehicle": { "type": ["object", "null"], "properties": { "state": { "enum": ["intact", "damaged", "destroyed", "leftBehind"] } } },
+    "flags": { "type": "array", "items": { "enum": ["chemicalPlantFight", "uninvolvedFactionKilled", "krugConvoyHit", "ceasefireBroken", "krugMarketFight"] } }
+  }
 }

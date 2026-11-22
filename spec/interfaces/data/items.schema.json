@@ -2,14 +2,189 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/items.schema.json",
   "title": "Items",
-  "description": "Weapons, calibres, ammunition, armour, vests, belts, backpacks, medical, barter and faction items (data/items.json).",
-  "version": "0.1.0",
-  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, ITM-001..ITM-030.",
+  "version": "0.2.0",
   "type": "object",
-  "additionalProperties": {
-    "type": "object",
-    "properties": { "id": { "type": "string" } },
-    "required": ["id"],
-    "additionalProperties": true
+  "additionalProperties": { "$ref": "#/$defs/item" },
+  "$defs": {
+    "ref": { "type": "string", "x-ref": "items" },
+    "zone": { "enum": ["head", "thorax", "leftArm", "rightArm", "leftLeg", "rightLeg"] },
+    "armourClass": { "type": "integer", "minimum": 1, "maximum": 6 },
+    "rarity": { "enum": ["common", "uncommon", "rare"] },
+    "item": {
+      "type": "object",
+      "required": ["id", "kind", "name"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+        "kind": { "enum": ["weapon", "mod", "calibre", "ammo", "helmet", "bodyArmour", "vest", "belt", "backpack", "medical", "barter", "opItem"] },
+        "name": { "type": "string", "minLength": 1 },
+        "weightKg": { "type": "number", "minimum": 0 },
+        "valueUsd": { "type": "number", "minimum": 0 },
+        "rarity": { "$ref": "#/$defs/rarity" },
+        "notes": { "type": "string" }
+      },
+      "oneOf": [
+        { "$ref": "#/$defs/weapon" }, { "$ref": "#/$defs/mod" }, { "$ref": "#/$defs/calibre" }, { "$ref": "#/$defs/ammo" },
+        { "$ref": "#/$defs/helmet" }, { "$ref": "#/$defs/bodyArmour" }, { "$ref": "#/$defs/vest" }, { "$ref": "#/$defs/belt" },
+        { "$ref": "#/$defs/backpack" }, { "$ref": "#/$defs/medical" }, { "$ref": "#/$defs/barter" }, { "$ref": "#/$defs/opItem" }
+      ]
+    },
+    "weapon": {
+      "properties": {
+        "kind": { "const": "weapon" },
+        "weaponType": { "enum": ["pistol", "shotgun", "smg", "assaultRifle", "battleRifle", "dmr", "sniperRifle", "lmg"] },
+        "calibre": { "$ref": "#/$defs/ref" },
+        "fireModes": { "type": "array", "minItems": 1, "items": { "anyOf": [{ "type": "integer", "minimum": 1 }, { "const": "auto" }] } },
+        "magazineSize": { "type": "integer", "minimum": 1 },
+        "barrelMultiplier": { "type": "number", "exclusiveMinimum": 0 },
+        "ergonomics": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "baseMoa": { "type": "number", "exclusiveMinimum": 0 },
+        "weightKg": { "type": "number", "exclusiveMinimum": 0 },
+        "recoil": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "modSlots": { "type": "array", "items": { "enum": ["muzzle", "stock", "pistolGrip", "magazine", "optic", "handguard"] } },
+        "action": { "enum": ["pump", "bolt"] }
+      },
+      "required": ["weaponType", "calibre", "fireModes", "magazineSize", "barrelMultiplier", "ergonomics", "baseMoa", "weightKg", "recoil", "modSlots"]
+    },
+    "mod": {
+      "properties": {
+        "kind": { "const": "mod" },
+        "slot": { "enum": ["muzzle", "stock", "pistolGrip", "magazine", "optic", "handguard", "frontGrip", "tactical"] },
+        "fits": { "type": "array", "items": { "$ref": "#/$defs/ref" } },
+        "modifiers": { "type": "object", "additionalProperties": { "type": "number" } },
+        "suppressor": { "type": "boolean" },
+        "subSlots": { "type": "object", "properties": { "frontGrip": { "type": "integer", "minimum": 0, "maximum": 1 }, "tactical": { "type": "integer", "minimum": 1, "maximum": 2 } } },
+        "module": { "enum": ["flashlight", "laser"] }
+      },
+      "required": ["slot", "weightKg"]
+    },
+    "calibre": {
+      "properties": {
+        "kind": { "const": "calibre" },
+        "designation": { "type": "string" },
+        "damage": { "type": "number", "exclusiveMinimum": 0 },
+        "projectiles": { "type": "integer", "minimum": 1 },
+        "recoilModifier": { "type": "number", "exclusiveMinimum": 0 },
+        "roundWeightG": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "required": ["designation", "damage", "projectiles", "recoilModifier", "roundWeightG"]
+    },
+    "ammo": {
+      "properties": {
+        "kind": { "const": "ammo" },
+        "calibre": { "$ref": "#/$defs/ref" },
+        "ammoType": { "enum": ["fmj", "ap", "hp", "subsonic", "tracer", "buckshot", "slug"] },
+        "damageModifier": { "type": "number", "exclusiveMinimum": 0 },
+        "falloff": { "type": "number", "minimum": 0, "maximum": 1 },
+        "falloffRangeTiles": { "type": "number", "exclusiveMinimum": 0 },
+        "penetrationClass": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "subsonic": { "type": "boolean" },
+        "spreadModifier": { "type": "number", "exclusiveMinimum": 0 },
+        "tracer": { "type": "boolean" },
+        "bleedChanceModifier": { "type": "number", "exclusiveMinimum": 0 },
+        "damageOverride": { "type": "number", "exclusiveMinimum": 0 },
+        "projectilesOverride": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["calibre", "ammoType", "damageModifier", "falloff", "falloffRangeTiles", "penetrationClass", "subsonic", "spreadModifier"]
+    },
+    "helmet": {
+      "properties": {
+        "kind": { "const": "helmet" },
+        "armourClass": { "$ref": "#/$defs/armourClass" },
+        "durability": { "type": "number", "exclusiveMinimum": 0 },
+        "hearingPenalty": { "type": "boolean" },
+        "visionConeDeg": { "type": "number", "exclusiveMinimum": 0 },
+        "nightVisionMount": { "type": "boolean" }
+      },
+      "required": ["armourClass", "durability", "hearingPenalty", "weightKg"]
+    },
+    "bodyArmour": {
+      "properties": {
+        "kind": { "const": "bodyArmour" },
+        "armourClass": { "$ref": "#/$defs/armourClass" },
+        "durability": { "type": "number", "exclusiveMinimum": 0 },
+        "fillsVestSlot": { "type": "boolean" },
+        "pouches": { "type": ["object", "null"], "properties": {
+          "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
+          "maxMagazines": { "type": "integer", "minimum": 0 }, "maxGrenades": { "type": "integer", "minimum": 0 },
+          "maxMedical": { "type": "integer", "minimum": 0 }, "maxOther": { "type": "integer", "minimum": 0 } } },
+        "durabilityLossModifier": { "type": "number", "exclusiveMinimum": 0 },
+        "apPenalty": { "type": "number", "minimum": 0 },
+        "staminaPenalty": { "type": "number", "minimum": 0 },
+        "concealable": { "type": "boolean" }
+      },
+      "required": ["armourClass", "durability", "fillsVestSlot", "weightKg"]
+    },
+    "vest": {
+      "properties": {
+        "kind": { "const": "vest" },
+        "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
+        "maxMagazines": { "type": "integer", "minimum": 0 }, "maxGrenades": { "type": "integer", "minimum": 0 },
+        "maxMedical": { "type": "integer", "minimum": 0 }, "maxOther": { "type": "integer", "minimum": 0 },
+        "quiet": { "type": "boolean" }
+      },
+      "required": ["capacityKg", "maxMagazines", "maxGrenades", "maxMedical", "maxOther", "weightKg"]
+    },
+    "belt": {
+      "properties": {
+        "kind": { "const": "belt" },
+        "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
+        "holsters": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["capacityKg", "holsters", "weightKg"]
+    },
+    "backpack": {
+      "properties": {
+        "kind": { "const": "backpack" },
+        "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
+        "extraAccessAp": { "type": "number", "minimum": 0 },
+        "noSprint": { "type": "boolean" }
+      },
+      "required": ["capacityKg", "weightKg"]
+    },
+    "medical": {
+      "properties": {
+        "kind": { "const": "medical" },
+        "treats": { "type": "array", "minItems": 1, "items": { "enum": ["lightBleeding", "heavyBleeding", "fracture", "pain", "hp", "limbAtZeroHp"] } },
+        "zones": { "type": "array", "items": { "$ref": "#/$defs/zone" } },
+        "apCost": { "type": "integer", "minimum": 1 },
+        "uses": { "type": ["integer", "null"], "minimum": 1 },
+        "hpPool": { "type": "number", "exclusiveMinimum": 0 },
+        "hpPerUseMax": { "type": "number", "exclusiveMinimum": 0 },
+        "durationTurns": { "type": "integer", "minimum": 1 },
+        "restoresToHp": { "type": "number", "minimum": 1 },
+        "causesPain": { "type": "boolean" },
+        "requiresMedical": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "backpackOnly": { "type": "boolean" }
+      },
+      "required": ["treats", "apCost"]
+    },
+    "barter": {
+      "properties": {
+        "kind": { "const": "barter" },
+        "foundIn": { "type": "array", "items": { "type": "string" } },
+        "barterClass": { "enum": ["tobacco", "alcohol", "valuable", "general"] },
+        "contains": { "type": "array", "items": { "type": "object", "required": ["item", "chance"], "properties": { "item": { "$ref": "#/$defs/ref" }, "chance": { "type": "number", "minimum": 0, "maximum": 1 } } } }
+      },
+      "required": ["weightKg", "valueUsd", "rarity", "foundIn", "barterClass"]
+    },
+    "opItem": {
+      "properties": {
+        "kind": { "const": "opItem" },
+        "foundIn": { "type": "array", "items": { "type": "string" } },
+        "perFaction": { "type": "boolean" },
+        "perPoi": { "type": "boolean" },
+        "opEffect": { "type": ["object", "null"], "properties": {
+          "type": { "enum": ["revealSquadPlan", "revealAdjacentSquads", "extendRadio", "checkpointPass", "demolition", "cutLock", "poiKey", "restockMedical", "restockAmmo"] } } },
+        "handIn": { "type": "array", "items": { "type": "object", "required": ["receiver"], "properties": {
+          "receiver": { "enum": ["issuingFaction", "enemiesOfIssuer", "factions", "rivalOfOwningPmc", "plantHolder", "cityHolder", "resistanceGroup", "krug"] },
+          "factions": { "type": "array", "items": { "type": "string", "x-ref": "factions" } },
+          "moneyUsd": { "type": "number", "minimum": 0 },
+          "reputation": { "type": "number" },
+          "dailyCap": { "type": "integer", "minimum": 1 },
+          "effect": { "type": "object" } } } }
+      },
+      "required": ["weightKg", "foundIn"]
+    }
   }
 }

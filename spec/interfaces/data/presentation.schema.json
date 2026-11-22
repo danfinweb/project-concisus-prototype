@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/presentation.schema.json",
+  "title": "Presentation",
+  "description": "Render and UX budgets (spec TEC).",
+  "version": "0.2.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
+  "type": "object",
+  "properties": {
+    "charTrianglesMin": { "type": "integer", "description": "TEC-001, design 500" },
+    "charTrianglesMax": { "type": "integer", "description": "TEC-001, design 2000" },
+    "textureMinPx": { "type": "integer", "description": "TEC-002, design 64" },
+    "textureMaxPx": { "type": "integer", "description": "TEC-002, design 256" },
+    "renderHeightMin": { "type": "integer", "description": "TEC-003, design 360" },
+    "renderHeightMax": { "type": "integer", "description": "TEC-003, design 480" },
+    "paletteSize": { "type": "integer", "description": "TEC-004, not set" },
+    "psxQuirks": { "type": "object", "description": "TEC-005 (optional)" },
+    "qualityTiers": { "type": "array", "description": "TEC-007: {id phone|desktop, bakedLighting, shadowCasters}" },
+    "fpsPhone": { "type": "integer", "description": "TEC-026, design 30" },
+    "fpsDesktop": { "type": "integer", "description": "TEC-026, design 60" },
+    "firstLoadMaxMb": { "type": "integer", "description": "TEC-027, design 50" },
+    "tapHoldMs": { "type": "integer", "description": "TEC-022, not set" },
+    "minTapTargetPx": { "type": "integer", "description": "TEC-025, not set" }
+  },
+  "additionalProperties": false
+}

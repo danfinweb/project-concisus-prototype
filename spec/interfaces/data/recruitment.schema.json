@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/recruitment.schema.json",
+  "title": "Recruitment",
+  "description": "Hiring pools, price tiers and salaries (spec MGT-002..MGT-005).",
+  "version": "0.2.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
+  "type": "object",
+  "properties": {
+    "pools": { "type": "array", "description": "MGT-002: {id, tiers, candidates, refreshHours}" },
+    "tiers": { "type": "array", "description": "MGT-003: {id, priceRange, attributeRanges, salary}" },
+    "priceFormula": { "type": "object", "description": "MGT-003" },
+    "salaryIntervalHours": { "type": "integer", "description": "MGT-005" },
+    "contractTermHours": { "type": "integer", "description": "MGT-005" }
+  },
+  "additionalProperties": false
+}

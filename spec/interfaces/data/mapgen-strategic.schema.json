@@ -2,14 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/mapgen-strategic.schema.json",
   "title": "Strategic map generation rules",
-  "description": "Stage rules for regions → cities → roads → resources → frontline → validate (data/mapgen/strategic.json).",
-  "version": "0.1.0",
-  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "description": "Rules per stage of the strategic generation pipeline (spec STR-082..STR-091).",
+  "version": "0.2.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
-  "additionalProperties": {
-    "type": "object",
-    "properties": { "id": { "type": "string" } },
-    "required": ["id"],
-    "additionalProperties": true
-  }
+  "properties": {
+    "pipeline": { "type": "object", "description": "STR-082: stage order, regionCount, maxAttempts" },
+    "land": { "type": "object", "description": "STR-083" },
+    "capital": { "type": "object", "description": "STR-084" },
+    "cities": { "type": "object", "description": "STR-085" },
+    "industry": { "type": "object", "description": "STR-086" },
+    "towns": { "type": "object", "description": "STR-087" },
+    "roads": { "type": "object", "description": "STR-088" },
+    "warState": { "type": "object", "description": "STR-089" },
+    "start": { "type": "object", "description": "STR-090" },
+    "validate": { "type": "object", "description": "STR-091" }
+  },
+  "additionalProperties": false
 }

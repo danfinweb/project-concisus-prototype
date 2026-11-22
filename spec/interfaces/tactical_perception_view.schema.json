@@ -2,12 +2,33 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_perception_view.schema.json",
   "title": "Tactical perception view",
-  "description": "What one unit or side knows under fog of war at an activation.",
-  "version": "0.1.0",
+  "description": "What one side knows under fog of war at an AI-controlled activation. Built by tactical/core, passed to that side's controller. Spec: TAI-002, TAI-004, TAI-006, TAI-012.",
+  "version": "0.2.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/tactical-ai"],
-  "$comment": "Skeleton: fields are defined by /update-spec.",
   "type": "object",
-  "properties": {},
-  "additionalProperties": true
+  "required": ["side", "faction", "turn", "activeUnit", "squad", "map", "allowedActions"],
+  "properties": {
+    "side": { "type": "string" },
+    "faction": { "type": "string" },
+    "doctrine": { "type": "string", "x-ref": "ai/doctrines" },
+    "turn": { "type": "integer", "minimum": 1 },
+    "timeOfDay": { "enum": ["day", "night"] },
+    "activeUnit": { "type": ["string", "null"], "description": "Unit to act, or null when the side chooses whom to activate" },
+    "squad": { "type": "array", "items": { "type": "object", "required": ["id", "position"], "properties": {
+      "id": { "type": "string" }, "position": { "type": "object" }, "level": { "type": "integer" }, "facing": { "type": "number" },
+      "stance": { "enum": ["upright", "crouched", "prone"] }, "ap": { "type": "integer" }, "stamina": { "type": "integer" }, "staminaMax": { "type": "integer" },
+      "zoneHp": { "type": "object" }, "conditions": { "type": "array" }, "suppressed": { "type": "boolean" },
+      "reaction": { "enum": ["fire", "takeCover", "hold"] }, "equipment": { "type": "object" }, "role": { "type": "string" } } } },
+    "squadPlan": { "type": "object" },
+    "blackboard": { "type": "object", "description": "Squad requests and claims (TAI-012)" },
+    "knownEnemies": { "type": "array", "items": { "type": "object", "properties": {
+      "id": { "type": "string" }, "position": { "type": "object" }, "seenTurn": { "type": "integer" }, "visibleNow": { "type": "boolean" }, "stance": { "type": "string" }, "visibleGear": { "type": "array" } } } },
+    "knownNeutrals": { "type": "array", "items": { "type": "object" } },
+    "noises": { "type": "array", "items": { "type": "object", "properties": { "origin": { "type": "object" }, "direction": { "type": "number" }, "distance": { "type": "number" }, "turn": { "type": "integer" } } } },
+    "map": { "type": "object", "description": "Known tiles: terrain cost, edge cover, levels, doors, windows, exits, destroyed tiles" },
+    "allowedActions": { "type": "array", "items": { "type": "object" }, "description": "Legal commands with AP costs, reachable tiles and shot previews (hit %, likely zone, penetration) for visible targets" },
+    "battleGoal": { "type": "object", "properties": { "goal": { "type": "string" }, "acceptableLoss": { "type": "number" } } },
+    "objectives": { "type": "array", "items": { "type": "object" } }
+  }
 }

@@ -75,5 +75,23 @@ export default {
         assert.deepEqual(refs, [{ path: '/calibre', table: 'calibres', id: '545x39' }]);
       },
     },
+    {
+      id: 'schema-oneof', name: 'schema: oneOf by kind collects ID references and names the failing branch',
+      run({ assert }) {
+        const schema = {
+          type: 'object', required: ['kind'], properties: { kind: { enum: ['weapon', 'calibre'] } },
+          oneOf: [{ $ref: '#/$defs/weapon' }, { $ref: '#/$defs/calibre' }],
+          $defs: {
+            weapon: { properties: { kind: { const: 'weapon' }, calibre: { type: 'string', 'x-ref': 'items' }, magazineSize: { type: 'integer', minimum: 1 } }, required: ['calibre', 'magazineSize'] },
+            calibre: { properties: { kind: { const: 'calibre' }, damage: { type: 'number' } }, required: ['damage'] },
+          },
+        };
+        const refs = [];
+        assert.deepEqual(validate(schema, { kind: 'weapon', calibre: '545x39', magazineSize: 30 }, { refs }), []);
+        assert.deepEqual(refs, [{ path: '/calibre', table: 'items', id: '545x39' }]);
+        const [e] = validate(schema, { kind: 'weapon', calibre: '545x39', magazineSize: 0 });
+        assert.match(e.message, /magazineSize must be >= 1/);
+      },
+    },
   ],
 };

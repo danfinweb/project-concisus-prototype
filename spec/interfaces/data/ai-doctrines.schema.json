@@ -1,15 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/ai-doctrines.schema.json",
-  "title": "AI doctrines and weights",
-  "description": "Utility weights, response curves and faction doctrines (data/ai/doctrines.json).",
-  "version": "0.1.0",
-  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "title": "AI doctrines",
+  "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, TAI-007..TAI-016).",
+  "version": "0.2.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
-    "properties": { "id": { "type": "string" } },
-    "required": ["id"],
-    "additionalProperties": true
+    "required": ["id", "layer"],
+    "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "layer": { "enum": ["strategic", "tactical"], "description": "SAI-010 / TAI-015" },
+      "factions": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "SAI-010" },
+      "considerations": { "type": "object", "description": "SAI-006 / TAI-007: name → {weight, curve {type, points}}" },
+      "wGoal": { "type": "number", "description": "TAI-009" },
+      "wFit": { "type": "number", "description": "TAI-010" },
+      "wCoord": { "type": "number", "description": "TAI-011" },
+      "logTopN": { "type": "integer", "description": "SAI-011 / TAI-016" },
+      "roles": { "type": "object", "description": "TAI-014, reserved" }
+    }
   }
 }

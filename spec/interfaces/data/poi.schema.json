@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/poi.schema.json",
+  "title": "Points of interest",
+  "description": "Point-of-interest types with their services and output (spec STR-010..STR-016, MGT-068).",
+  "version": "0.2.0",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": ["id", "category"],
+    "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "category": { "enum": ["gov", "plant", "town", "smallCity", "largeCity", "gasStation", "hiddenCity"], "description": "STR-010" },
+      "plantKind": { "enum": ["mechanical", "chemical", "oil", "arms", "minerals"], "description": "STR-010" },
+      "services": { "type": "array", "description": "STR-039..STR-042" },
+      "income": { "type": "integer", "description": "STR-010" },
+      "supplyOutput": { "type": "object", "description": "STR-010" },
+      "recruitOutput": { "type": "integer", "description": "STR-010" },
+      "dailyOutput": { "type": "object", "description": "STR-015 / MGT-068: what a PMC-held plant delivers per day" },
+      "mineralModifier": { "type": "number", "description": "STR-011" },
+      "hiddenOutputMultiplier": { "type": "number", "description": "STR-013 (optional)" },
+      "garrison": { "type": "object", "description": "STR-013 (optional)" }
+    }
+  }
+}

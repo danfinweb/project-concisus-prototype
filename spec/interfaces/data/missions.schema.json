@@ -2,14 +2,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/missions.schema.json",
   "title": "Missions",
-  "description": "Contract and mission templates (data/missions.json).",
-  "version": "0.1.0",
-  "$comment": "Skeleton: the record fields are defined by /update-spec. The table is an object keyed by record ID.",
+  "description": "Mission types for contracts (spec MGT-042..MGT-048).",
+  "version": "0.2.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
-    "properties": { "id": { "type": "string" } },
-    "required": ["id"],
-    "additionalProperties": true
+    "required": ["id", "payBand"],
+    "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "payBand": { "type": "array", "description": "MGT-046: [min, max]" },
+      "goals": { "type": "array", "description": "MGT-043: strategic goals this mission serves" },
+      "success": { "type": "object", "description": "MGT-044: success condition parameters" },
+      "failure": { "type": "object", "description": "MGT-044 / MGT-048: failure condition parameters" }
+    }
   }
 }
