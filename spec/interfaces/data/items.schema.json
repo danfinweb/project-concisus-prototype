@@ -3,7 +3,7 @@
   "$id": "data/items.schema.json",
   "title": "Items",
   "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, ITM-001..ITM-030.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -42,7 +42,9 @@
         "weightKg": { "type": "number", "exclusiveMinimum": 0 },
         "recoil": { "type": "integer", "minimum": 1, "maximum": 100 },
         "modSlots": { "type": "array", "items": { "enum": ["muzzle", "stock", "pistolGrip", "magazine", "optic", "handguard"] } },
-        "action": { "enum": ["pump", "bolt"] }
+        "action": { "enum": ["pump", "bolt"] },
+        "feedType": { "enum": ["pistol", "boxMagazine", "stripperClip", "boltAction", "belt", "tube"], "description": "Selects the reload base AP (TAC-041, DAT-011)" },
+        "fireApCost": { "type": "integer", "minimum": 1, "description": "Overrides the weapon-type default fire AP (TAC-039)" }
       },
       "required": ["weaponType", "calibre", "fireModes", "magazineSize", "barrelMultiplier", "ergonomics", "baseMoa", "weightKg", "recoil", "modSlots"]
     },

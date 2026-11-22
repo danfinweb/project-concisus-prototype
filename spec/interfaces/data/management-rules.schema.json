@@ -3,7 +3,7 @@
   "$id": "data/management-rules.schema.json",
   "title": "Management rules",
   "description": "Global management constants (spec MGT).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -25,10 +25,9 @@
     "repMax": { "type": "integer", "description": "MGT-053" },
     "repStart": { "type": "integer", "description": "MGT-053" },
     "standingThresholds": { "type": "object", "description": "MGT-054: hostile -50, unfriendly -20, friendly 20, trusted 50" },
-    "repActs": { "type": "object", "description": "MGT-056..MGT-059: reputation change per act" },
-    "repSpillHostile": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-061, design 0.5" },
-    "repSpillAllied": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-061, design 0.25" },
-    "repPatronFollow": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-063, design 0.5" },
+    "repActs": { "type": "object", "description": "MGT-056..MGT-059: reputation change per act (directly affected faction only, MGT-060)" },
+    "unfriendlyContractShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-051, share of basic offers shown at Unfriendly, not set" },
+    "unfriendlyPriceMarkup": { "type": "number", "description": "MGT-039, price factor at Unfriendly, not set" },
     "fobPrices": { "type": "object", "description": "MGT-066, per city size, not set" },
     "servicePrices": { "type": "object", "description": "MGT-067, not set" },
     "scoreWeights": { "type": "object", "description": "MGT-071, not set" }

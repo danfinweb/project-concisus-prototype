@@ -88,10 +88,11 @@ The loadout is part of the soldier record (MGT) and of the unit in `battle` (TAC
 
 ### [DAT-006] Access tiers
 **Rule.** Items used from a quick container (vest, belt) cost their normal AP. Items used from the backpack
-(slow) cost their normal AP plus a backpack surcharge (TAC). Applies to magazines (reload), grenades and
-medical items.
-**Values.** `backpackAccessSurchargeAp` — not set (design: Open) → data/tactical-rules.json (owned by TAC).
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); › Medical system › Using medical items
+(slow) cost their normal AP plus a backpack surcharge (TAC-068), the same for every item. Applies to
+magazines (reload), grenades and medical items.
+**Values.** `backpackSurcharge` — 4 (draft) → data/tactical-rules.json (owned by TAC, TAC-068; replaces the
+earlier name `backpackAccessSurchargeAp`).
+**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); › Medical system › Using medical items; design/tactical-actions.md › Medical, Gear and interaction
 
 ### [DAT-007] Everything carried counts toward weight
 **Rule.** Carried weight = Σ `weightKg` of everything in the seven slots and in their containers, plus
@@ -134,17 +135,23 @@ on the body until another soldier recovers it.
 | `recoil` | integer | — | 1–100 | Base kick per shot; × calibre `recoilModifier` = effective recoil (TAC) |
 | `modSlots` | array of enum | — | subset of `muzzle`, `stock`, `pistolGrip`, `magazine`, `optic`, `handguard` | Which mod slots exist; the barrel is not a slot |
 | `action` | enum | — | `pump`, `bolt` | Optional descriptor from the item list; no rule uses it yet |
+| `feedType` | enum | — | `pistol`, `boxMagazine`, `stripperClip`, `boltAction`, `belt`, `tube` | Selects the reload base AP (TAC-041); `tube` reloads per shell |
+| `fireApCost` | integer | AP | ≥ 1 | Optional; overrides the weapon-type default fire AP (TAC-039) before fire-mode and ergonomics modifiers |
 
 Mods change these values directly (DAT-016) except `barrelMultiplier` and `baseMoa`.
+**Values.** `feedType` per weapon — not set (design: the item list gives no feed type per weapon) →
+data/items.json; `fireApCost` — not set for any weapon (type defaults apply, TAC-039).
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Weapon profile (draft); design/item-list.md › Weapons
+**Source.** design/design.md › Data definitions › Weapon profile (draft); design/item-list.md › Weapons; design/tactical-actions.md › Weapons (Fire, Reload)
 
 ### [DAT-012] Fire modes
 **Rule.** Each entry of `fireModes` is one shot action: an integer n fires n rounds per trigger action
-(1 = semi-auto, n > 1 = burst); `"auto"` fires a full-auto burst. Rounds and AP per shot action come from
-the selected mode; recoil builds within a burst (TAC). A weapon with one entry has no mode switch.
-**Values.** rounds per `"auto"` burst — not set (design: Open) → data/tactical-rules.json; AP per shot
-action per mode — not set (design: Open) → data/tactical-rules.json.
+(1 = semi-auto, n > 1 = burst; the design's burst is 3 rounds); `"auto"` fires a full-auto burst. Rounds and
+AP per shot action come from the selected mode; recoil builds within a burst (TAC). A weapon with one entry
+has no mode switch. AP per shot action = weapon-type default or the weapon's `fireApCost` (DAT-011) + burst
+or auto surcharge ± ergonomics (TAC-039).
+**Values.** `burstRounds` — 3, `autoRounds` — 5, `burstApSurcharge` — 2, `autoApSurcharge` — 4,
+`fireApByWeaponType` (all draft) → data/tactical-rules.json (owned by TAC, TAC-039).
 **Source.** design/design.md › Data definitions › Weapon profile (draft) › Fire modes; design/tactical-actions.md › Weapons
 
 ### [DAT-013] Base MoA game scale
@@ -530,7 +537,8 @@ Initial content: design/item-list.md › Medical items (8 items).
 
 ### [ITM-020] Medical item restrictions
 **Rule.** Tourniquet treats heavy bleeding on arms and legs only. Hemostatic dressing treats heavy
-bleeding in any zone. IFAK restores up to `hpPerUseMax` per use from its pool. Painkillers mask pain for
+bleeding in any zone (light and quick); the medkit also stops heavy bleeding in any zone, so neither is
+exclusive. IFAK restores up to `hpPerUseMax` per use from its pool. Painkillers mask pain for
 `durationTurns`. Surgical kit needs Medical ≥ `requiresMedical` and brings an arm or leg at 0 HP back to
 `restoresToHp`. Medkit is `backpackOnly`.
 **Values.** IFAK `hpPool` 60, `hpPerUseMax` 15; medkit `hpPool` 300; painkillers `uses` 4,
@@ -628,7 +636,7 @@ items (e.g. dog tags: issuer +1 reputation each, `dailyCap` 5; enemies $50 each)
 
 ### [ITM-029] Hand-in reputation and attribution
 **Rule.** Reputation from a hand-in is applied through the MGT reputation change (`applyRep`) as a friendly
-act toward the receiver, including spillover to its allies and enemies. A hand-in is never attributed to
+act toward the receiver only, with no spillover to its allies or enemies (MGT reputation). A hand-in is never attributed to
 the faction it hurts; only a survivor at the scene of the original loot can report it, like any hostile act
 (MGT attribution).
 **Source.** design/item-list.md › Operation and faction items › Hand-in rules
@@ -640,7 +648,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 
 ## Open questions
 
-1. DAT-012 — Rounds fired by an `"auto"` fire mode and AP per shot action per mode are not designed.
+1. **Resolved (design 8972470):** burst 3 rounds +2 AP, full auto 5 rounds +4 AP on top of the weapon-type default fire AP (draft), per-weapon override `fireApCost`. DAT-012 — Rounds fired by an `"auto"` fire mode and AP per shot action per mode are not designed.
 2. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open.
 3. DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
    calibre), modifier arithmetic (add vs multiply) and the meaning of the muzzle `flash` value are not stated.
@@ -657,7 +665,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
     have `valueUsd`. Trader prices are needed for MGT trading.
 11. ITM-019 — Medical items have no weights; medkit "large; backpack item" cannot be checked against the
     1 kg pouch rule. Medkit HP per use is not stated.
-12. ITM-020 — Hemostatic dressing is called "the only fix for thorax and head bleeding in the field", yet the
+12. **Resolved (design 8972470):** the note now reads "Light and quick; the medkit also stops heavy bleeding in any zone" — both treat heavy bleeding in every zone. ITM-020 — Hemostatic dressing is called "the only fix for thorax and head bleeding in the field", yet the
     medkit also stops heavy bleeding.
 13. ITM-017 — Meaning of the battle-belt holster (does weapon 2 or a pistol sit there, does it change swap
     AP?). Does the 1 kg pouch rule (ITM-016) and type limits apply to belts? The item list names only vests
@@ -677,3 +685,6 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
     or a rules table may be preferable.
 22. DAT-006/DAT-013/ITM-005/ITM-007/ITM-010/ITM-012 — Constants placed in `data/tactical-rules.json`
     (proposed); must match the table TAC uses.
+23. DAT-011 — `feedType` is needed per weapon for the reload cost (TAC-041), but the item list gives none:
+    which LMGs are belt-fed, and do the bolt rifles (SV-98, M24) reload as `boltAction`, `stripperClip` or
+    `boxMagazine`; which shotguns are `tube`-fed? Only pistols map obviously (`pistol`).

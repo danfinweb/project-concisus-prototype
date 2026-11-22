@@ -3,7 +3,7 @@
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
   "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAI-009.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -50,7 +50,14 @@
       "id": { "type": "string" }, "missionId": { "type": "string" },
       "type": { "type": "string", "description": "e.g. capture VIP, escort cargo, hold position, scavenge" },
       "targets": { "type": "array", "items": { "type": "string" } } } } },
-    "battleGoal": { "type": "object", "description": "Per AI side: goal and acceptable-loss threshold from the strategic layer (TAI-009)" },
+    "battleGoal": {
+      "type": "object",
+      "description": "Per AI side (faction id → goal): the battle goal and acceptable-loss threshold from the strategic layer (TAI-004, TAI-009). The unit of acceptableLoss is open (TAI open question 9).",
+      "additionalProperties": { "type": "object", "required": ["goal"], "properties": {
+        "goal": { "type": "string" },
+        "targets": { "type": "array", "items": { "type": "string" } },
+        "acceptableLoss": { "type": "number", "minimum": 0 } } }
+    },
     "exits": { "type": "array", "items": { "type": "object", "properties": {
       "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] }, "params": { "type": "object" } } } },
     "vip": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "rank": { "enum": ["major", "colonel", "general", "leader"] } } }

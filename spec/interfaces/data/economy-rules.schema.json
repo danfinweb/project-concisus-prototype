@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "data/economy-rules.schema.json",
+  "title": "Economy rules",
+  "description": "Money formulas shared by the strategic layer (AI faction funds, STR-092, STR-093) and Management (the player's PMC, MGT-005, MGT-070). All values not set (design: Open).",
+  "version": "0.1.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
+  "type": "object",
+  "properties": {
+    "startFunds": { "type": "object", "description": "STR-092: faction id → starting money" },
+    "incomeFormula": { "type": "object", "description": "STR-092: income per held region and plant (per-POI-type income stays in data/poi.json)" },
+    "squadUpkeep": { "type": "object", "description": "STR-092: cost per squad per booking interval" },
+    "salaryFormula": { "type": "object", "description": "STR-092 / MGT-005" },
+    "payIntervalHours": { "type": "integer", "description": "STR-092 / MGT-005: booking interval" },
+    "lowLiquidity": { "type": "object", "description": "STR-069 sign 5: evaluation inputs" }
+  },
+  "additionalProperties": false
+}

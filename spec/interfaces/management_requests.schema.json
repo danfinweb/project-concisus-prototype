@@ -2,15 +2,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "management_requests.schema.json",
   "title": "Management requests",
-  "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: player services at a location, op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request. Spec: STR-004, STR-015, STR-029, STR-039..STR-043, MGT-002..MGT-005, MGT-039..MGT-051, MGT-056..MGT-064, MGT-068, MGT-070.",
-  "version": "0.1.0",
+  "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: player services at a location, op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request. Spec: STR-004, STR-015, STR-029, STR-039..STR-043, STR-093, MGT-002..MGT-005, MGT-039..MGT-051, MGT-056..MGT-060, MGT-064, MGT-068, MGT-070.",
+  "version": "0.2.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/management"],
   "type": "object",
   "required": ["time", "requests"],
   "properties": {
     "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
-    "requests": { "type": "array", "items": { "$ref": "#/$defs/request" } }
+    "requests": { "type": "array", "items": { "$ref": "#/$defs/request" } },
+    "results": {
+      "type": "array",
+      "description": "Management's answer, one per request. acceptContract and missionOutcome return paymentDue; Strategic deducts it from the employer's funds and sends contractPayment, only then Management credits the player (STR-093, MGT-047).",
+      "items": { "type": "object", "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "boolean" },
+        "error": { "type": "string" },
+        "paymentDue": { "type": "object", "properties": { "contractId": { "type": "string" }, "employer": { "type": "string", "x-ref": "factions" }, "amountUsd": { "type": "number", "minimum": 0 } } }
+      } }
+    }
   },
   "$defs": {
     "request": {
@@ -20,8 +30,9 @@
           "hire", "trade", "barter", "vehicleTrade", "acceptContract", "handOver", "handIn", "hospital", "repair", "refuel",
           "buyFob", "buyIntel", "payCompensation", "payOffBounty", "payKrugPass",
           "opReturn", "soldierFate", "healingTick", "plantOutput", "dailyRollover", "priceModifier", "localRecruits",
-          "reputationAct", "missionOutcome", "contractEnded"
+          "reputationAct", "missionOutcome", "contractEnded", "contractPayment"
         ] },
+        "employer": { "type": "string", "x-ref": "factions", "description": "contractPayment: the faction whose funds paid (STR-093)" },
         "location": { "type": "string", "description": "Region or POI where it happens" },
         "squad": { "type": "string" },
         "faction": { "type": "string", "x-ref": "factions" },

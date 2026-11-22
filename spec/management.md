@@ -47,10 +47,12 @@ The service number is unchanged. The player may also set `kit_marks` (cosmetic o
 ### [MGT-005] Salaries and renewals
 **Rule.** Each soldier has a salary paid from `economy` at a fixed interval and a contract term that must
 be renewed. No soldier has personal opinions; renewal is not refused for personal reasons.
-**Values.** salary per tier, pay interval, term length, consequence of non-payment — not set (design: not
-stated) → data/recruitment.json
+The salary formula is shared with the AI factions' salaries (STR-092).
+**Values.** salary formula and pay interval — not set (design: Open) → data/economy-rules.json (shared with
+STR-092); salary per tier, term length, consequence of non-payment — not set (design: not stated) →
+data/recruitment.json
 **Status.** open
-**Source.** design/design.md › Management › Soldiers & progression › Contracts & morale
+**Source.** design/design.md › Management › Soldiers & progression › Contracts & morale; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-006] Service record logging
 **Rule.** The game appends entries to a soldier's `service_record` automatically, each stamped with game
@@ -305,9 +307,11 @@ data/presets.json, data/management-rules.json
 
 ### [MGT-039] Faction traders
 **Rule.** Each employer faction has traders whose available stock is gated by the player's standing with
-that faction (MGT-055): Unfriendly or worse — no trade; Neutral — basic; Friendly — military gear;
-Trusted — armoured vehicles, helicopters, best stock. Trading takes no game time.
-**Values.** stock lists per faction and standing → data/traders.json
+that faction (MGT-055): Hostile — no trade; Unfriendly — basic stock at higher prices
+(`unfriendly_price_markup`); Neutral — basic; Friendly — military gear; Trusted — armoured vehicles,
+helicopters, best stock. Trading takes no game time.
+**Values.** stock lists per faction and standing → data/traders.json; `unfriendly_price_markup` — not set
+(design: Open) → data/management-rules.json
 **Source.** design/design.md › Management › Gear, loot & return › Traders; › Reputation › Standing
 
 ### [MGT-040] Krug market prices
@@ -351,7 +355,8 @@ on the board); or from world events and desperate measures (STR). Management sto
 
 ### [MGT-044] Mission outcome conditions
 **Rule.** Each mission resolves to `success` or `failure`, evaluated by STR/TAC and reported to
-Management:
+Management. A mission counts as completed (`success`) as soon as its goal is met, even if the squad is
+lost afterwards; later events of the op do not undo it (GEN-002):
 
 | Mission | Success | Failure |
 | --- | --- | --- |
@@ -366,7 +371,7 @@ Management:
 **Values.** "most of its cargo" fraction, handover hours — not set (design: not stated) →
 data/missions.json
 **Status.** open
-**Source.** design/design.md › Management › Contracts and missions › Mission types
+**Source.** design/design.md › Management › Contracts and missions › Mission types; › Overview › Core loop
 
 ### [MGT-045] Bundling missions into an op
 **Rule.** When planning an op (GEN-001) the player selects any missions from any signed contracts; one op
@@ -384,10 +389,13 @@ not stated)
 **Source.** design/design.md › Management › Contracts and missions › Pay bands
 
 ### [MGT-047] Advance and remainder
-**Rule.** On signing, `advance = round(pay × advance_fraction)` is credited to `economy`. On success the
-remaining `pay − advance` is credited.
+**Rule.** On signing, `advance = round(pay × advance_fraction)` is due; on success the remaining
+`pay − advance` is due. The money comes from the employer's funds, which Strategic owns: MGT names the
+payment due in its result (`contractId`, `employer`, `amountUsd`), Strategic deducts it from the
+employer's funds and sends a `contractPayment` request, and only then is the amount credited to `economy`
+(STR-093).
 **Values.** `advance_fraction` — 0.25 (draft) → data/management-rules.json
-**Source.** design/design.md › Management › Contracts and missions › Contract terms
+**Source.** design/design.md › Management › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-048] Contract failure
 **Rule.** On failure (a mission failed or the deadline passed with missions open): no further pay;
@@ -411,8 +419,10 @@ data/factions.json
 
 ### [MGT-051] Contract board and filtering
 **Rule.** Contract offers are shown on boards at FOBs, in cities, and (Krug work only) at Krug markets.
-An offer is shown only if the player's standing with its employer is Neutral or better; contracts marked
-sensitive require Trusted; better contracts require Friendly (MGT-055).
+An employer at standing Hostile shows no offers. At Unfriendly it shows fewer offers: only a share
+`unfriendly_contract_share` of its basic offers (selection seeded). Neutral or better shows all basic
+offers; contracts marked sensitive require Trusted; better contracts require Friendly (MGT-055).
+**Values.** `unfriendly_contract_share` — not set (design: Open) → data/management-rules.json
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › Reputation
 
 ### [MGT-052] Rival PMC competition
@@ -425,11 +435,13 @@ player as hostile (MGT-055).
 
 ### [MGT-053] Reputation value
 **Rule.** Each non-player faction (GEN-004) holds one integer reputation toward the player, range −100…100,
-starting at 0. Every change is clamped to the range. Reputation never drifts; it changes only through acts
-(MGT-056…MGT-060) and their spill-over (MGT-061…MGT-063). Reputation is also read as an input by world
-events, desperate measures and faction goals (STR).
+starting at 0. Every change is clamped to the range. Reputation never drifts; it changes with two things
+only: how the player handles contracts (MGT-056) and what the player does to the faction (MGT-057…MGT-059),
+applied by MGT-060. An act changes reputation only with the faction it directly affects; there is no
+spill-over to that faction's allies or enemies (MGT-061…MGT-063 removed). Reputation is also read as an
+input by world events, desperate measures and faction goals (STR).
 **Values.** `rep_min` — −100; `rep_max` — 100; `rep_start` — 0 → data/management-rules.json
-**Source.** design/design.md › Management › Reputation
+**Source.** design/design.md › Management › Reputation (draft)
 
 ### [MGT-054] Standing levels
 **Rule.** Standing is derived from reputation `r`: `hostile` if r ≤ −50; `unfriendly` if −49 ≤ r ≤ −20;
@@ -439,9 +451,10 @@ events, desperate measures and faction goals (STR).
 
 ### [MGT-055] Standing effects
 **Rule.**
-- `hostile`: the faction attacks player squads on sight (SAI) and may put a bounty on the PMC (STR); no
-  contracts, no trade.
-- `unfriendly`: no contracts, no trade; hostile to the player when competing for the same objective.
+- `hostile`: no contracts, no trade; the faction attacks player squads on sight (SAI) and may put a
+  bounty on the PMC (STR).
+- `unfriendly`: fewer contracts (MGT-051) and higher prices (MGT-039); hostile to the player when
+  competing for the same objective.
 - `neutral`: basic trade and basic contracts.
 - `friendly`: adds military gear and better contracts.
 - `trusted`: adds armoured vehicles, helicopters, best stock and sensitive contracts.
@@ -483,30 +496,26 @@ civilian loyalty in that region collapses (applied by STR). Attribution (MGT-064
 **Source.** design/design.md › Management › Reputation › What changes reputation
 
 ### [MGT-060] Act application order
-**Rule.** For each attributed act: apply the direct change (MGT-056…MGT-059) to the affected faction,
-clamp, then apply spill-over (MGT-061…MGT-063) computed from the direct change. Spill-over never triggers
-further spill-over.
-**Source.** design/design.md › Management › Reputation (structure implied; ordering is a spec decision)
+**Rule.** For each attributed act (MGT-064): apply its change (MGT-056…MGT-059) to the faction it directly
+affects, then clamp. No other faction's reputation changes from that act (no spill-over). The only act
+that directly affects several factions is a war crime (MGT-059, every faction). Acts apply in the order
+they are reported.
+**Source.** design/design.md › Management › Reputation (draft) (structure implied; ordering is a spec decision)
 
-### [MGT-061] Spill-over to hostile and allied factions
-**Rule.** When the player's reputation with faction F rises by `d > 0`, every faction H with relation(H, F)
-≤ −50 (GEN-007) changes by `−d × rep_spill_hostile`, and every faction A with relation(A, F) ≥ 50 changes
-by `+d × rep_spill_allied`. Falls produce no spill-over. Rounding: the design example (+10 → −5 and +2)
-implies rounding toward zero.
-**Values.** `rep_spill_hostile` — 0.5; `rep_spill_allied` — 0.25 → data/management-rules.json
-**Source.** design/design.md › Management › Reputation › Helping opposing factions
+### [MGT-061] Spill-over to hostile and allied factions (removed)
+**Rule.** Removed in design 8972470: the "Helping opposing factions" block is gone; an act changes
+reputation only with the faction it directly affects (MGT-053).
+**Source.** design/design.md › Management › Reputation (draft) (block removed)
 
-### [MGT-062] Krug exemption
-**Rule.** The Krug never takes spill-over from MGT-061. Its reputation changes only from acts that affect
-the Krug itself.
-**Source.** design/design.md › Management › Reputation › Helping opposing factions
+### [MGT-062] Krug exemption (removed)
+**Rule.** Removed in design 8972470: with no spill-over (MGT-061 removed) there is nothing to exempt the
+Krug from; Krug reputation changes only from acts that affect the Krug, like every faction (MGT-053).
+**Source.** design/design.md › Management › Reputation (draft) (block removed)
 
-### [MGT-063] Rival PMCs follow their patrons
-**Rule.** Whenever reputation with a patron (`ssv` for `varyag`, `vdk` for `aegis`, GEN-004) changes by
-`d` (direct or spill-over), the patron's PMC additionally changes by `d × rep_patron_follow`, on top of
-its own changes.
-**Values.** `rep_patron_follow` — 0.5 → data/management-rules.json
-**Source.** design/design.md › Management › Reputation › Helping opposing factions
+### [MGT-063] Rival PMCs follow their patrons (removed)
+**Rule.** Removed in design 8972470: Varyag and Aegis no longer follow their patrons' reputation changes;
+they change only from acts that affect them directly (MGT-053).
+**Source.** design/design.md › Management › Reputation (draft) (block removed)
 
 ### [MGT-064] Attribution
 **Rule.** An act changes reputation with the affected faction only if at least one member of that faction
@@ -559,8 +568,11 @@ stops delivering.
 **Rule.** `economy` holds the PMC's money balance and a list of debts. Each debt: creditor faction,
 amount, origin (e.g. unreturned advance, MGT-048; Krug deal). Paying a debt's full amount removes it
 (Krug: entry in Karsin's book, GEN-008). Every credit and debit is logged with game time. Whether the
-balance may go negative is not stated.
-**Source.** design/design.md › Management › Contracts and missions › Contract terms; › Factions & campaign › Leaders
+balance may go negative is not stated. The PMC's running costs and income use the same shared formulas as
+the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is credited only on a
+`contractPayment` request from Strategic (MGT-047, STR-093). AI factions' money is not in `economy`.
+**Values.** shared economy formulas — not set (design: Open) → data/economy-rules.json
+**Source.** design/design.md › Management › Contracts and missions › Contract terms; › Factions & campaign › Leaders; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-071] Campaign score
 **Rule.** At campaign end (GEN-012) a score is computed from money, reputation and surviving soldiers.
@@ -596,12 +608,15 @@ balance may go negative is not stated.
     booked as debt?
 15. MGT-050: deniability chance per employer; whether disowned contracts are paid.
 16. MGT-052: does a rival completing the mission first count as failure (with −5 reputation)?
-17. MGT-055: the design gives Unfriendly "no contracts or trade" but does not say Hostile also blocks them;
+17. **Resolved (design 8972470):** Hostile now explicitly means no contracts or trade; Unfriendly means
+    fewer contracts and higher prices (MGT-039, MGT-051, MGT-055). MGT-055: the design gives Unfriendly "no contracts or trade" but does not say Hostile also blocks them;
     spec assumes it does.
 18. MGT-056: mapping from pay band to +5…+15; MGT-057: rule for +1…+3 supply sales.
-19. MGT-061: rounding of spill-over (example implies toward zero, −5 and +2.5→+2). Does spill-over to a rival
+19. **Resolved (design 8972470):** spill-over and patron follow are removed (MGT-061…MGT-063), so neither
+    rounding nor stacking applies. MGT-061: rounding of spill-over (example implies toward zero, −5 and +2.5→+2). Does spill-over to a rival
     PMC (MGT-063) stack with spill-over from relations to the same PMC?
-20. MGT-060: ordering and no-cascade rule is a spec decision; confirm.
+20. **Resolved (design 8972470):** with no spill-over an act changes only the faction it directly affects,
+    so there is no cascade; acts apply in reported order (MGT-060). MGT-060: ordering and no-cascade rule is a spec decision; confirm.
 21. MGT-064: who counts as a witness (sight, radio, any survivor of the fight)?
 22. MGT-066: is the stash per FOB or shared across FOBs? Transfer of items between FOBs?
 23. MGT-067, MGT-068, MGT-069: service prices, industry output amounts, mineral boost size (TBD), FOB loss
@@ -610,3 +625,14 @@ balance may go negative is not stated.
 25. MGT-071: score formula.
 26. MGT-011: who decides between MIA, captured and dead for soldiers left behind (STR or TAC), and can MIA
     soldiers return later (implied by the "Revenant" deed)?
+27. MGT-039, MGT-051: "fewer contracts and higher prices" at Unfriendly has no numbers; spec models them as
+    `unfriendly_contract_share` and `unfriendly_price_markup`. Confirm the model (share of offers vs. only
+    some contract types) and whether Unfriendly traders sell only basic stock.
+28. MGT-047, STR-093: what happens when the employer's funds cannot cover a payment due (late payment,
+    debt owed to the player, contract fails)? VDK "late payments" suggests delay.
+29. MGT-048: is a repaid advance credited back to the employer's funds (STR-093)?
+30. MGT-005, MGT-070: which of the player's costs and incomes use the shared `data/economy-rules.json`
+    formulas (salaries only, or FOB upkeep and plant income too)?
+31. MGT-044: "completed as soon as the goal is met" — for missions whose goal is a delivery or hand-over
+    (retrieve_deliver, capture_vip), the goal is met only at the destination; for assassinate_vip it is the
+    confirmed kill. Confirm that no mission needs the squad to return to an FOB.

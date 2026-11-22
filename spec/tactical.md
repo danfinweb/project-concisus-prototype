@@ -38,9 +38,9 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › Turn and activation
 
 ### [TAC-006] Action points per activation
-**Rule.** Full AP = 25 + floor(Agility ÷ 10) (range 25–35 for Agility 1–100). AP for this activation = full AP − sum of active AP modifiers (suppression TAC-015, stun TAC-025, pain TAC-026, over-encumbrance TAC-027), never below 0. AP is spent on movement, stance, turning, aiming, firing, reloading, medical and gear actions.
+**Rule.** Full AP = 25 + floor(Agility ÷ 10) (range 25–35 for Agility 1–100). AP for this activation = full AP − sum of active AP modifiers (suppression TAC-015, stun TAC-025, pain TAC-026, over-encumbrance TAC-027), never below 0. These four are the only AP modifiers: wounds do not reduce the AP pool; they raise the cost of the actions that use the wounded zone (TAC-029, TAC-040, TAC-041, TAC-043). AP is spent on movement, stance, turning, aiming, firing, reloading, medical and gear actions.
 **Values.** `apBase` — 25, `apAgilityDivisor` — 10 → data/tactical-rules.json
-**Source.** design/design.md › Tactical Layer (Action points); design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md › Turn and activation
+**Source.** design/design.md › Tactical Layer (Action points); design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md › Turn and activation, AP modifiers on an activation
 
 ### [TAC-007] Set facing at end of activation
 **Rule.** When an activation ends, the soldier's final facing (one of 8 directions) is set at no AP cost.
@@ -92,9 +92,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Turn structure › Vision and facing; design/design.md › Tactical Layer (Cover & visibility); design/item-list.md › Helmets
 
 ### [TAC-017] Turning during an activation
-**Rule.** Changing facing during an activation (other than the free final facing, TAC-007) costs `turnCost` AP.
-**Values.** `turnCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** Changing facing on the spot during an activation costs `turnCost` AP per 90° or part of it (a 45° turn costs as much as a 90° turn; 135° costs 2 × `turnCost`). Turning along a path while moving is free, and the final facing is free (TAC-007).
+**Values.** `turnCost` — 1 (draft) → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Turn structure › Vision and facing; design/tactical-actions.md › Movement
 
 ### [TAC-018] Gunshot hearing range
@@ -114,9 +113,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation
 
 ### [TAC-021] Reaction setting
-**Rule.** Each soldier has a reaction setting: Fire, Take cover or Hold (stay hidden, no reaction). It is chosen during the soldier's activation and persists until changed; it is applied automatically, with no prompts during the opponent's move.
-**Values.** `setReactionCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** Each soldier has a reaction setting: Fire, Take cover or Hold (stay hidden, no reaction). It is chosen during the soldier's activation and persists until changed; it is applied automatically, with no prompts during the opponent's move. Setting it is free and it can be changed any number of times within the activation.
+**Values.** `setReactionCost` — 0 (draft: free) → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation
 
 ### [TAC-022] Reaction attempt cost and chance
@@ -132,24 +130,24 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 ## Action costs and AP modifiers
 
 ### [TAC-024] Action cost composition
-**Rule.** Every action cost = base value per action (from data), adjusted by attributes, gear and wounds as stated in the action's section, rounded down to a whole number, minimum 1 for any action with a non-zero base. An action that costs more AP than the soldier has left cannot be started.
-**Source.** design/design.md › Tactical Layer › Actions and costs; design/design.md › Management › Soldier attributes › Derived values
+**Rule.** Every action cost = base value per action (from data), adjusted by attributes, gear and wounds as stated in the action's section. Additive terms (attribute and ergonomics thresholds, surcharges) are applied first; multipliers (e.g. fracture ×1.5) apply to the whole sum; the result is rounded down to a whole number and is never below 1 AP. Actions defined as free (cost 0: pass, final facing, set reaction, leave the map) are exempt from the minimum. An action that costs more AP than the soldier has left cannot be started. Attribute thresholds ("Agility 70+") mean attribute ≥ threshold; "ergonomics 30 or below" means ≤ 30.
+**Source.** design/design.md › Tactical Layer › Actions and costs; design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md (intro: whole numbers, rounded down after any multiplier, never below 1 AP)
 
 ### [TAC-025] Stun (head hit)
-**Rule.** A hit to the head zone that does not kill has a chance to stun; a stunned soldier loses AP on their next activation, then the stun clears.
-**Values.** `stunChance` — not set (design: Open), `stunApLoss` — not set (design: Open) → data/tactical-rules.json
+**Rule.** A hit to the head zone that does not kill has a chance to stun; a stunned soldier loses `stunApLoss` AP on their next activation, then the stun clears.
+**Values.** `stunChance` — not set (design: Open), `stunApLoss` — 10 (draft) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › AP modifiers on an activation
 
 ### [TAC-026] Pain AP loss
-**Rule.** A soldier in pain (TAC-063) loses AP on each activation and has added shooter spread until the pain is masked (painkillers) or ends.
-**Values.** `painApLoss` — not set (design: Open), `painSpread` — not set (design: Open) → data/tactical-rules.json
+**Rule.** A soldier in pain (TAC-063) loses `painApLoss` AP on each activation and has added shooter spread until the pain is masked (painkillers) or ends. Pain also raises the aim-step cost (TAC-040).
+**Values.** `painApLoss` — 4 (draft), `painSpread` — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions; design/tactical-actions.md › AP modifiers on an activation
 
 ### [TAC-027] Over-encumbrance
-**Rule.** If total carried weight (all seven equipment slots and contents) exceeds the soldier's carry capacity, the soldier is over-encumbered: AP penalty on each activation (Strength lowers it) and the activation stamina surcharge (TAC-008). Carry capacity derives from Strength (main) and Endurance (minor); formula not set (design: Open), owned by MGT/DAT.
-**Values.** `encumbranceApPenalty` — not set (design: Open) → data/tactical-rules.json
+**Rule.** If total carried weight (all seven equipment slots and contents) exceeds the soldier's carry capacity, the soldier is over-encumbered: −`encumbranceApPenalty` AP on each activation, or −`heavyEncumbranceApPenalty` AP instead if carried weight exceeds `heavyEncumbranceThreshold` × carry capacity (the two do not stack), plus the activation stamina surcharge (TAC-008). Strength lowers the penalty for heavy kit (amount not set, design: Open). Carry capacity derives from Strength (main) and Endurance (minor); formula not set (design: Open), owned by MGT/DAT.
+**Values.** `encumbranceApPenalty` — 5 (draft), `heavyEncumbranceApPenalty` — 10 (draft), `heavyEncumbranceThreshold` — 1.25 (draft) → data/tactical-rules.json; Strength reduction — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer (Action points); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Data definitions › Soldier equipment slots
 
@@ -161,40 +159,35 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer (Movement)
 
 ### [TAC-029] Walk one tile
-**Rule.** Walking one tile costs `walkCost` + terrain cost of the destination tile (road, grass, mud, rubble, stairs). A diagonal step adds `diagonalSurcharge`. Each wounded leg adds `legWoundMoveSurcharge`. If either leg has a fracture, the total step cost is × `fractureMoveFactor`, rounded down.
-**Values.** `walkCost` — 2, `diagonalSurcharge` — not set (design: Open), `legWoundMoveSurcharge` — not set (design: Open), `fractureMoveFactor` — 1.5 → data/tactical-rules.json; per-terrain `moveCost` — not set (design: Open) → data/terrain.json
-**Status.** open
-**Source.** design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement; design/design.md › Tactical Layer › Medical system › Conditions
+**Rule.** Walking one tile costs `walkCost` (orthogonal step) or `diagonalWalkCost` (diagonal step, instead of `walkCost`) + terrain cost of the destination tile. Each wounded leg (below `woundedThreshold` of its max HP, TAC-062) adds `legWoundMoveSurcharge` per tile. If either leg has a fracture, the whole tile cost (base + terrain + stance, sprint and carry terms + leg-wound surcharge) is × `fractureMoveFactor`, then rounded down (TAC-024).
+**Values.** `walkCost` — 2, `diagonalWalkCost` — 3 (draft), `legWoundMoveSurcharge` — 1 (draft), `fractureMoveFactor` — 1.5 → data/tactical-rules.json; per-terrain `moveCost` (draft): road, floor, grass 0; mud, shallow water, rubble, dense brush 1; stairs 1 → data/terrain.json
+**Source.** design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement (Walk one tile, Leg wound surcharge); design/design.md › Tactical Layer › Medical system › Conditions
 
 ### [TAC-030] Move crouched
-**Rule.** A step while crouched costs the walk cost (TAC-029) + `crouchSurcharge`.
-**Values.** `crouchSurcharge` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** A step while crouched costs the walk cost (TAC-029) + `crouchSurcharge` per tile.
+**Values.** `crouchSurcharge` — 1 (draft) → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement
 
 ### [TAC-031] Crawl prone
-**Rule.** A step while prone costs the walk cost + `proneSurcharge`, with `proneSurcharge` > `crouchSurcharge`.
-**Values.** `proneSurcharge` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** A step while prone costs the walk cost + `proneSurcharge` per tile, with `proneSurcharge` > `crouchSurcharge`. No sprinting, vaulting or climbing while prone (TAC-055).
+**Values.** `proneSurcharge` — 3 (draft) → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement
 
 ### [TAC-032] Sprint
-**Rule.** A soldier may sprint while upright; AP cost per sprinted tile not set (design: Open). Sprinting during an activation adds the stamina surcharge (TAC-008) and makes reactions against the mover easier (TAC-022). Not possible while prone, with a leg fracture, or while wearing a backpack flagged `noSprint` (e.g. large rucksack).
-**Values.** `sprintCost` — not set (design: Open) → data/tactical-rules.json; backpack `noSprint` → data/items.json
-**Status.** open
+**Rule.** A soldier may sprint while upright only. A sprinted tile costs the walk cost (TAC-029, incl. terrain and leg-wound surcharge) − `sprintDiscount`, never below 1 AP per tile. Sprinting during an activation adds the stamina surcharge (TAC-008) and makes reactions against the mover easier (TAC-022). Not possible while prone, with a leg fracture, while carrying a squadmate (TAC-074), or while wearing a backpack flagged `noSprint` (e.g. large rucksack).
+**Values.** `sprintDiscount` — 1 (draft) → data/tactical-rules.json; backpack `noSprint` → data/items.json
 **Source.** design/tactical-actions.md › Movement; design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Backpacks
 
 ### [TAC-033] Change stance
-**Rule.** Stances: upright, crouched, prone. Changing stance costs AP per transition; getting up from prone costs the most. Agility affects stance-change cost (formula not set).
-**Values.** `stanceCost` per transition (upright↔crouched, crouched↔prone, prone→upright) — not set (design: Open) → data/tactical-rules.json
+**Rule.** Stances: upright, crouched, prone. Changing stance costs AP per transition; getting up from prone costs the most. The cost of upright → prone is not stated (design: Open). Agility affects stance-change cost (design.md attribute table; formula not set, tactical-actions gives no Agility term).
+**Values.** `stanceCost` per transition (draft): upright → crouched 2, crouched → upright 2, crouched → prone 2, prone → crouched 4, prone → upright 6; upright → prone — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement; design/design.md › Management › Soldier attributes
 
 ### [TAC-034] Vault a window, climb a ladder
-**Rule.** Vaulting a window or climbing a ladder costs AP depending on Agility; not possible while prone (the soldier must change stance first).
-**Values.** `vaultCost`, `climbCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
-**Source.** design/design.md › Tactical Layer (Movement), Body zones and hitboxes › Stance; design/tactical-actions.md › Movement
+**Rule.** Vaulting a window or low wall costs `vaultCost` AP, or `vaultCostAgile` if Agility ≥ `agileThreshold`. Climbing a ladder costs `climbCost` AP per level, or `climbCostAgile` per level if Agility ≥ `agileThreshold`. Neither is possible while prone (the soldier must change stance first); climbing is not possible while carrying a squadmate (TAC-074).
+**Values.** `vaultCost` — 4 (draft), `vaultCostAgile` — 3 (draft), `climbCost` — 4 per level (draft), `climbCostAgile` — 3 per level (draft), `agileThreshold` — 70 (draft) → data/tactical-rules.json
+**Source.** design/design.md › Tactical Layer (Movement), Body zones and hitboxes › Stance; design/tactical-actions.md › Movement (Vault a window or low wall, Climb a ladder)
 
 ### [TAC-035] Cover per tile edge
 **Rule.** Cover is stored per tile edge with value none, half or full. Half cover is a ~1.0 m high edge; full cover blocks the whole silhouette. Cover objects have a destructible material (prefab/terrain data). The preview shows per edge where a soldier is protected.
@@ -210,40 +203,35 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer (Movement)
 
 ### [TAC-038] Leave the map at an exit
-**Rule.** Each map has exits (count from map generation); each exit carries its own condition (vehicle fuel, a boat at a set turn, a paid crossing). A soldier on an exit tile whose condition is met may leave the map; AP cost not set (design: Open). Soldiers who left are out of the battle and count as survivors in the battle result.
-**Values.** `exitCost` — not set (design: Open) → data/tactical-rules.json; exit conditions → data/mapgen/tactical.json
-**Status.** open
+**Rule.** Each map has exits (count from map generation); each exit carries its own condition (vehicle fuel, a boat at a set turn, a paid crossing). A soldier who ends a move on an exit tile whose condition is met may leave the map; leaving is free. Soldiers who left are out of the battle and count as survivors in the battle result.
+**Values.** `exitCost` — 0 (draft: free) → data/tactical-rules.json; exit conditions → data/mapgen/tactical.json
 **Source.** design/tactical-actions.md › Turn and activation; design/design.md › Management › Gear, loot & return
 
 ## Weapons
 
 ### [TAC-039] Fire
-**Rule.** A shot action uses one fire mode of the equipped weapon (weapon field `fireModes`, e.g. [1, 3] or [1, auto]); the mode sets rounds fired and AP cost. Each round consumes one cartridge from the loaded magazine; firing with an empty magazine is not allowed. Rounds in a burst are resolved in order with growing recoil spread (TAC-047).
-**Values.** per-mode `rounds`, `apCost` — not set (design: Open, per weapon) → data/items.json
-**Status.** open
-**Source.** design/tactical-actions.md › Weapons; design/design.md › Data definitions › Weapon profile
+**Rule.** A shot action uses one fire mode of the equipped weapon (weapon field `fireModes`, e.g. [1, 3] or [1, auto]); the mode sets rounds fired and AP cost. Mode 1 fires one round; a burst mode fires `burstRounds` rounds (the design's burst is 3 rounds, i.e. mode 3); `"auto"` fires `autoRounds` rounds. AP cost = fire AP of the weapon (its `fireApCost` override if set, else `fireApByWeaponType` for its `weaponType`) + `burstApSurcharge` (burst) or `autoApSurcharge` (auto) − `ergoApDelta` if ergonomics ≥ `ergoHighThreshold` + `ergoApDelta` if ergonomics ≤ `ergoLowThreshold`, then TAC-024. Each round consumes one cartridge from the loaded magazine; firing with an empty magazine is not allowed. Rounds in a burst are resolved in order with growing recoil spread (TAC-047).
+**Values.** `fireApByWeaponType` (draft): `pistol` 4, `smg` 5, `assaultRifle` 6, `shotgun` 6, `battleRifle` 7, `dmr` 7, `lmg` 8, `sniperRifle` (bolt-action) 9; `burstRounds` — 3, `burstApSurcharge` — 2, `autoRounds` — 5, `autoApSurcharge` — 4, `ergoHighThreshold` — 70, `ergoLowThreshold` — 30, `ergoApDelta` — 1 (all draft) → data/tactical-rules.json; per-weapon `fireApCost` override → data/items.json
+**Source.** design/tactical-actions.md › Weapons (Fire); design/design.md › Data definitions › Weapon profile
 
 ### [TAC-040] Aim longer
-**Rule.** Before a shot, the soldier may spend extra AP in aim steps; each step reduces shooter spread (TAC-044). Aim-step cost is lowered by Marksmanship and weapon ergonomics and raised by arm wounds and pain.
-**Values.** `aimStepCost`, `aimSpreadReduction`, `maxAimSteps` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
-**Source.** design/design.md › Tactical Layer (Action points); design/tactical-actions.md › Weapons
+**Rule.** Before a shot, the soldier may spend up to `maxAimSteps` aim steps; each step lowers shooter spread (TAC-044) by `aimSpreadReduction`. Cost per step = `aimStepCost`, or `aimStepCostSkilled` if Marksmanship ≥ `aimSkilledThreshold`; + `aimWoundSurcharge` per step if the aiming arm is wounded (below `woundedThreshold` of its max HP) or the soldier is in pain (TAC-063). Tactical-actions gives no ergonomics term for aiming (see open questions).
+**Values.** `aimStepCost` — 2 (draft), `aimStepCostSkilled` — 1 (draft), `aimSkilledThreshold` — 75 (draft), `maxAimSteps` — 3 (draft), `aimSpreadReduction` — 0.15 per step (placeholder), `aimWoundSurcharge` — 1 (draft) → data/tactical-rules.json
+**Source.** design/design.md › Tactical Layer (Action points); design/tactical-actions.md › Weapons (Aim longer)
 
 ### [TAC-041] Reload
-**Rule.** Reloading replaces the magazine with one from the vest or belt at normal cost, or from the backpack at normal cost + backpack surcharge (TAC-068). Cost lowered by Marksmanship (main), Agility (minor) and ergonomics; raised by arm wounds and arm fractures. The magazine item may modify reload cost.
-**Values.** `reloadBaseCost` — not set (design: Open) → data/tactical-rules.json; magazine `reloadModifier` → data/items.json
-**Status.** open
-**Source.** design/tactical-actions.md › Weapons; design/design.md › Data definitions › Weapon profile, Soldier equipment slots
+**Rule.** Reloading replaces the magazine with one from the vest or belt at normal cost, or from the backpack at normal cost + backpack surcharge (TAC-068). Base cost = `reloadApByFeedType` for the weapon's `feedType`; a tube-fed weapon loads shells one at a time at `reloadApByFeedType.tube` per shell. Cost = base − `reloadSkilledBonus` if Marksmanship ≥ `reloadSkilledThreshold` − `ergoApDelta` if ergonomics ≥ `ergoHighThreshold` + `ergoApDelta` if ergonomics ≤ `ergoLowThreshold` + `backpackSurcharge` if the magazine comes from the backpack + `woundedArmReloadSurcharge` if an arm is wounded (below `woundedThreshold` of its max HP); × `armFractureReloadFactor` if an arm is fractured; then TAC-024. The magazine item may modify reload cost (DAT-016 `reloadAp`). Design.md also names Agility (minor) for reload; tactical-actions gives no Agility term (see open questions).
+**Values.** `reloadApByFeedType` (draft): `pistol` 4, `boxMagazine` 5, `stripperClip` 6, `boltAction` 6, `belt` 10, `tube` 2 per shell; `reloadSkilledThreshold` — 70, `reloadSkilledBonus` — 1, `woundedArmReloadSurcharge` — 2, `armFractureReloadFactor` — 1.5 (all draft) → data/tactical-rules.json; weapon `feedType`, magazine `reloadAp` modifier → data/items.json
+**Source.** design/tactical-actions.md › Weapons (Reload); design/design.md › Data definitions › Weapon profile, Soldier equipment slots
 
 ### [TAC-042] Swap weapon 1 and 2
-**Rule.** Switching the active weapon between slots Weapon 1 and Weapon 2 costs AP depending on Marksmanship, Agility and the ergonomics of the weapon being readied.
-**Values.** `swapBaseCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
-**Source.** design/tactical-actions.md › Weapons; design/design.md › Data definitions › Soldier equipment slots
+**Rule.** Switching the active weapon between slots Weapon 1 and Weapon 2 costs `swapCost` AP, or `swapCostPistol` when either weapon has `weaponType: pistol`; − `swapAgileBonus` if Agility ≥ `agileThreshold`; + `swapHeavySurcharge` if a weapon over `swapHeavyKg` (effective weight, DAT-016) is involved; then TAC-024. Design.md also names Marksmanship and ergonomics for swaps; tactical-actions gives no such terms (see open questions).
+**Values.** `swapCost` — 3, `swapCostPistol` — 2, `swapAgileBonus` — 1, `swapHeavyKg` — 6, `swapHeavySurcharge` — 2 (all draft) → data/tactical-rules.json; `agileThreshold` (TAC-034)
+**Source.** design/tactical-actions.md › Weapons (Swap between weapon 1 and 2); design/design.md › Data definitions › Soldier equipment slots
 
 ### [TAC-043] Throw a grenade
-**Rule.** Throwing a grenade from the vest or belt costs normal AP (backpack: + surcharge). Strength sets the maximum throwing distance. Grenade effects are item data.
-**Values.** `throwBaseCost`, throw-distance formula — not set (design: Open) → data/tactical-rules.json
+**Rule.** Throwing a grenade from the vest or belt costs `throwCost` AP; from the backpack + `backpackSurcharge` (TAC-068); + `woundedArmThrowSurcharge` if the throwing arm is wounded (below `woundedThreshold` of its max HP). Strength sets the maximum throwing distance. Grenade effects are item data.
+**Values.** `throwCost` — 5 (draft), `woundedArmThrowSurcharge` — 1 (draft) → data/tactical-rules.json; throw-distance formula — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/tactical-actions.md › Weapons; design/design.md › Management › Soldier attributes
 
@@ -261,7 +249,7 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Calibre profile
 
 ### [TAC-046] Hit chance and shot preview
-**Rule.** Before firing, the preview runs `previewSamples` traces with the same model and reports: hit % (share of traces hitting the target), most likely body zone (and distribution per zone), and whether the round would penetrate that zone's armour (TAC-050). Preview sampling uses a separate RNG stream so it never changes the battle RNG sequence. Hit chance is therefore the share of the cone covered by visible body zones after cover.
+**Rule.** Before firing, the preview runs `previewSamples` traces with the same model and reports: hit % (share of traces hitting the target), most likely body zone (and distribution per zone), and whether the round would penetrate that zone's armour (TAC-050). Preview sampling uses its own RNG stream (separate from the battle seed's stream) so looking at a preview never changes the battle RNG sequence, a real shot or a replay. Hit chance is therefore the share of the cone covered by visible body zones after cover.
 **Values.** `previewSamples` — "a few hundred" (no exact value) → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Hit model; design/design.md › Tactical Layer (Readability)
 
@@ -326,8 +314,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes › Derived values
 
 ### [TAC-058] Zone damage effects
-**Rule.** Damage to a zone may trigger: head → stun chance (TAC-025); thorax → high bleeding chance (TAC-060/061); arm (wounded) → more aim and reload AP, more shooter spread; leg (wounded) → higher movement cost (TAC-029), max stamina −1 (TAC-009).
-**Values.** per-zone bleeding chances, arm wound aim/reload/spread modifiers — not set (design: Open) → data/tactical-rules.json
+**Rule.** Damage to a zone may trigger: head → stun chance (TAC-025); thorax → high bleeding chance (TAC-060/061); arm (wounded, TAC-062) → more aim AP (TAC-040), reload AP (TAC-041) and throw AP (TAC-043), more shooter spread; leg (wounded) → higher movement cost (TAC-029), max stamina −1 (TAC-009). Wounds never reduce the AP pool (TAC-006).
+**Values.** arm wound AP surcharges — see TAC-040 (`aimWoundSurcharge` 1), TAC-041 (`woundedArmReloadSurcharge` 2), TAC-043 (`woundedArmThrowSurcharge` 1) (draft); per-zone bleeding chances, arm wound spread modifier — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone
 
@@ -348,8 +336,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions
 
 ### [TAC-062] Fracture
-**Rule.** Caused by heavy hits or falls on arms and legs. Arm fracture: more aim spread and slower reloads. Leg fracture: movement cost × 1.5 (TAC-029), no sprinting. Treated by splint. A "wounded" zone = a zone below its max HP or with an untreated fracture.
-**Values.** `fractureChance`, fracture damage threshold, arm-fracture spread/reload modifiers — not set (design: Open) → data/tactical-rules.json
+**Rule.** Caused by heavy hits or falls on arms and legs. Arm fracture: more aim spread and reload cost × 1.5 (TAC-041). Leg fracture: movement cost × 1.5 (TAC-029), no sprinting. Treated by splint. A "wounded" arm or leg = a limb below `woundedThreshold` of its max HP; healing it to or above that share removes the wounded state. Fracture effects apply on their own, whether or not the limb is wounded.
+**Values.** `woundedThreshold` — 0.5 (draft) → data/tactical-rules.json; `armFractureReloadFactor` — 1.5 (draft, TAC-041); `fractureChance`, fracture damage threshold, arm-fracture spread modifier — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions
 
@@ -382,21 +370,19 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 ## Gear and interaction
 
 ### [TAC-068] Item access tiers
-**Rule.** Using an item (magazine, grenade, medical, other) from the load-bearing vest or battle belt costs the item's normal AP. From the backpack: item AP + `backpackSurcharge`; a backpack flagged awkward (duffel bag) adds its own extra (value open).
-**Values.** `backpackSurcharge` — not set (design: Open) → data/tactical-rules.json; backpack `extraAccessCost` → data/items.json
+**Rule.** Using an item (magazine, grenade, medical, other) from the load-bearing vest or battle belt costs the item's normal AP. From the backpack: item AP + `backpackSurcharge`, the same for every item; a backpack flagged awkward (duffel bag) adds its own extra (value open).
+**Values.** `backpackSurcharge` — 4 (draft) → data/tactical-rules.json; backpack `extraAccessAp` (ITM-018) — not set (design: "extra AP") → data/items.json
 **Status.** open
 **Source.** design/tactical-actions.md › Gear and interaction, Medical; design/design.md › Data definitions › Soldier equipment slots; design/item-list.md › Backpacks
 
 ### [TAC-069] Drop the backpack
-**Rule.** A soldier may drop the backpack onto their tile during an activation; it and its contents stay on the map as lootable and its weight no longer counts.
-**Values.** `dropBackpackCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** A soldier may drop the backpack onto their tile during an activation for `dropBackpackCost` AP; it and its contents stay on the map as lootable and its weight no longer counts. A soldier with an empty backpack slot on the backpack's tile may pick it up again (with its contents) for `pickUpBackpackCost` AP.
+**Values.** `dropBackpackCost` — 1 (draft), `pickUpBackpackCost` — 4 (draft) → data/tactical-rules.json
 **Source.** design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots
 
 ### [TAC-070] Pick up or loot
-**Rule.** A soldier on or adjacent to items, bodies or containers may move items into free slot capacity (weight and type limits per DAT). Items not in a slot at battle end stay on the map; only items carried off the map or into the vehicle's storage count as loot in the battle result.
-**Values.** `lootCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** A soldier on or adjacent to items, bodies or containers may move items into free slot capacity (weight and type limits per DAT) for `lootCost` AP per item taken. Opening a container or searching a body first costs `openContainerCost` AP and shows its contents. Items not in a slot at battle end stay on the map; only items carried off the map or into the vehicle's storage count as loot in the battle result.
+**Values.** `lootCost` — 2 per item (draft), `openContainerCost` — 3 (draft) → data/tactical-rules.json
 **Source.** design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots
 
 ### [TAC-071] Cut a lock
@@ -405,37 +391,35 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/tactical-actions.md › Gear and interaction
 
 ### [TAC-072] Place a demolition charge
-**Rule.** A soldier carrying a demolition charge may place it on an adjacent target; cost and success depend on Technical. Detonation triggers destruction recalculation (TAC-036).
-**Values.** `placeChargeCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** A soldier carrying a demolition charge may place it on an adjacent target for `placeChargeCost` AP, or `placeChargeCostSkilled` if Technical ≥ `placeChargeSkilledThreshold`. Detonation triggers destruction recalculation (TAC-036).
+**Values.** `placeChargeCost` — 8 (draft), `placeChargeCostSkilled` — 6 (draft), `placeChargeSkilledThreshold` — 50 (draft) → data/tactical-rules.json
 **Source.** design/tactical-actions.md › Gear and interaction
 
 ### [TAC-073] Restrain a VIP
-**Rule.** In a capture mission, a soldier adjacent to the VIP may restrain them only once the VIP has surrendered or is wounded.
-**Values.** `restrainCost` — not set (design: Open) → data/tactical-rules.json
-**Status.** open
+**Rule.** In a capture mission, a soldier on a tile adjacent to the VIP may restrain them for `restrainCost` AP, only once the VIP has surrendered or is wounded.
+**Values.** `restrainCost` — 6 (draft) → data/tactical-rules.json
 **Source.** design/tactical-actions.md › Gear and interaction
 
 ### [TAC-074] Carry or drag a wounded squadmate
-**Rule.** Named as a deed in the design but not yet defined as an action; reserved.
-**Status.** open
-**Source.** design/tactical-actions.md › Gear and interaction
+**Rule.** A soldier adjacent to a wounded squadmate may lift them for `liftCost` AP to carry or drag them, and put them down for `putDownCost` AP. Carrying: the carrier must be upright; each tile costs the walk cost (TAC-029) + `carryMoveSurcharge`; no sprinting (TAC-032) or climbing (TAC-034). Dragging: possible upright or crouched; each tile costs the walk cost (plus the crouch surcharge when crouched, TAC-030) + `dragMoveSurcharge`.
+**Values.** `liftCost` — 4, `putDownCost` — 2, `carryMoveSurcharge` — 2 per tile, `dragMoveSurcharge` — 3 per tile (all draft) → data/tactical-rules.json
+**Source.** design/tactical-actions.md › Gear and interaction (Carry or drag a wounded squadmate)
 
 ## Open questions
 
-1. TAC-006 / TAC-058: design.md says leg or arm wounds reduce the AP pool for the activation; tactical-actions.md lists only suppression, stun, pain and over-encumbrance as AP modifiers and treats arm wounds as raising aim/reload cost and leg wounds as raising movement cost. Which applies?
-2. TAC-009 / TAC-058 / TAC-062: "wounded" leg/arm is undefined. Spec assumes "below max HP or fractured"; does any scratch count, and does healing to full remove it?
-3. TAC-008: the +1 stamina surcharge depends on sprinting during the activation, but stamina is checked at activation start. Spec charges it at the end (floored at 0). Confirm, and confirm whether a soldier with exactly 2 stamina may sprint.
+1. **Resolved (design 8972470):** wounds do not reduce the AP pool; they raise the cost of the actions that use the wounded zone (design.md no longer lists leg/arm wounds as turn modifiers). TAC-006 / TAC-058: design.md says leg or arm wounds reduce the AP pool for the activation; tactical-actions.md lists only suppression, stun, pain and over-encumbrance as AP modifiers and treats arm wounds as raising aim/reload cost and leg wounds as raising movement cost. Which applies?
+2. **Resolved (design 8972470):** an arm or leg counts as wounded below 50% of its max HP (TAC-062 `woundedThreshold`); healing it above that removes the state. TAC-009 / TAC-058 / TAC-062: "wounded" leg/arm is undefined. Spec assumes "below max HP or fractured"; does any scratch count, and does healing to full remove it?
+3. **Resolved (design 8972470):** the surcharge is charged when the activation ends, as specced. Still open: whether a soldier with exactly 2 stamina may sprint. TAC-008: the +1 stamina surcharge depends on sprinting during the activation, but stamina is checked at activation start. Spec charges it at the end (floored at 0). Confirm, and confirm whether a soldier with exactly 2 stamina may sprint.
 4. TAC-011: does a soldier who made reaction attempts in a turn still recover stamina that turn? Spec: yes (reacting is not activation).
 5. TAC-013: "contact" and "skip ahead until something changes" are undefined for the stall rule.
 6. TAC-015: what counts as "cover is hit" (any shot hitting an edge the soldier is behind? only shots aimed at them?), and is the suppression spread increase a fixed amount? Nerve's reduction is not quantified.
 7. TAC-003: boundaries — is exactly 21:00 night and exactly 06:00 day? Spec uses [06:00, 21:00) as day.
 8. TAC-004: no formula for base sight/spotting range (Perception + Recon), nor for flashlight blinding.
 9. TAC-019: the "alerted" state has no defined effect.
-10. TAC-020 / TAC-036: the reaction trigger is "an opposing soldier moves into or through the cone", but destruction "can trigger reactions on newly opened sightlines" without movement. Does a non-moving action (firing, opening a sightline) trigger reactions? Also: can a reactor attempt more than once against the same mover in one move?
+10. **Resolved (design 8972470):** one attempt per mover per entry into the vision cone (second part, as specced). Still open: whether a non-moving action triggers reactions. TAC-020 / TAC-036: the reaction trigger is "an opposing soldier moves into or through the cone", but destruction "can trigger reactions on newly opened sightlines" without movement. Does a non-moving action (firing, opening a sightline) trigger reactions? Also: can a reactor attempt more than once against the same mover in one move?
 11. TAC-022: distance, stance, sprint, noise and wound modifiers have no values; does Nerve or Recon (noise) feed in?
 12. TAC-023: Take cover — which tile when several qualify, and is it limited to one tile? Does the Fire reaction use a specific fire mode (single shot?) and the snap-shot penalty value?
-13. TAC-021: the cost of setting a reaction is not stated (tactical-actions: Open).
+13. **Resolved (design 8972470):** setting a reaction is free and can be changed any number of times in the activation. TAC-021: the cost of setting a reaction is not stated (tactical-actions: Open).
 14. TAC-044: the shooter-spread function (Marksmanship, Perception at range, stance, aim time, wounds) and how terms combine (additive in MoA?) are open; "hip shot" is mentioned for lasers but never defined as a fire option.
 15. TAC-045: the relation between cone width and the normal distribution's σ ("where nearly all shots land") needs a number.
 16. TAC-046: exact preview sample count ("a few hundred") and whether the preview must match the result exactly or only statistically.
@@ -443,14 +427,25 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 18. TAC-051: is blunt damage also subject to the 10% damage floor and does it cause bleeding/pain?
 19. TAC-059 / TAC-067: arm or leg at 0 HP has "no negative effects for now", yet the surgical kit exists to bring them back to 1 HP. Does a limb at 0 HP keep its wound effects, or is there a missing 0-HP effect?
 20. TAC-059: damage overflow from a 0-HP limb is discarded in the spec; does it transfer to the thorax?
-21. TAC-061 / TAC-067: item list says hemostatic dressing is the "only fix for thorax and head bleeding in the field", but the medkit stops heavy bleeding (zone unrestricted) and bandage/IFAK stop light bleeding in any zone. Clarify which zones each item covers.
+21. **Resolved (design 8972470):** the item list now says the dressing is light and quick and the medkit also stops heavy bleeding in any zone; dressing and medkit cover every zone, the tourniquet arms and legs only; there is no "only fix". TAC-061 / TAC-067: item list says hemostatic dressing is the "only fix for thorax and head bleeding in the field", but the medkit stops heavy bleeding (zone unrestricted) and bandage/IFAK stop light bleeding in any zone. Clarify which zones each item covers.
 22. TAC-060 / TAC-061 / TAC-062: bleeding chances per hit/zone, the damage threshold for "hard hits" and "heavy hits", fall damage and Endurance bleed resistance are all unquantified.
 23. TAC-063 / TAC-026: pain causes (which damage amount), AP and spread magnitude, and whether painkillers stack, are open.
 24. TAC-065: order of operations — is the "never below 1" minimum applied before the self-treatment and backpack surcharges (spec) or after?
 25. TAC-066: is the IFAK's 15-HP cap applied before or after the Medical multiplier, and does the multiplier apply to the medkit too?
-26. TAC-027: carry capacity formula (DAT/MGT) and the AP penalty are open; heavy assault armour's "large stamina and AP penalties" has no rule.
-27. TAC-029..TAC-034, TAC-017: terrain, diagonal, crouch, prone, sprint, stance, turn, vault and climb costs are all open; is a facing change implied by a move step free?
-28. TAC-039..TAC-043: fire-mode AP costs, aim steps, reload, swap and throw costs and the Strength→throw distance formula are open.
+26. **Resolved (design 8972470):** AP penalty −5 over carry capacity, −10 over 125% of it (draft) (part). Still open: carry capacity formula, Strength's reduction, heavy assault armour penalties. TAC-027: carry capacity formula (DAT/MGT) and the AP penalty are open; heavy assault armour's "large stamina and AP penalties" has no rule.
+27. **Resolved (design 8972470):** draft values for terrain, diagonal, crouch, prone, sprint, stance, turn, vault and climb; turning along a path while moving is free. Remaining gap: question 32. TAC-029..TAC-034, TAC-017: terrain, diagonal, crouch, prone, sprint, stance, turn, vault and climb costs are all open; is a facing change implied by a move step free?
+28. **Resolved (design 8972470):** draft fire AP per weapon type with burst/auto/ergonomics modifiers, aim steps, reload by feed type, swap and throw costs (part). Still open: the Strength → throw distance formula. TAC-039..TAC-043: fire-mode AP costs, aim steps, reload, swap and throw costs and the Strength→throw distance formula are open.
 29. TAC-047: recoil-control formula and tracer's reduction value are open.
-30. TAC-038: AP cost of leaving the map; does leaving require the whole squad, and how does the Management morale rule (below 20 an activated soldier may flee toward the nearest exit) hook into activation? Ownership of that rule is outside this file's sources.
+30. **Resolved (design 8972470):** leaving the map is free once the soldier ends the move on an exit tile with its condition met (AP part). Still open: whole squad, morale fleeing. TAC-038: AP cost of leaving the map; does leaving require the whole squad, and how does the Management morale rule (below 20 an activated soldier may flee toward the nearest exit) hook into activation? Ownership of that rule is outside this file's sources.
 31. TAC-044: weapon Condition raises jam chance and spread (weapon profile) — no jam rule or magnitudes are given for the tactical layer.
+32. TAC-033: the cost of upright → prone is not stated (only upright ↔ crouched, crouched → prone, prone → crouched, prone → upright). Is it a direct transition or crouched-then-prone (2 + 2)? design.md also names Agility for stance changes; tactical-actions gives no Agility term.
+33. TAC-040 / TAC-041 / TAC-042: design.md says Marksmanship and weapon ergonomics lower reload and aim costs and Agility speeds up swaps; its attribute table adds Agility (minor) to reload and Marksmanship and ergonomics to swaps. tactical-actions has no ergonomics term for aiming, no Agility term for reload and no Marksmanship/ergonomics term for swaps. Spec follows tactical-actions; confirm.
+34. TAC-040 / TAC-043: "aiming arm" and "throwing arm" are undefined (handedness?). Do a wounded aiming arm and pain stack (+2 per step), or is it +1 if either applies? Does the 15% spread reduction per aim step add up (3 steps = −45%) or multiply (×0.85³)?
+35. TAC-041: "wounded arm" — either arm or a specific one? For tube-fed weapons (2 AP per shell), do the Marksmanship, ergonomics, backpack and wound terms apply per shell or once per reload; can a reload be partial? The item list gives no feed type per weapon (box magazine vs belt for LMGs; stripper clip, bolt-action or box magazine for bolt rifles), so `feedType` must be assigned in content.
+36. TAC-039: does a per-weapon `fireApCost` override replace only the weapon-type default (spec: yes; burst/auto and ergonomics modifiers still apply) or the final cost? Are burst modes other than 3 rounds allowed? What happens when a burst or auto mode is fired with fewer rounds loaded than it fires? The type list names only bolt-action sniper rifles.
+37. TAC-042: "weapon over 6 kg" — the weapon being readied, the one put away, or either; base or effective weight (with mods)?
+38. TAC-029 / TAC-062 / TAC-009: "a leg fracture then multiplies the whole tile cost by 1.5" — does the multiplier apply only to a leg that is also wounded (below 50%), or to any fractured leg (spec)? Does a fractured limb above 50% HP count as wounded for max stamina?
+39. TAC-024: the design states multiplier-after-additives only for the leg fracture ("whole tile cost"); the spec applies it to every action (e.g. reload arm fracture ×1.5 after the backpack +4). Confirm.
+40. TAC-070: is the 3 AP open/search cost paid once per container or body per battle, or per soldier or visit? Are its contents then shown to the whole side?
+41. TAC-074: the spec requires the carrier to be adjacent (not stated). Can dead squadmates, enemies or a restrained VIP be carried or dragged? Does the carried soldier's weight count toward the carrier's encumbrance? Can a carrier vault, and can a soldier drag while prone?
+42. TAC-038: "end the move on an exit tile" — may a soldier who starts an activation on an exit tile leave without moving?

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_commands.schema.json",
   "title": "Strategic commands",
-  "description": "Commands a faction controller returns for its hourly action: the same commands a player issues. The strategic layer validates and resolves them; contract offers go on to Management. Spec: STR-020, STR-021, STR-044, SAI-004, SAI-011, SAI-014.",
-  "version": "0.2.0",
+  "description": "One command set a faction controller returns for every hour that passes: the same commands a player issues. They resolve together with the player's actions (STR-003). The strategic layer validates and resolves them; contract offers go on to Management. Spec: STR-003, STR-020, STR-021, STR-044, SAI-004, SAI-011, SAI-014, SAI-015.",
+  "version": "0.3.0",
   "x-producer": "modules/strategic-ai",
   "x-consumers": ["modules/strategic", "modules/management"],
   "type": "object",
@@ -17,8 +17,10 @@
     "command": {
       "type": "object", "required": ["type"],
       "properties": {
-        "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "pickMeasure", "recruit", "pass"] },
+        "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "acceptContract", "pickMeasure", "recruit", "pass"] },
         "squad": { "type": "string" },
+        "squads": { "type": "array", "items": { "type": "string" }, "description": "acceptContract: squads assigned to the accepted contract (SAI-015)" },
+        "contractId": { "type": "string", "description": "acceptContract: the offer taken" },
         "goal": { "enum": ["patrol", "supplyRun", "attackPoi", "holdPoi", "escort", "tradeRoute", "hunt"] },
         "target": { "type": "string" },
         "toRegion": { "type": "string", "description": "Must be adjacent to the squad's region" },

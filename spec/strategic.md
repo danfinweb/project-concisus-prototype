@@ -17,8 +17,8 @@ Management (MGT); this file only reads them. Vehicle definitions are DAT (`data/
 campaign starts at Day 1, hour = `startHour`. The clock advances in whole hours only; no state stores
 fractions of an hour. Advancing from hour 23 sets hour 0 and `day + 1`. Every timestamp in the game
 (news feed, service records, after-action reports, deadlines, intel expiry, scheduled events) is a
-`{ day, hour }` value; displayed as "Day D, HH:00". Time only advances when the player issues an action
-that takes ≥ 1 hour.
+`{ day, hour }` value; displayed as "Day D, HH:00". Time only advances when the player ends the turn
+(STR-003) with at least one squad action that takes ≥ 1 hour; nothing advances while the player chooses.
 **Values.** `startHour` — not set (design: Open) → data/strategic-rules.json.
 **Source.** design/design.md › Strategic Layer (Time)
 
@@ -26,22 +26,33 @@ that takes ≥ 1 hour.
 **Rule.** Every player strategic action has a duration `d`, a whole number of hours ≥ 0, fixed by the
 action type (STR-027…STR-043) or set by the player (Wait, Rest). An action may also cost money, fuel or
 standing; costs are applied when the action starts. `d = 0` actions (trade, hire, vehicle trade) resolve
-immediately and pass no time, so no faction acts (STR-003 does not run).
-**Source.** design/design.md › Strategic Layer (Time); design/strategic-actions.md (intro)
+immediately and pass no time, so no faction acts (STR-003 does not run). An action with `d > 1` (travel,
+rest, healing) can be interrupted by an encounter or an event (STR-003); the hours already spent count
+(progress made stays), and the rest of the action is dropped.
+**Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md (intro)
 
 ### [STR-003] Hour tick
-**Rule.** A player action of duration `d` runs `d` hour ticks in sequence. Each tick, in this order:
-1. Advance the clock by one hour (STR-001).
-2. Progress per-hour processes of the player's squads: travel progress, healing progress (healing
-   amount computed by MGT from roster data; STR-037).
-3. Each non-player faction, in a fixed order (`factionTickOrder`), receives its strategic perception
-   view (STR-021) and returns commands; each of its squads may take at most one action toward its goal
-   this hour (STR-020).
-4. Resolve movement arrivals, then encounters (STR-022) and off-screen fights (STR-026).
-5. If the new time is 00:00, run the daily checks (STR-004).
-6. Expire timed state whose due time ≤ now (intel, event durations, deadlines, warning signs).
-If a step produces a tactical engagement involving the player, the remaining ticks of the action stop
-and the engagement resolves first (STR-023) — see Open questions.
+**Rule.** One strategic turn is one hour of game time. A turn has two phases:
+- **Planning.** The player chooses an action for each of their squads that has none in progress (a squad
+  in a multi-hour action keeps it), then commits by ending the turn. Nothing with `d ≥ 1` resolves before
+  the commit; `d = 0` actions resolve at once (STR-002). The world state does not change while the player
+  plans.
+- **Resolution.** After the commit, hour ticks run. Each tick, in this order:
+  1. Each non-player faction receives its strategic perception view (STR-021), built from the state at
+     the start of the tick, and returns one command set (STR-020). All views are built before any command
+     resolves, so no faction sees another's commands of the same hour.
+  2. The actions of all squads — the player's and every AI faction's — resolve together, one action per
+     squad: movement progress, scouting, holding, per-hour processes such as healing progress (amount
+     computed by MGT from roster data; STR-037). Where two actions conflict in the same tick, they apply in
+     `factionTickOrder`.
+  3. Resolve movement arrivals, then encounters (STR-022) and off-screen fights (STR-026).
+  4. Advance the clock by one hour (STR-001).
+  5. If the new time is 00:00, run the daily checks (STR-004).
+  6. Expire timed state whose due time ≤ now (intel, event durations, deadlines, warning signs).
+- **Interruption.** An encounter (STR-022) or an event that involves a player squad interrupts that
+  squad's multi-hour action (STR-002); the hours already spent count. A tactical engagement resolves first
+  (STR-023). Ticks keep running only while every player squad still has an action in progress and none
+  was interrupted; otherwise the next planning phase starts (spec assumption, see Open questions).
 **Values.** `factionTickOrder` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); › AI › Strategic AI (Controller hand-off)
@@ -207,19 +218,23 @@ after the player. The strategic layer validates such commands with the normal ru
 **Source.** design/design.md › Strategic Layer (Escalation)
 
 ### [STR-020] One action per faction per hour
-**Rule.** In each hour tick (STR-003, step 3) every non-player faction issues one command set. Each of
-its squads may perform at most one action that hour (start/continue a move, scout, fight, hold, wait).
-A move taking `h` hours occupies the squad for `h` ticks; it arrives at the end of the last tick. The
-player faction acts only through the player's actions.
-**Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn)
+**Rule.** For every hour that passes (STR-003), every faction issues one set of commands and each of its
+squads takes exactly one action that hour (start/continue a move, scout, fight, hold, wait). This holds
+for every faction squad, the player's included: the player's command set is the actions chosen in the
+planning phase, the AI factions' come from their controllers (STR-021). A move taking `h` hours occupies
+the squad for `h` ticks; it arrives at the end of the last tick unless interrupted (STR-002). All squads'
+actions of one hour resolve together (STR-003, step 2).
+**Source.** design/design.md › Overview › Pillars (4); › Strategic Layer (Time); › Squads and simulation (Strategic turn)
 
 ### [STR-021] Faction controller hand-off
-**Rule.** Strategic decides when a faction acts; `strategic-ai` decides what. Each tick, every
-non-player faction receives a `strategic_perception_view` (its fog-of-war view, STR-008) and returns
-`strategic_commands` (set goal, move squad, offer contract). Strategic validates each command against
-the same rules as player actions (passability, fuel, durations, capital rule) and drops invalid ones
-with a logged reason. Contract offers go to MGT.
-**Source.** design/design.md › AI › Strategic AI (Controller hand-off)
+**Rule.** Strategic decides when a faction acts; `strategic-ai` decides what. For every hour that passes
+(each tick, STR-003), every non-player faction receives a `strategic_perception_view` (its fog-of-war
+view, STR-008, including its own funds, STR-092) and returns `strategic_commands` (set goal, move squad,
+offer contract). Strategic validates each command against the same rules as player actions
+(passability, fuel, durations, capital rule) and drops invalid ones with a logged reason; valid ones
+resolve together with the player's actions (STR-003). The controller never changes the world state
+directly. Contract offers go to MGT.
+**Source.** design/design.md › AI (intro); › AI › Strategic AI (Controller hand-off); › Strategic Layer › Squads and simulation (Faction funds)
 
 ### [STR-022] Encounter detection
 **Rule.** After movement in a tick, for every region containing squads of ≥ 2 factions, each pair
@@ -260,14 +275,43 @@ winner, and changes to region control, loyalty and supply. Formula not set.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Off-screen fights)
 
+### [STR-092] Faction funds
+**Rule.** The `world` slice holds `funds` (money) for every AI faction (`ssv`, `vdk`, `varyag`, `aegis`,
+`krug`, and any resistance group or rogue PMC that becomes a faction). The player's PMC money is not here:
+it is the MGT `economy` slice (MGT-070). Funds change only by these rules:
+- **Income:** from the regions and plants (STR-010) the faction holds, using the POI income of STR-014.
+- **Costs:** upkeep of its squads, its soldiers' salaries, and the contracts it offers (paid out through
+  STR-093).
+The formulas (income per held region and plant, squad upkeep, salaries, when income and costs are booked)
+live in one shared rules table, `data/economy-rules.json`, which MGT also uses for the player's PMC
+(MGT-005, MGT-070). A faction whose income cannot cover its costs meets crisis sign 5, Low liquidity
+(STR-069). Each faction's own funds appear in its perception view (STR-021); other factions' funds do not.
+**Values.** income formula, squad upkeep, salary formula, booking interval, start funds per faction — not
+set (design: Open) → data/economy-rules.json; per-POI-type `income` → data/poi.json (STR-014).
+**Status.** open
+**Source.** design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); design/design.md (module table: `world` includes funds)
+
+### [STR-093] Contract payment between modules
+**Rule.** Contract pay moves from the employer's funds to the player's money. When MGT books a payment
+on a contract with the player (advance on signing, remainder on success; MGT-047), its result to the
+triggering management request (`acceptContract`, `missionOutcome`) names the payment due
+(`contractId`, `employer`, `amountUsd`). Strategic deducts that amount from the employer's funds
+(STR-092) and sends a `contractPayment` management request with the same fields; MGT credits the
+player's `economy` only on that request. A contract between two AI factions (SAI-015) is settled inside
+the `world` slice: Strategic moves the pay from the employer's funds to the contractor's.
+**Source.** design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); › Management › Contracts and missions › Contract terms
+
 ## Operations and strategic actions
 
 ### [STR-027] Operation lifecycle
 **Rule.** An op is `{ id, squadId, objectives[], startFob, startTime }`. Objectives are missions from
 accepted contracts (MGT) and/or player objectives (scout a region, scavenge, resupply); one op may
-bundle several. The op ends when the squad arrives at any PMC FOB: then it **succeeds**, whether or not
-objectives were met. Soldiers who do not return are reported to MGT as MIA, captured or dead.
-**Source.** design/design.md › Core loop; › Management › Gear, loot & return
+bundle several. The op ends when at least one soldier of the squad arrives at any PMC FOB: then it
+**succeeds**, whether or not objectives were met (GEN-002). An op whose last soldier is lost before
+reaching an FOB fails. A contract mission counts as completed as soon as its goal is met (reported to MGT
+at that moment as `missionOutcome`), even if the squad is lost afterwards. Soldiers who do not return are
+reported to MGT as MIA, captured or dead.
+**Source.** design/design.md › Overview › Core loop; › Management › Gear, loot & return
 
 ### [STR-028] Launch an op
 **Rule.** At an FOB, the player commits a squad, its loadout and a vehicle (or on foot); they are
@@ -338,8 +382,9 @@ intel (STR-048). Success chance not set.
 ### [STR-037] Wait and rest
 **Rule.** The player sets `n ≥ 1` hours; that many ticks run (STR-003). Rest: each tick, the squad's
 soldiers progress healing (MGT computes HP from the squad's best Medical; rate is higher when the squad
-is in a PMC FOB region). Wait is the same with no rest benefit (see Open questions).
-**Source.** design/design.md › Strategic Layer (Time); design/strategic-actions.md › Movement and operations
+is in a PMC FOB region). Wait is the same with no rest benefit (see Open questions). An encounter or event
+interrupts the rest (STR-002, STR-003): the hours already rested count, healing made so far stays.
+**Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md › Movement and operations
 
 ### [STR-038] Enter a point of interest
 **Rule.** A squad in a region with a POI may enter it; entering is required before using its services
@@ -462,10 +507,12 @@ temporary effects are reverted.
 
 ### [STR-051] Faction relations
 **Rule.** World state holds a relation value for every ordered pair of factions, integer −100…100.
-Relations decide who attacks whom (hostile ≤ −50, allied ≥ 50, as used by MGT and STR-069). Events and
-measures shift them; they are clamped to range. Reputation with the player is a separate value (MGT).
+Relations decide who attacks whom (hostile ≤ −50, allied ≥ 50, as used by STR-022 and STR-069). Events
+and measures shift them; they are clamped to range. Reputation with the player is a separate value (MGT)
+and is not changed by relations: since design 8972470 there is no reputation spill-over to a faction's
+allies or enemies (MGT-053).
 **Values.** `relationMin` −100, `relationMax` 100, `hostileAt` −50, `alliedAt` 50 → data/strategic-rules.json; start values — not set (design: Open) → data/factions.json.
-**Source.** design/design.md › Strategic Layer › World events; › Management › Reputation (Helping opposing factions)
+**Source.** design/design.md › Strategic Layer › World events; › Management › Reputation (draft)
 
 ### [STR-052] Warning signs
 **Rule.** An event or measure flagged `warned` schedules warning signs `warningLeadDays` before its
@@ -614,7 +661,8 @@ the list of player-attributed fights it lost in the last 7 days. This feeds STR-
 2. Large area losses: regions lost in the last 7 days ≥ 15% of regions held 7 days ago.
 3. Large troop losses: soldiers lost in the last 7 days ≥ 30% of soldiers 7 days ago.
 4. Resistance: ≥ 2 resistance groups active in its regions.
-5. Low liquidity: income cannot cover salaries and contract payments (contracts go unpaid).
+5. Low liquidity: the faction's income cannot cover its costs — squads, salaries and contract payments
+   (STR-092); contracts go unpaid.
 6. Capital threatened: an enemy squad within region distance ≤ 2 of its capital, or of its last city if
    the capital is lost.
 7. Key plants lost: oil+arms plants held < 50% of start.
@@ -622,7 +670,7 @@ the list of player-attributed fights it lost in the last 7 days. This feeds STR-
 9. Its PMC has gone rogue: Varyag (SSV) or Aegis (VDK) is rogue.
 10. Repeated defeats by the player: ≥ 3 player-attributed lost fights in the last 7 days.
 **Values.** `littleTerritory` 0.30, `areaLoss` 0.15, `troopLoss` 0.30, `resistanceGroups` 2, `capitalThreatRange` 2, `keyPlants` 0.5, `isolationFactions` 3, `isolationRelation` −50, `playerDefeats` 3 → data/strategic-rules.json.
-**Source.** design/world-events.md › Desperate measures (Crisis signs); › Reputation in the event system
+**Source.** design/world-events.md › Desperate measures (Crisis signs); › Reputation in the event system; design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [STR-070] Measure selection
 **Rule.** After the sign check: if a faction has ≥ 3 true signs and no measure running, it may pick one
@@ -799,14 +847,21 @@ road, each with a non-water landable neighbour.
 
 ## Open questions
 
-1. STR-003/STR-020: the Time bullet says every *faction* takes one action per hour; Squads and
+1. **Resolved (design 8972470):** every hour every faction issues one set of commands and each of its
+   squads takes one action; the controller hand-off runs for every hour that passes (STR-003, STR-020,
+   STR-021). STR-003/STR-020: the Time bullet says every *faction* takes one action per hour; Squads and
    simulation says every faction *squad* takes one action per hour; Controller hand-off says factions get
    their perception view "after each player action". Spec assumes one command set per faction per hour,
    one action per squad. Confirm.
-2. STR-003: does a hostile encounter interrupt a multi-hour player action (move, rest)? Where is a squad
-   during a 2–3 hour move for encounter purposes (origin, destination, both)?
-3. STR-002/STR-017: with several player squads on ops at once, how do their actions share the clock
-   (one global clock, per-squad orders that continue while another squad acts)?
+2. **Resolved (design 8972470):** yes — an encounter or event interrupts a multi-hour action (travel,
+   rest, healing) and the hours already spent count (STR-002, STR-003). The squad's position during a move
+   stays open as question 26. STR-003: does a hostile encounter interrupt a multi-hour player action
+   (move, rest)? Where is a squad during a 2–3 hour move for encounter purposes (origin, destination,
+   both)?
+3. **Resolved (design 8972470):** one global clock; the player chooses an action for each squad, ends the
+   turn, and all squads' actions resolve together (STR-003). How many hours one commit runs is still a spec
+   assumption (question 27). STR-002/STR-017: with several player squads on ops at once, how do their
+   actions share the clock (one global clock, per-squad orders that continue while another squad acts)?
 4. STR-006/STR-005: "every region shows one terrain type" but asphalt/dirt road are terrain types and
    mountains are passable "by road". Spec models roads as links on top of base terrain. Confirm.
 5. STR-006: movement cost uses the destination region's terrain — or origin, or the worse of both?
@@ -832,7 +887,8 @@ road, each with a non-water landable neighbour.
 16. STR-061: Defection — which faction do defectors join (the one they fought, the strongest neighbour)?
 17. STR-067: the Resistance group uses loyalty "toward the controlling faction", supporting per-faction
     loyalty; it becomes a faction — does it count in crisis sign 8 (isolation) and in relations?
-18. STR-069 sign 5 (low liquidity) needs faction-level money (income vs salaries and contract payments)
+18. **Resolved (design 8972470):** Strategic owns every AI faction's funds in the `world` slice; formulas
+    in a shared rules table used by MGT too (STR-092, STR-093). STR-069 sign 5 (low liquidity) needs faction-level money (income vs salaries and contract payments)
     for AI factions; the design defines no AI faction economy. Who owns it: STR world or MGT?
 19. STR-070: measure durations are not stated; may a faction run a measure and the nuclear strike at the
     same time?
@@ -844,3 +900,18 @@ road, each with a non-water landable neighbour.
 24. STR-081: flavour event triggers not defined in the GDD (lore only).
 25. Workflow starting pipeline (regions → cities → roads → resources → frontline → validate) differs from
     the design order (industry before roads). Spec follows the design order.
+26. STR-003/STR-022: where is a squad during a multi-hour move for encounter purposes (origin,
+    destination, both)? Split from question 2.
+27. STR-003: how many hour ticks does one commit run when the player's squads have actions of different
+    lengths? Spec assumes ticks run until any player squad's action ends or is interrupted. May the player
+    cancel a multi-hour action in progress at a planning phase?
+28. STR-003: which events interrupt a multi-hour action (any event naming the squad's region, only
+    events that touch the squad)? And do `d = 0` actions (trade, hire) really resolve before the commit,
+    given "nothing resolves before that"?
+29. STR-092: income/cost formulas, booking interval (hourly, daily) and start funds are not given. May
+    funds go negative? What does "contracts go unpaid" do to a contract with the player (late pay, debt
+    owed to the player, failure)?
+30. STR-092: do resistance groups and a rogue PMC get funds (and from what start value) when they become
+    factions?
+31. STR-093: when the player repays an advance (MGT-048) or pays compensation or a bounty (STR-043), is
+    that money credited to the faction's funds?

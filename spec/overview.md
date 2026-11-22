@@ -25,10 +25,12 @@ moves on the strategic map (STR); (3) tactical engagements happen as the route a
 **Source.** design/design.md › Overview › Core loop
 
 ### [GEN-002] Op success condition
-**Rule.** An op succeeds if and only if the squad reaches an FOB the player owns. Objective completion does
-not affect op success (objectives are scored separately per mission, MGT contract rules). Soldiers of the
-squad who do not reach an FOB are MIA, captured or dead (MGT); gear carried by them is lost to the PMC
-unless recovered. An op whose squad has no soldier left who reaches an FOB fails.
+**Rule.** An op succeeds if and only if at least one soldier of its squad reaches an FOB the player owns.
+Objective completion does not affect op success (objectives are scored separately per mission, MGT
+contract rules). A contract's mission counts as completed as soon as its goal is met, even if the squad is
+lost afterwards (MGT-044). Soldiers of the squad who do not reach an FOB are MIA, captured or dead (MGT);
+gear carried by them is lost to the PMC unless recovered. An op whose squad has no soldier left who
+reaches an FOB fails.
 **Source.** design/design.md › Overview › Core loop; › Management › Gear, loot & return
 
 ### [GEN-003] Op objectives and bundling
@@ -52,9 +54,11 @@ no reputation change of their own.
 | `krug` | The Krug | trader / neutral network | Viktor Karsin | — |
 | `player` | Player's PMC | player | the player | — |
 
-Employers post contracts (MGT). Rival PMCs compete for contracts and hunt player ops (STR/SAI). The Krug
-trades, runs smuggling routes, neutral markets and local recruits. Every non-player faction holds one
-reputation value toward the player (MGT).
+Employers post contracts (MGT). SSV contracts often target the VDK; working for an employer has no
+reputation effect with its enemies by itself — only the acts a contract requires change reputation, with
+the faction they directly affect (MGT-053). Rival PMCs compete for contracts and hunt player ops (STR/SAI).
+The Krug trades, runs smuggling routes, neutral markets and local recruits. Every non-player faction holds
+one reputation value toward the player (MGT). Every AI faction's money is held by STR (STR-092).
 **Values.** faction definitions (id, name, kind, leader, patron) → data/factions.json
 **Source.** design/design.md › Factions & campaign › Factions
 
@@ -74,11 +78,12 @@ squads and cannot be fought as a faction.
 ### [GEN-007] Faction relations model
 **Rule.** Every ordered pair of map factions (GEN-004, excluding `player`) holds a relation value, integer
 −100…100. A relation ≤ −50 means hostile, ≥ 50 means allied, otherwise neutral. Relations are changed
-only by world events and their effects (STR); they decide who attacks whom and feed reputation spill-over
-(MGT). The Krug is neutral to every faction.
+only by world events and their effects (STR); they decide who attacks whom. They do not change the
+player's reputation: there is no spill-over to a faction's allies or enemies (MGT-053). The Krug is neutral
+to every faction.
 **Values.** `relation_min` — −100; `relation_max` — 100; `hostile_at` — −50; `allied_at` — 50 →
 data/factions.json; initial relations per pair — not set (design: not stated) → data/factions.json
-**Source.** design/design.md › Strategic layer › World events; › Management › Reputation › Helping opposing factions
+**Source.** design/design.md › Strategic layer › World events; › Management › Reputation (draft)
 
 ### [GEN-008] Leader effects
 **Rule.** Each leader has exactly one in-play effect:
@@ -186,7 +191,8 @@ the rest of the campaign.
 
 ## Open questions
 
-1. GEN-002: does an op count as succeeded if only part of the squad returns? Assumed yes (any soldier
+1. **Resolved (design 8972470):** yes — an op succeeds when at least one soldier gets back to an FOB; a
+   contract's missions count as completed as soon as their goal is met. GEN-002: does an op count as succeeded if only part of the squad returns? Assumed yes (any soldier
    reaching an FOB), failure only if none returns.
 2. GEN-012: trigger conditions for the four non-coup endings and for when `cash_out` is offered are not
    designed.

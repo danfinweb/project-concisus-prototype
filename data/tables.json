@@ -12,6 +12,7 @@
   "tactical-rules": "tactical-rules.schema.json",
   "strategic-rules": "strategic-rules.schema.json",
   "management-rules": "management-rules.schema.json",
+  "economy-rules": "economy-rules.schema.json",
   "callsigns": "callsigns.schema.json",
   "recruitment": "recruitment.schema.json",
   "traders": "traders.schema.json",
