@@ -136,7 +136,7 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | --- | --- | --- | --- | --- |
 | Bandage | Light bleeding | 3 | 1 |  |
 | Tourniquet | Heavy bleeding on an arm or leg | 2 | 1 | Causes pain |
-| Hemostatic dressing | Heavy bleeding in any zone | 4 | 1 | Only fix for thorax and head bleeding in the field |
+| Hemostatic dressing | Heavy bleeding in any zone | 4 | 1 | Light and quick; the medkit also stops heavy bleeding in any zone |
 | Splint | Fracture | 5 | 1 |  |
 | Painkillers | Pain | 2 | 4 | Effect lasts 10 turns |
 | IFAK (individual first aid kit) | Restores HP; stops light bleeding | 6 | 60 HP total | Up to 15 HP per use |
@@ -203,6 +203,6 @@ Items that open options during operations or can be handed in to a faction for m
 
 **Hand-in rules**
 
-- Reputation from hand-ins goes through applyRep as a friendly act toward the receiving faction, including spillover.
+- Reputation from hand-ins goes through applyRep as a friendly act toward the receiving faction.
 - A hand-in is never attributed to the faction it hurts; only a survivor at the scene of the loot can report it, like any other hostile act.
 - Faction items count toward weight and use the "other" type limit in vests and plate carriers.

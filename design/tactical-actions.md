@@ -2,40 +2,42 @@
 
 Nov 22, 2026 · @Dan
 
-**Draft — not final.** Every action a soldier can take on a tactical map, with its cost and how it is calculated. The rules behind them are in the Tactical Layer of the [Game Design Document](https://claude.ai/artifact/EntHEaJm8q32rPTHWXMbvo); "Open" marks a cost not set yet.
+**Draft — not final.** Every action a soldier can take on a tactical map, with its cost and how it is calculated. The rules behind them are in the Tactical Layer of the [Game Design Document](https://claude.ai/artifact/EntHEaJm8q32rPTHWXMbvo). "Defined" values come from the design; "Draft" values are first proposals to tune in playtests; "Open" marks a cost not set yet. All costs are whole numbers, rounded down after any multiplier, and never below 1 AP. Reference: an average soldier has 30 AP, so walking 6 tiles (12 AP) and an aimed rifle shot (8 AP) still leaves 10 AP.
 
 ## Turn and activation
 
 | Action | Cost | How it is calculated | Status |
 | --- | --- | --- | --- |
-| Activate a soldier | 2 stamina points | +1 stamina point if the soldier sprinted or is over carry capacity; needs at least 2 stamina points. Grants the soldier's full AP: 25 + Agility ÷ 10, rounded down (25–35), minus the AP modifiers below | Defined |
+| Activate a soldier | 2 stamina points | +1 stamina point if the soldier sprinted or is over carry capacity, charged when the activation ends; needs at least 2 stamina points. Grants the soldier's full AP: 25 + Agility ÷ 10, rounded down (25–35), minus the AP modifiers below | Defined |
 | Pass | Free | Every soldier not activated in a turn recovers +1 stamina point | Defined |
 | Set facing at the end of an activation | Free | — | Defined |
-| Set reaction (Fire, Take cover, Hold) | Not stated | Chosen during the activation, applied automatically | Open |
-| Reaction attempt | 1 stamina point | Success: 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%, adjusted for distance, the mover's stance, noise and the reactor's wounds. Not possible while suppressed or at 0 stamina points | Defined |
-| Leave the map at an exit | Not stated | Each exit has its own condition (fuel, a boat at a set turn, a paid crossing) | Open |
+| Set reaction (Fire, Take cover, Hold) | Free | Chosen during the activation, applied automatically; can be changed any number of times in the activation | Draft |
+| Reaction attempt | 1 stamina point | Success: 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%, adjusted for distance, the mover's stance, noise and the reactor's wounds. One attempt per mover per entry into the vision cone. Not possible while suppressed or at 0 stamina points | Defined |
+| Leave the map at an exit | Free | The soldier must end the move on an exit tile and the exit's condition must be met (fuel, a boat at a set turn, a paid crossing) | Draft |
 
 ## Movement
 
 | Action | Cost | How it is calculated | Status |
 | --- | --- | --- | --- |
-| Walk one tile | 2 AP + terrain cost | Terrain cost per tile (road, grass, mud, rubble, stairs); diagonals cost more; leg wounds raise the cost; a leg fracture multiplies it by 1.5 | Base defined, terrain and diagonal values open |
-| Move crouched | Walk cost + crouch surcharge | — | Open |
-| Crawl prone | Walk cost + a larger surcharge | — | Open |
-| Sprint | Not stated | +1 stamina point on that activation; not possible prone or with a leg fracture | Open |
-| Change stance | Not stated | Getting up from prone costs the most | Open |
-| Turn during an activation | Not stated | — | Open |
-| Vault a window, climb a ladder | Not stated | Agility; not possible prone | Open |
+| Walk one tile | 2 AP + terrain cost | Defined base. Draft: diagonal step 3 AP instead of 2. Terrain per tile: road, floor, grass +0; mud, shallow water, rubble, dense brush +1; stairs +1 | Base defined, terrain and diagonal draft |
+| Move crouched | Walk cost +1 AP per tile | — | Draft |
+| Crawl prone | Walk cost +3 AP per tile | No sprinting, vaulting or climbing | Draft |
+| Sprint | Walk cost −1 AP per tile (never below 1 per tile) | Upright only; +1 stamina point on that activation; not possible prone, with a leg fracture or in a large rucksack | Draft |
+| Leg wound surcharge | +1 AP per tile per wounded leg | A leg counts as wounded below 50% of its HP; a leg fracture then multiplies the whole tile cost by 1.5 | Draft |
+| Change stance | Upright ↔ crouched 2 AP; crouched → prone 2 AP; prone → crouched 4 AP; prone → upright 6 AP | Getting up from prone costs the most | Draft |
+| Turn during an activation | 1 AP per 90° or part of it | Turning along a path while moving is free; the final facing is free | Draft |
+| Vault a window or low wall | 4 AP | Agility 70+: 3 AP; not possible prone | Draft |
+| Climb a ladder | 4 AP per level | Agility 70+: 3 AP per level; not possible prone or while carrying a squadmate | Draft |
 
 ## Weapons
 
 | Action | Cost | How it is calculated | Status |
 | --- | --- | --- | --- |
-| Fire (one shot action) | Set per fire mode of the weapon | Rounds and AP per shot action come from the weapon's fire modes; recoil builds within a burst | Open (per weapon) |
-| Aim longer | Extra AP | Raises accuracy; aim cost lowered by Marksmanship and ergonomics, raised by arm wounds and pain | Open |
-| Reload | Not stated | Lowered by Marksmanship and ergonomics; from the vest or belt at normal cost, from the backpack at extra cost; raised by arm wounds and fractures | Open |
-| Swap between weapon 1 and 2 | Not stated | Marksmanship, Agility and ergonomics | Open |
-| Throw a grenade | Not stated | From the vest or belt at normal cost; Strength sets throwing distance | Open |
+| Fire (one shot action) | Default by weapon type: pistol 4, SMG 5, assault rifle 6, shotgun 6, battle rifle 7, DMR 7, LMG 8, bolt-action sniper rifle 9 AP | Burst (3 rounds) +2 AP; full auto (5 rounds) +4 AP; ergonomics 70+ −1 AP, 30 or below +1 AP. Each weapon can override its value in /data | Draft |
+| Aim longer | 2 AP per aim step, up to 3 steps | Each step lowers shooter spread by 15% (placeholder). Marksmanship 75+: 1 AP per step. +1 AP per step with a wounded aiming arm (below 50% HP) or pain | Draft |
+| Reload | Pistol 4, box magazine 5, stripper clip or bolt-action 6, belt-fed 10 AP; tube-fed shotgun 2 AP per shell | Marksmanship 70+ −1 AP; ergonomics 70+ −1 AP, 30 or below +1 AP; magazine from the backpack +4 AP; wounded arm +2 AP; arm fracture ×1.5 | Draft |
+| Swap between weapon 1 and 2 | 3 AP | 2 AP when either weapon is a pistol; Agility 70+ −1 AP; weapon over 6 kg +2 AP | Draft |
+| Throw a grenade | 5 AP | From the vest or belt; from the backpack +4 AP; wounded throwing arm +1 AP; Strength sets throwing distance | Draft |
 
 ## Medical
 
@@ -52,24 +54,25 @@ Item AP from the [Item list](https://claude.ai/artifact/3ZE9h1z8kMDFDuWB4muJRJ).
 | Medkit | 8 | Backpack item | Defined |
 | Surgical kit | 15 | Needs Medical 40+ | Defined |
 
-The backpack surcharge is still open.
+Draft: an item used from the backpack costs +4 AP (the backpack surcharge, the same for every item).
 
 ## Gear and interaction
 
 | Action | Cost | How it is calculated | Status |
 | --- | --- | --- | --- |
 | Use an item from the vest or belt | The item's normal AP | — | Defined |
-| Use an item from the backpack | The item's AP + a surcharge | — | Surcharge open |
-| Drop the backpack | Not stated | — | Open |
-| Pick up or loot (items, bodies, containers) | Not stated | — | Open |
+| Use an item from the backpack | The item's AP +4 AP | — | Draft |
+| Drop the backpack | 1 AP | Picking it up again costs 4 AP | Draft |
+| Pick up or loot (items, bodies, containers) | 2 AP per item taken | Opening a container or searching a body first costs 3 AP and shows its contents | Draft |
 | Cut a lock with bolt cutters | 10 AP | Silent | Defined |
-| Place a demolition charge | Not stated | Technical | Open |
-| Restrain a VIP (capture mission) | Not stated | Only once the VIP surrenders or is wounded | Open |
-| Carry or drag a wounded squadmate | Not stated | Named as a deed, not yet defined as an action | Open |
+| Place a demolition charge | 8 AP | Technical 50+: 6 AP | Draft |
+| Restrain a VIP (capture mission) | 6 AP | Adjacent tile; only once the VIP surrenders or is wounded | Draft |
+| Carry or drag a wounded squadmate | Lift 4 AP, put down 2 AP; carrying +2 AP per tile, dragging +3 AP per tile | Carrying: upright, no sprinting or climbing. Dragging: possible crouched | Draft |
 
 ## AP modifiers on an activation
 
 - **Suppressed:** −5 AP, wider spread, no reactions.
-- **Head hit:** chance to be stunned, losing AP on the next activation (amount open).
-- **Pain:** fewer AP until masked (amount open).
-- **Over-encumbered:** fewer AP (amount open); Strength lowers the penalty for heavy kit.
+- **Head hit:** chance to be stunned, losing 10 AP on the next activation (draft).
+- **Pain:** −4 AP until masked by painkillers (draft).
+- **Over-encumbered:** −5 AP over carry capacity, −10 AP over 125% of it (draft); Strength lowers the penalty for heavy kit.
+- Wounds do not reduce the AP pool; they raise the cost of the actions that use the wounded zone (see the tables above).

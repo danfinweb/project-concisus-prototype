@@ -2,12 +2,12 @@
 
 Nov 22, 2026 · @Dan
 
-The design is split along the game's modules, as defined in [Sloperator — Development Workflow](https://claude.ai/artifact/MtPiB5ywYhqZWJ1WV7CWog). Each module section is the source for that module's spec; Overview and Factions & campaign apply to all modules. Story and lore are kept in a separate doc, Sloperator – Story & Lore.
+The design is split along the game's modules, as defined in [Sloperator — Development Workflow](https://claude.ai/artifact/MtPiB5ywYhqZWJ1WV7CWog). Each module section is the source for that module's spec; Overview and Factions & campaign apply to all modules. Story and lore are kept in a separate doc, Concisus – Story & Lore.
 
 | Section | Module | State it owns |
 | --- | --- | --- |
 | Overview, Factions & campaign | All modules | — |
-| Strategic Layer | `modules/strategic/` | `world`: map, territory, faction forces |
+| Strategic Layer | `modules/strategic/` | `world`: map, territory, faction forces and funds |
 | Tactical Layer | `modules/tactical/` | `battle` |
 | Management | `modules/management/` | `roster`, `unlocks`, `economy`, `contracts`, `reputation` |
 | AI | `modules/strategic-ai/`, `modules/tactical-ai/` | — (issues player commands) |
@@ -25,7 +25,7 @@ The design is split along the game's modules, as defined in [Sloperator — Deve
 1. **Faceless and disposable** — soldiers are generated, interchangeable contractors with no authored personality. Attachment forms only through the story the player shares with a soldier: the deployments survived, the wounds carried, the comrades lost.
 2. **Every operation is a gamble** — gear you take in is at risk; loot you bring out funds the war. Retreat is always an option, and often the smart one.
 3. **Grounded, readable tactics** — realistic weapons and ballistics, but every hit chance and risk is legible to the player.
-4. **A war that answers every move** — the strategic map runs like a classic roguelike: time only passes when the player acts, and every hour that passes gives every faction an action of its own. Nothing happens while the player thinks; everything happens because the player acts.
+4. **A war that answers every move** — the strategic map runs like a classic roguelike: time only passes when the player acts, and every hour that passes gives every faction squad an action of its own. Nothing happens while the player thinks; everything happens because the player acts.
 
 **What we take from each reference**
 
@@ -39,7 +39,7 @@ The design is split along the game's modules, as defined in [Sloperator — Deve
 
 ### Core loop
 
-The unit of play is the **operation** (short: **op**), not a fixed mission. Every op starts at one of the player's FOBs on the strategic map: the player sets the objectives, picks the squad and loadout, moves out, fights the tactical engagements the objectives require, and returns to an FOB. **An op succeeds only when the squad gets back to an FOB** — objectives met or not.
+The unit of play is the **operation** (short: **op**), not a fixed mission. Every op starts at one of the player's FOBs on the strategic map: the player sets the objectives, picks the squad and loadout, moves out, fights the tactical engagements the objectives require, and returns to an FOB. **An op succeeds when at least one soldier gets back to an FOB** — objectives met or not. A contract's missions count as completed as soon as their goal is met, even if the squad is lost afterwards.
 
 &#91;embedded content: core loop · FOB → operation → return\]
 
@@ -47,13 +47,13 @@ Objectives come from employer contracts (missions such as escorting a shipment o
 
 ## Factions & campaign
 
-This section covers how the factions and the campaign work in play. Setting, history, tone, faction backgrounds, leaders' habits and flavour events are in [Sloperator – Story & Lore](https://claude.ai/artifact/QKZMoCYw1dk6DrBsicjvS8).
+This section covers how the factions and the campaign work in play. Setting, history, tone, faction backgrounds, leaders' habits and flavour events are in [Concisus – Story & Lore](https://claude.ai/artifact/QKZMoCYw1dk6DrBsicjvS8).
 
 ### Factions
 
 | Faction | Leader | Role for the player (draft) |
 | --- | --- | --- |
-| Socialist State of Veligrad (SSV) | Marshal Mikhail Orlov | Employer: reliable pay, harsh methods; working for it burns standing with the VDK |
+| Socialist State of Veligrad (SSV) | Marshal Mikhail Orlov | Employer: reliable pay, harsh methods; its contracts often target the VDK |
 | Veligrad Democratic Coalition (VDK) | Aleksandr Volkov | Employer: idealistic but deniable — late payments, contracts that can be disowned |
 | Varyag Solutions | Anton Sokolov | Rival PMC (SSV-aligned): Soviet doctrine with modern tactics; hunts player ops, competes for contracts |
 | Aegis Group | Daniel Rook | Rival PMC (VDK-aligned): better-equipped, high-tech; the same threat from the other side |
@@ -117,7 +117,7 @@ Any armed company strong enough to hold the capital can try.
 
 A turn-based region map (JA2 layout, roguelike timing) where the player moves squads, launches operations from its FOBs and manages the PMC's money and reputation.
 
-- **Time:** a 24-hour clock that only runs when the player acts. Every player action takes game time, and for every hour that passes, every faction takes one action of its own. Moving a vehicle one region takes 1 hour on roads, more on rough terrain (see Terrain types). Travel and healing progress per hour. Waiting is an action too and passes time. Trading and hiring take no time; resting takes as many hours as the player sets; scouting takes 3 hours (placeholder); a battle always takes 1 hour, however long it runs in real time. The clock runs in full hours only: every duration is a whole number of hours, with no fractions. A day counter starts at Day 1 when the campaign begins and goes up by one at 00:00. Every point in time is written as day and hour (e.g. Day 14, 06:00) and serves as the time reference for anything in the game, past or future: when an event happened in the news feed, service records and after-action reports, and when a deadline, intel expiry or scheduled event is due. The daily checks (world events, desperate measures, barter deals) run at 00:00.
+- **Time:** a 24-hour clock that only runs when the player acts. Every player action takes game time, and for every hour that passes, every faction issues one set of commands and each of its squads takes one action. Moving a vehicle one region takes 1 hour on roads, more on rough terrain (see Terrain types). Travel and healing progress per hour. Waiting is an action too and passes time. Trading and hiring take no time; resting takes as many hours as the player sets; scouting takes 3 hours (placeholder); a battle always takes 1 hour, however long it runs in real time. The clock runs in full hours only: every duration is a whole number of hours, with no fractions. A day counter starts at Day 1 when the campaign begins and goes up by one at 00:00. Every point in time is written as day and hour (e.g. Day 14, 06:00) and serves as the time reference for anything in the game, past or future: when an event happened in the news feed, service records and after-action reports, and when a deadline, intel expiry or scheduled event is due. The daily checks (world events, desperate measures, barter deals) run at 00:00.
 - **Intel:** fog of war on enemy strength. Recon, informants and drones reveal operation areas, layouts, loot hints and exits.
 - **Escalation:** the enemy adapts: better gear, counter-raids on your regions, rival PMC hunt squads (XCOM pressure).
 
@@ -172,11 +172,13 @@ Deep in the woods and mountains lie closed Soviet-era cities (background in Stor
 Every faction — the SSV, the VDK, Varyag, Aegis, the Krug and the player — fields squads on the map. Each non-player squad has a goal and pursues it with the same rules as the player: it moves, burns fuel, uses supplies and fights.
 
 - **Goals:** patrol, supply run, attack or hold a point of interest, escort, trade route, hunt (a squad sent after a specific target, including the player).
-- **Strategic turn:** one strategic turn is one hour of game time. The player's action runs for its duration, and every faction squad takes one action toward its goal for each hour that passes.
+- **Strategic turn:** one strategic turn is one hour of game time. The player's action runs for its duration, and every faction squad takes one action toward its goal for each hour that passes. An action that takes several hours (travel, rest, healing) can be interrupted by an encounter or an event; the hours already spent count. The player chooses an action for each of their squads, then commits by ending the turn. Nothing resolves before that: once the turn ends, the actions of all squads, the player's and every AI faction's, resolve together.
 - **Encounters:** when squads meet in a region, the faction behaviour rules decide whether it turns hostile. If the player is involved, it becomes a tactical engagement; the player can also try to evade (Recon and terrain) or, with the Krug, pay their way.
 - **Off-screen fights:** battles between non-player squads are resolved automatically from squad strength, gear and terrain; the result changes control, loyalty and supply on the map.
 - **Control:** holding points of interest gives factions income, supplies and recruits; losing them weakens their squads over time. This is how the war shifts without the player — and how the player's choices tip it.
 - **Operations:** a player op is the player's squad leaving an FOB, moving across this map to its objectives and getting back (see Core loop).
+
+**Faction funds (draft):** the Strategic layer owns every AI faction's money. Income comes from the regions and plants the faction holds; it pays for its squads, salaries and the contracts it offers. The formulas live in a shared rules file that Management also uses for the player's PMC. Contract pay crosses modules through an interface: Strategic deducts it from the employer's funds and Management credits the player. A faction whose income cannot cover its costs meets the Low liquidity crisis sign.
 
 ### **VIPs**
 
@@ -224,7 +226,7 @@ The ten crisis signs and the measures each faction can pick are listed in [World
 
 **Flavour events (no gameplay effect)**
 
-Flavour events appear only in the news feed, on radio intercepts or as visual changes on the map. The event list is in [Sloperator – Story & Lore](https://claude.ai/artifact/QKZMoCYw1dk6DrBsicjvS8).
+Flavour events appear only in the news feed, on radio intercepts or as visual changes on the map. The event list is in [Concisus – Story & Lore](https://claude.ai/artifact/QKZMoCYw1dk6DrBsicjvS8).
 
 ### Map generation (draft)
 
@@ -247,7 +249,7 @@ Turn-based squad combat on destructible 3D maps, with JA2-style action points an
 
 - **Turn structure:** alternating soldier activations with stamina-limited reactions (see Turn structure below). Turn-based from the first moment on the map, including stealth: there is no real-time exploration phase.
 - **Action points (decided):** each soldier's AP per activation are derived from their stats, so a fast, skilled veteran does more per activation than a rookie. AP is spent on movement, stance, aiming, reloading, medical and gear actions; aiming longer raises accuracy.
-  - Turn modifiers: leg or arm wounds, over-encumbrance and suppression reduce the pool for that activation.
+  - Turn modifiers: over-encumbrance and suppression reduce the pool for that activation.
   - Action costs also scale with stats and gear: Marksmanship and weapon ergonomics lower reload and aim costs, Agility speeds up weapon swaps, Strength lowers the penalty for heavy kit.
 - **Camera (decided):** isometric 3D camera with smooth zoom — zoomed out for planning across the map, zoomed in to read cover, stance and gear. Fixed default angle; walls and roofs cut away around selected soldiers and the cursor, and units behind cover show as outlines. Optional 90° rotation (Q/E on PC, a rotate button on mobile) with a snap-back-to-default button and a compass, so the game stays fully playable without ever rotating. Assets are built to read from all four sides. Mouse wheel on PC, pinch on mobile.
 - **Movement (decided):** grid-based on square tiles (about 1.5 m), 8 directions, diagonals cost more AP.
@@ -332,7 +334,7 @@ Every action spends AP within an activation, and activations and reactions spend
 **Decision: MoA is simulated.** Every shot is a real spread cone tested against the target's silhouette and cover, not a range-band table.
 
 - **Per shot:** pick a point inside the cone (normal distribution, most shots near the centre) and trace it against simple hit volumes per body zone and against cover.
-- **Shot preview:** the hit chance and likely body zone shown before firing come from the same model, sampled (e.g. a few hundred traces), so the number shown and the result always agree.
+- **Shot preview:** the hit chance and likely body zone shown before firing come from the same model, sampled (e.g. a few hundred traces), so the number shown and the result always agree. The preview samples with its own random stream, so looking at a preview never changes a real shot or a replay.
 - **Performance:** hit volumes are low-poly boxes per body zone, which keeps sampling cheap enough for phones.
 - **Payoff:** distance, cover, stance, barrel, ammo and optics all change the result through one mechanism, and modding has a visible effect on every shot.
 
@@ -548,14 +550,14 @@ The Tarkov layer: what you carry in is at risk, what you carry out pays for the 
 
 ### Reputation (draft)
 
-**Draft — not final.** Every faction holds one reputation value toward the player's PMC, from −100 to 100, starting at 0. It moves with three things: how the player handles contracts, what the player does to the faction, and whom the player helps.
+**Draft — not final.** Every faction holds one reputation value toward the player's PMC, from −100 to 100, starting at 0. It moves with two things: how the player handles contracts and what the player does to the faction. For now an act changes reputation only with the faction it affects directly; there is no spill-over to that faction's allies or enemies.
 
 **Standing**
 
 | Reputation | Standing | Effect |
 | --- | --- | --- |
-| ≤ −50 | Hostile | Attacks on sight; may put a bounty on the PMC |
-| −49 to −20 | Unfriendly | No contracts or trade; hostile when competing for the same objective |
+| ≤ −50 | Hostile | No contracts or trade; attacks on sight; may put a bounty on the PMC |
+| −49 to −20 | Unfriendly | Fewer contracts and higher prices; hostile when competing for the same objective |
 | −19 to 19 | Neutral | Basic trade and contracts |
 | 20 to 49 | Friendly | Military gear, better contracts |
 | ≥ 50 | Trusted | Armoured vehicles, helicopters, best stock, sensitive contracts |
@@ -578,13 +580,6 @@ The Tarkov layer: what you carry in is at risk, what you carry out pays for the 
 | Hostile acts | Take one of its regions | −15 |
 | Hostile acts | Krug: break a deal or fight in a Krug market | −50 |
 | Hostile acts | War crimes (killing civilians or prisoners) | −20 with every faction; civilian loyalty collapses in the region |
-
-**Helping opposing factions**
-
-- Factions hold relations toward each other (−100 to 100, see World events). Whenever the player's reputation with a faction rises, every faction **hostile** to it (relation ≤ −50) loses half that amount, and every faction **allied** with it (relation ≥ 50) gains a quarter.
-- Example: a +10 contract for the VDK costs −5 with the SSV and gives +2 with Aegis.
-- The Krug is neutral to everyone: helping one side never costs Krug standing, unless the act hurts the Krug itself.
-- Varyag and Aegis move with their patrons at half strength on top of their own changes.
 
 **Attribution**
 
@@ -610,7 +605,10 @@ The PMC's progress is what it owns, not what it builds. FOBs have no upgrades an
 
 ## AI
 
-Each layer's AI is a separate module. It sees only what its side knows and issues the same commands a player does; the utility-AI structure is defined in the workflow doc.
+Each layer's AI is a separate module. It sees only what its side knows under fog of war and issues the same commands a player does; it never changes game state directly. Both layers use utility AI: each agent scores the actions available to it and picks the best one, so behaviour comes from shared situation maps and from agents reacting to each other, not from scripts.
+
+- **Data:** weights, response curves and faction doctrines are data in /data/ai/, tuned like other content. All behaviour values are unset for now.
+- **Logging:** every decision is logged with its top-scored options, so behaviour can be inspected and explained.
 
 ### Strategic AI
 
@@ -622,11 +620,30 @@ Each layer's AI is a separate module. It sees only what its side knows and issue
 
 Otherwise its units go about their business, on the strategic map and in tactical engagements alike. Attacking a non-hostile faction is the player's choice — and costs reputation.
 
-**Controller hand-off.** The Strategic Layer decides when a faction acts; `strategic-ai` decides what it does. After each player action, every faction gets its perception view (what it knows under fog of war) and returns commands: set a goal, move a squad, offer a contract. The Strategic Layer validates and resolves them; contract offers go on to Management.
+**Faction AI tiers.** Each faction AI works toward its ultimate goal in three tiers:
+
+| Tier | Role |
+| --- | --- |
+| Situation maps | Per-region values computed every hour: own and enemy strength, economic value, threat, frontline, supply reach |
+| Strategist | Scores candidate objectives: own gain + damage to rivals − cost − risk + a commitment bonus for current plans |
+| Operational planner | Assigns squads to objectives, or offers a contract when its own squads can't reach the objective or are worth more elsewhere |
+
+Other factions evaluate contract offers with the same utility scoring. Faction personalities come from doctrine data: aggression, risk tolerance, contract use and hostility per faction.
+
+**Controller hand-off.** The Strategic Layer decides when a faction acts; `strategic-ai` decides what it does. For every hour that passes, every faction gets its perception view (what it knows under fog of war) and returns commands: set a goal, move a squad, offer a contract. The Strategic Layer validates and resolves them; contract offers go on to Management.
 
 ### Tactical AI
 
 Enemy squads take roles: flank, suppress, retreat, call reinforcements. Units of non-hostile factions on the same map follow their own objectives and only engage under the faction behaviour rules above.
+
+**Unit scoring.** Each unit scores its candidate actions, weighted in this order of importance:
+
+1. **Survival:** exposure, threat, HP, morale. It acts as a multiplier that dominates as danger rises, not as a hard rule that blocks everything else.
+2. **Battle goal:** progress toward the objective and the squad's current plan.
+3. **Action fit:** how effective each action is in the current situation.
+4. **Coordination:** bonuses for answering squad requests, penalties for tiles or targets a squadmate has claimed.
+
+A squad leader sets the squad plan and roles. Units coordinate through a shared blackboard of requests and claims. The battle goal and an acceptable-loss threshold come from the strategic layer, through the tactical map request.
 
 **Controller hand-off.** The Tactical Layer decides when a unit acts; `tactical-ai` decides what it does.
 
