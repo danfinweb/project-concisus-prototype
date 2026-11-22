@@ -5,6 +5,8 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
+Design baseline: — (none yet; set by `/update-spec` to the commit whose `design/` the spec was built from)
+
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
 | GEN | [overview.md](overview.md) | design.md › Overview, Factions & campaign | all modules |

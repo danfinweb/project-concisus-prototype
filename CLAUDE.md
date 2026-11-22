@@ -10,7 +10,9 @@ chain (design → spec → schema → code and tools). Findings come back up as 
 ## Rules
 
 1. `design/` is read-only. Never edit it. It is a Markdown export of the live Claude Docs (links in
-   `design/README.md`); only the user changes the design, and the export is refreshed from the live docs.
+   `design/README.md`); only the user changes the design. Refresh the export from the live docs **only
+   when the user explicitly permits it** for that refresh — comparing the live docs with `design/` and
+   reporting differences is fine, writing is not.
 2. `spec/` changes only through `/update-spec`.
 3. Modules never import from other modules or from `tools/`. They exchange data only through the
    interfaces in `spec/interfaces/`.
