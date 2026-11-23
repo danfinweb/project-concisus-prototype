@@ -160,9 +160,9 @@ Civilian items with no use in combat. They are sold for money or traded for gear
 
 | Item | Weight (kg) | Value | Rarity | Found in |
 | --- | --- | --- | --- | --- |
-| Cigarettes (pack) | 0.02 | $15 | Common | Bodies, houses, checkpoints |
+| Cigarettes (pack) | 0.02 | $15 | Common | Bodies, houses |
 | Cigarettes (carton) | 0.25 | $150 | Uncommon | Shops, warehouses, convoys |
-| Vodka (bottle) | 0.8 | $30 | Common | Houses, shops, checkpoints |
+| Vodka (bottle) | 0.8 | $30 | Common | Houses, shops |
 | Instant coffee | 0.2 | $20 | Common | Houses, shops |
 | Black tea | 0.1 | $10 | Common | Houses, shops |
 | Sugar (1 kg) | 1.0 | $8 | Common | Houses, shops, warehouses |
@@ -201,7 +201,6 @@ Items that open options during operations or can be handed in to a faction for m
 | Field orders | 0.3 | Squad leaders, command posts | Read: shows that squad's goal and route for 72 hours | Its enemies: $300, +3 reputation |
 | Encrypted radio | 1.5 | Radio operators, command vehicles | Carried by a squad: shows that faction's squads in adjacent regions for 7 days | Its enemies: $800, +5 reputation |
 | Codebook | 0.2 | Officers, command posts | With an encrypted radio of the same faction: range 2 regions, duration 14 days | Its enemies: $1,000, +5 reputation |
-| Checkpoint pass (per faction) | 0.01 | Officers, command posts | That faction's checkpoints let the squad pass without an encounter for 7 days, while standing is above −50 | — |
 | Western satellite phone | 1.0 | Western-backed officers, Aegis | — | SSV or Varyag: $1,200, +5 reputation |
 | Hard drive with data | 0.3 | Offices, PMC command posts, old laptops (10%) | — | Rival of the owning PMC: $1,500, +5 reputation; the Krug: $2,000, no reputation |
 | Demolition charge | 2.0 | Military depots, engineers | Destroys a wall or a vehicle; required for sabotage objectives (bridges, plants) | — |

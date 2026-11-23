@@ -49,7 +49,7 @@ Nov 22, 2026 · @Dan
 | Paying any price | SSV, VDK, Krug | Troop losses or repeated defeats by the player, while money is still available | Contract pay doubles; the faction even hires PMCs it has fought | Big money from a former enemy, at a reputation cost elsewhere |
 | Scorched earth | SSV, VDK | Area losses | Plants, bridges and roads in regions about to be lost are destroyed | Lost income and routes for everyone; contracts to stop or carry out demolitions |
 | Mining the roads | SSV, VDK | Area losses | Minefields on roads and approaches in threatened regions | Hazards on the strategic map; Technical soldiers clear them (mines on the tactical map: OPTIONAL, later build) |
-| Martial law | SSV, VDK | Resistance in its territory, capital threatened | Curfews and checkpoints in all held cities; trade restricted, civilians searched | Harder movement and trade; smuggling contracts with the Krug |
+| Martial law | SSV, VDK | Resistance in its territory, capital threatened | Curfews in all held cities; trade restricted, civilians searched | Harder movement and trade; smuggling contracts with the Krug |
 | Seizing Krug stocks | SSV, VDK | Low liquidity | Raids Krug markets for fuel and ammunition | The Krug turns hostile to that faction; contracts to defend or loot the markets |
 | VIP strike | SSV, VDK | Little territory, isolation | Sends a team to kill a high-ranking officer of the opposing faction (see VIPs in the GDD). The death hits that faction's best troops hardest | Contracts to protect the VIP or carry out the strike; intel on the target's location is part of the contract |
 | Nuclear strike | SSV, VDK | Five or more signs, one of them Capital threatened | See Nuclear strike below | See below |

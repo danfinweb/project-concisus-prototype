@@ -128,14 +128,14 @@ Every player action on the strategic map takes a whole number of hours (some tak
 **Draft — not final.** The strategic map is the whole of Veligrad on a square tile grid, consistent with the tactical layer (hex tiles are a switchable option for testing). Each tile is one region: one terrain type, at most one point of interest and its controlling faction; a road can lie on top of the terrain. Settlements (cities, towns, villages) also hold civilian loyalty, one value per faction from −100 to 100. Every faction moves its squads across the map tile by tile.
 
 - **The capital** starts in the hands of the SSV or the VDK, but it can fall. If its holder dissolves or loses it, the capital is uncontrolled and contested; whoever holds it for a set time (draft 7 days) becomes its holder. If that is the player, it counts as the coup ending; a rival PMC holding it just becomes its holder, and for now only the player's coup ends the campaign (see Coups).
-- **Roads connect every point of interest except hidden cities, which only helicopters can reach (hidden cities are an optional feature).** Off-road travel is possible where the terrain allows it.
+- **Roads connect every point of interest except hidden cities, which only helicopters can reach (hidden cities are an optional feature).** Off-road travel is possible where the terrain allows it. Krug markets are a flag on a town or city tile, not a point of interest of their own. Each strategic terrain type maps to a biome (in a strategic terrain table) that selects the tactical terrain and prefab tables for battles on that tile.
 - **Fog of war:** the player sees regions within the recon range of their squads, FOBs and intel sources; everything else shows the last known state.
 
 **Terrain types**
 
 | Terrain | Vehicle (hours per region) | On foot (hours per region) | Visibility | Character |
 | --- | --- | --- | --- | --- |
-| Asphalt road | 1 | 2 | Seen from far | Fastest route; patrols and checkpoints |
+| Asphalt road | 1 | 2 | Seen from far | Fastest route; patrols |
 | Road (dirt or gravel) | 1 | 2 | Medium | Connects towns and plants; ambush-prone |
 | Steppe | 2 | 2 | Open, long sightlines | Hard to hide; fast off-road with the right tyres |
 | Woods | 3 | 2 | Low | Concealment and ambushes |
@@ -736,7 +736,7 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 
 ### Vehicles (draft)
 
-**Draft — not final.** Vehicles are not upgraded; the player chooses between different vehicles, each with its own cost, parameters and features. A squad on the map is its vehicle: seats cap the squad size, its storage holds both the squad's supplies and what it brings home.
+**Draft — not final.** Vehicles are not upgraded; the player chooses between different vehicles, each with its own cost, parameters and features. A squad on the map has at most one vehicle: its seats cap the squad size and its storage holds the squad's supplies and what it brings home. A squad without a vehicle travels on foot (2 hours per tile, 3 in mountains) and carries only what its soldiers carry.
 
 - **Start:** the player buys a first vehicle with the starting budget; only the cheapest few are affordable.
 - **Buying and selling:** in large cities and at mechanical plants. Some vehicles are only sold to factions' friends (high standing) or through the Krug.
@@ -754,7 +754,7 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 | Off-road | Poor / good / very good: lowers the travel time in steppe and woods |
 | Armour | Protection for passengers in road encounters (armour class) |
 | Noise | How far away factions notice it |
-| Profile | Civilian or military: civilian vehicles draw less attention at checkpoints |
+| Profile | Civilian or military |
 | Features | Special abilities, listed below |
 
 **Vehicles**
