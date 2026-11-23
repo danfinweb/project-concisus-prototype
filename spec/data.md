@@ -20,6 +20,8 @@ every record has a `kind` that selects its profile:
 | `mod` | Weapon mod profile | DAT-016 |
 | `calibre` | Calibre profile | DAT-019 |
 | `ammo` | Ammunition load profile | DAT-021 |
+| `magazine` | Magazine (box, pistol magazine or belt) | DAT-030 |
+| `grenade` | Grenade | ITM-032 |
 | `helmet` | Helmet | ITM-009 |
 | `bodyArmour` | Body armour | ITM-011 |
 | `vest` | Load-bearing vest | ITM-013 |
@@ -33,7 +35,7 @@ Calibres and ammunition loads stay in `data/items.json` (not own tables): they a
 the weapons in the item editor, ammo loads are carried and traded like any item, and one registry lookup
 resolves every weapon → calibre → load reference. Vehicles are not items (they are bought, crewed and
 moved on the strategic map) and live in their own table `data/vehicles.json` (proposed new table).
-**Source.** design/design.md › Data definitions; design/item-list.md
+**Source.** design/design.md › Data definitions; design/item-list.md › Weapons (magazines are items), Grenades
 
 ### [DAT-002] Common item fields
 **Rule.** Every record in `data/items.json` has:
@@ -61,11 +63,11 @@ Multipliers are plain factors (`0.9` = ×0.9).
 ### [DAT-004] Definitions versus instance state
 **Rule.** `/data` holds definitions only; they are frozen at load and never changed by play. Per-instance
 values live in the owning state slice and reference the definition by `id`: a gun's `condition` (DAT-014),
-its fitted mods and loaded ammo; an armour piece's current durability; a medical item's remaining uses or
+its fitted mods, its loaded magazine and loaded rounds; a magazine's rounds (count and load, DAT-030); an armour piece's current durability; a medical item's remaining uses or
 HP; the issuing faction or point of interest of per-faction items (ITM-025); a vehicle's fuel, storage
 contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `battle` (TAC) in a fight,
 `world` (STR) for items and vehicles left on the map.
-**Source.** design/design.md › Data definitions (intro); › Weapon profile › State, not profile
+**Source.** design/design.md › Data definitions (intro); › Weapon profile › State, not profile; design/item-list.md › Weapons (magazine rounds are counted)
 
 ## Soldier equipment slots
 
@@ -75,7 +77,7 @@ contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `ba
 | Slot | Accepts `kind` | Access tier | Effect in play |
 | --- | --- | --- | --- |
 | `weapon1` | `weapon` (any type) | — | Equipped weapon |
-| `weapon2` | `weapon` (any type) | — | Second equipped weapon; switching weapon 1 ↔ 2 costs AP (TAC; Marksmanship, Agility, ergonomics) |
+| `weapon2` | `weapon` (any type) | — | Second equipped weapon; switching weapon 1 ↔ 2 costs AP (TAC-042: Agility and whether a pistol is involved) |
 | `helmet` | `helmet` | — | Armour class for the head zone; may narrow hearing (ITM-010) |
 | `bodyArmour` | `bodyArmour` | — | Armour class for the thorax zone; durability wears per hit (ITM-012) |
 | `vest` | `vest`, or the plate carrier in `bodyArmour` (DAT-009) | quick | Item list with weight and type limits |
@@ -84,7 +86,7 @@ contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `ba
 
 The loadout is part of the soldier record (MGT) and of the unit in `battle` (TAC).
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft)
+**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); design/tactical-actions.md › Weapons (Swap between weapon 1 and 2)
 
 ### [DAT-006] Access tiers
 **Rule.** Items used from a quick container (vest, belt) cost their normal AP. Items used from the backpack
@@ -127,20 +129,23 @@ on the body until another soldier recovers it.
 | `weaponType` | enum | — | `pistol`, `shotgun`, `smg`, `assaultRifle`, `battleRifle`, `dmr`, `sniperRifle`, `lmg` | Animations, AI role (TAI), trader and loot categories |
 | `calibre` | ID → items (`calibre`) | — | existing calibre | Cartridge fired; decides which ammo and magazines fit (DAT-020) and scales recoil |
 | `fireModes` | array of (integer ≥ 1 or `"auto"`) | rounds per trigger action | non-empty, unique | DAT-012 |
-| `magazineSize` | integer | rounds | ≥ 1 | Standard magazine capacity |
+| `magazineSize` | integer | rounds | ≥ 1 | Capacity of the standard magazine (box/pistol/belt) or of the tube (`tube`) |
 | `barrelMultiplier` | number | factor | > 0, around 1.0 (short < 1.0, long > 1.0) | Multiplies calibre damage; fixed, never changed by mods |
-| `ergonomics` | integer | — | 1–100 | AP cost to ready, aim, reload (with Marksmanship, TAC) |
+| `ergonomics` | integer | — | 1–100 | AP cost to fire (TAC-039) and reload (TAC-041); no effect on aim or swap |
 | `baseMoa` | number | game MoA | > 0 | Mechanical accuracy, DAT-013 |
 | `weightKg` | number | kg | > 0 | Weight with standard magazine |
 | `recoil` | integer | — | 1–100 | Base kick per shot; × calibre `recoilModifier` = effective recoil (TAC) |
 | `modSlots` | array of enum | — | subset of `muzzle`, `stock`, `pistolGrip`, `magazine`, `optic`, `handguard` | Which mod slots exist; the barrel is not a slot |
 | `action` | enum | — | `pump`, `bolt` | Optional descriptor from the item list; no rule uses it yet |
-| `feedType` | enum | — | `pistol`, `boxMagazine`, `stripperClip`, `boltAction`, `belt`, `tube` | Selects the reload base AP (TAC-041); `tube` reloads per shell |
+| `feedType` | enum | — | `pistol`, `boxMagazine`, `stripperClip`, `boltAction`, `belt`, `tube` | Selects the reload base AP (TAC-041) and how the weapon is fed: `pistol`, `boxMagazine`, `belt` take a fitting `magazine` item (DAT-030); `tube` loads loose shells (partial reload) |
 | `fireApCost` | integer | AP | ≥ 1 | Optional; overrides the weapon-type default fire AP (TAC-039) before fire-mode and ergonomics modifiers |
 
 Mods change these values directly (DAT-016) except `barrelMultiplier` and `baseMoa`.
-**Values.** `feedType` per weapon — not set (design: the item list gives no feed type per weapon) →
-data/items.json; `fireApCost` — not set for any weapon (type defaults apply, TAC-039).
+**Values.** `feedType` per weapon (design/item-list.md › Weapons) → data/items.json: `pistol` — PM, Glock 17;
+`boxMagazine` — PP-19-01 Vityaz, MP5, Saiga-12, AK-74M, AKM, M4A1, FN FAL, HK G3, SVD, M110, SV-98, M24,
+RPK-74; `belt` — M249, PKM; `tube` — Remington 870. `stripperClip` and `boltAction` stay in the enum (TAC-041
+reload costs) but no weapon uses them. RPK-74 `magazineSize` 40 (was 45). `fireApCost` — not set for any
+weapon (type defaults apply, TAC-039).
 **Status.** Draft (design: "Draft — not final").
 **Source.** design/design.md › Data definitions › Weapon profile (draft); design/item-list.md › Weapons; design/tactical-actions.md › Weapons (Fire, Reload)
 
@@ -191,12 +196,12 @@ them. Each slot holds at most one mod.
 
 Allowed `modifiers` keys per slot: muzzle — `recoil`, `flash`; stock, pistolGrip, frontGrip — `ergonomics`,
 `recoil`; handguard — `ergonomics` (plus own `weightKg`); magazine — `magazineSize`, `reloadAp`; optic —
-`shooterSpreadAtRange`. A fitted magazine mod replaces `magazineSize`; spare magazines carried in a vest or
-belt are instances of magazine mods and count as magazines for type limits (ITM-014). The weapon's
+`shooterSpreadAtRange`. A fitted magazine mod replaces `magazineSize`. Spare magazines are not mods: they are
+`magazine` items (DAT-030) and count as magazines for type limits (ITM-014). The weapon's
 effective weight = `weightKg` + Σ fitted mod `weightKg`.
 **Values.** all mod values; whether modifiers add or multiply — not set (design: Open) → data/items.json.
 **Status.** Draft; initial content: none in design/item-list.md (no mods listed).
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile
+**Source.** design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; design/item-list.md › Weapons (magazines are items)
 
 ### [DAT-017] Tactical modules
 **Rule.** `flashlight`: at night restores the carrier's full day sight and spotting range (TAC time of
@@ -212,6 +217,28 @@ data/tactical-rules.json.
 suppressed and suppressed-subsonic shots are TAC gunshot-noise rules (ITM-007).
 **Source.** design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; › Tactical Layer › Gunshot noise
 
+### [DAT-030] Magazine profile
+**Rule.** Magazines (box and pistol magazines) and belts are items, `kind: "magazine"`, with, in addition to
+DAT-002:
+
+| Field | Type | Unit | Range | Meaning |
+| --- | --- | --- | --- | --- |
+| `calibre` | ID → items (`calibre`) | — | existing calibre | Rounds it holds |
+| `feedType` | enum | — | `pistol`, `boxMagazine`, `belt` | Matches the weapon's `feedType` (DAT-011) |
+| `capacity` | integer | rounds | ≥ 1 | Rounds it holds when full |
+| `fits` | array of ID → items (`weapon`) | — | non-empty; every weapon has the same `calibre` and `feedType` | Weapons it can be loaded into |
+| `weightKg` | number | kg | ≥ 0 | Empty weight; loaded rounds add `roundWeightG` each (DAT-007) |
+
+Magazines of the same pattern are shared: one magazine record fits every weapon in its `fits`, whatever
+that weapon's own `magazineSize` (the loaded magazine's `capacity` sets the rounds available). A magazine
+instance (DAT-004) counts its rounds and records the load ID of each round or of the whole fill; it is
+refilled from loose ammunition of its calibre. Tube-fed weapons use no magazine item: they load loose
+shells (TAC-041).
+**Values.** magazine records, `capacity`, `fits` and weights → data/items.json (ITM-031); empty magazine
+weight — not set (design: "a weight", no values); refill cost or time — not set (design: Open).
+**Status.** open
+**Source.** design/item-list.md › Weapons (Feed type, magazines are items)
+
 ## Calibre profile
 
 ### [DAT-019] Calibre profile
@@ -225,14 +252,16 @@ suppressed and suppressed-subsonic shots are TAC gunshot-noise rules (ITM-007).
 | `recoilModifier` | number | factor | design: about 0.6–1.6 (item list goes down to 0.5) | Effective recoil = weapon `recoil` × this |
 | `roundWeightG` | number | g | > 0 | Weight per cartridge |
 
-A load may override `damage` and `projectiles` (ITM-008).
+A load may override `damage` and `projectiles` (ITM-008); 12 gauge sets them per load.
 **Status.** Draft (design: "Draft — not final").
 **Source.** design/design.md › Data definitions › Calibre profile (draft); design/item-list.md › Calibres
 
 ### [DAT-020] Calibre fit
 **Rule.** A weapon accepts an ammo load or a magazine mod only if it references the same calibre ID
-(weapon `calibre` = load `calibre` = magazine's weapon calibre).
-**Source.** design/design.md › Data definitions › Calibre profile (draft) › Designation
+(weapon `calibre` = load `calibre` = magazine's weapon calibre). A `magazine` item (DAT-030) fits a weapon
+only if the weapon is in its `fits` list, which requires the same `calibre` and `feedType`; a magazine is
+filled only with loads of its own `calibre`.
+**Source.** design/design.md › Data definitions › Calibre profile (draft) › Designation; design/item-list.md › Weapons (magazines are items)
 
 ## Ammunition load profile
 
@@ -369,16 +398,18 @@ STR). A vehicle left behind on a failed op can be destroyed, captured or recover
 
 ### [ITM-001] Weapon items
 **Rule.** Weapons are `kind: "weapon"` records (DAT-011). The item-list type "Shotgun (pump)" maps to
-`weaponType: shotgun, action: pump`; "Sniper rifle (bolt)" to `sniperRifle, action: bolt`.
-Initial content: design/item-list.md › Weapons (18 weapons).
+`weaponType: shotgun, action: pump`; "Sniper rifle (bolt)" to `sniperRifle, action: bolt`. The item-list
+feed types map to `feedType`: Pistol → `pistol`, Box magazine → `boxMagazine`, Belt → `belt`, Tube → `tube`.
+Initial content: design/item-list.md › Weapons (18 weapons, with feed type; RPK-74 magazine 40).
 **Source.** design/item-list.md › Weapons
 
 ## Calibres
 
 ### [ITM-002] Calibre items
 **Rule.** Calibres are `kind: "calibre"` records (DAT-019); damage is per projectile at the muzzle with
-barrel multiplier 1.0. The 12 gauge record holds the buckshot values (`damage` 25, `projectiles` 8); the
-slug load overrides them (ITM-008).
+barrel multiplier 1.0. 12 gauge sets damage and projectile count per load: both its loads carry
+`damageOverride` / `projectilesOverride` (ITM-008); the calibre record keeps the buckshot values
+(`damage` 25, `projectiles` 8) only as the fallback the profile requires.
 Initial content: design/item-list.md › Calibres (8 calibres).
 **Source.** design/item-list.md › Calibres
 
@@ -416,9 +447,26 @@ It comes from the load alone and never changes with distance or barrel length.
 
 ### [ITM-008] Load-specific damage and projectiles
 **Rule.** If a load sets `damageOverride` / `projectilesOverride`, they replace the calibre's `damage` /
-`projectiles` for that load. Used for 12 gauge: slug = 90 damage, 1 projectile.
-**Values.** slug `damageOverride` 90, `projectilesOverride` 1 → data/items.json.
-**Source.** design/item-list.md › Calibres (12 gauge row)
+`projectiles` for that load. Used for 12 gauge, on every load: buckshot = 8 projectiles × 25 damage, slug =
+1 projectile × 90 damage.
+**Values.** buckshot `damageOverride` 25, `projectilesOverride` 8; slug `damageOverride` 90,
+`projectilesOverride` 1 → data/items.json.
+**Source.** design/item-list.md › Calibres (intro and 12 gauge row)
+
+## Magazines
+
+### [ITM-031] Magazine items
+**Rule.** Every magazine-, pistol- or belt-fed weapon (DAT-011 `feedType` ≠ `tube`) has at least one
+`kind: "magazine"` record (DAT-030) that fits it, with `capacity` = the weapon's `magazineSize` unless a
+shared pattern says otherwise. Shared pattern from the item list: the RPK-74's 40-round magazine and the
+AK-74M's 30-round magazine both fit RPK-74 and AK-74M. Belts for M249 and PKM are `feedType: belt`
+records (100 rounds). Other sharing between weapons of the same calibre and feed type is not stated.
+Initial content: one magazine per weapon from design/item-list.md › Weapons (17 non-tube weapons), with
+the AK-74M / RPK-74 pair sharing `fits`.
+**Values.** `capacity` per magazine (from `magazineSize`; RPK-74 40, AK-74M 30, M249/PKM belt 100) →
+data/items.json; magazine weights — not set (design: no values).
+**Status.** open (weights; which other weapons share patterns)
+**Source.** design/item-list.md › Weapons (Feed type, magazines are items)
 
 ## Helmets
 
@@ -480,9 +528,10 @@ Initial content: design/item-list.md › Load-bearing vests (4 vests).
 
 ### [ITM-014] Pouch type limits
 **Rule.** Every item placed in a vest or plate-carrier pouch counts in exactly one type category:
-`magazine` (magazine mods, DAT-016), `grenade`, `medical` (`kind: medical`), `other` (everything else).
+`magazine` (`kind: magazine`, DAT-030), `grenade` (`kind: grenade`, ITM-032), `medical` (`kind: medical`),
+`other` (everything else).
 The count per category must stay ≤ its `max…` value, in addition to `capacityKg`.
-**Source.** design/item-list.md › Load-bearing vests; design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits
+**Source.** design/item-list.md › Load-bearing vests; › Weapons (magazines are items); › Grenades; design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits
 
 ### [ITM-015] Other items
 **Rule.** `other` covers barter goods, operation and faction items and small tools — everything not a
@@ -525,7 +574,7 @@ Initial content: design/item-list.md › Backpacks (4 backpacks).
 | `apCost` | integer | AP | ≥ 1 | Base AP before Medical modifiers (TAC) |
 | `uses` | integer or null | uses | ≥ 1 | Uses per item; null when `hpPool` is set |
 | `hpPool` | number | HP | > 0 | Total HP restorable (IFAK, medkit) |
-| `hpPerUseMax` | number | HP | > 0 | Optional cap per use |
+| `hpPerUse` | number | HP | > 0 | Optional; base HP per use before the Medical multiplier (TAC-066); replaces `hpPerUseMax` |
 | `durationTurns` | integer | turns | ≥ 1 | Optional; effect duration (painkillers) |
 | `restoresToHp` | number | HP | ≥ 1 | Optional; surgical kit sets a 0-HP limb to this |
 | `causesPain` | boolean | — | — | Tourniquet |
@@ -538,12 +587,38 @@ Initial content: design/item-list.md › Medical items (8 items).
 ### [ITM-020] Medical item restrictions
 **Rule.** Tourniquet treats heavy bleeding on arms and legs only. Hemostatic dressing treats heavy
 bleeding in any zone (light and quick); the medkit also stops heavy bleeding in any zone, so neither is
-exclusive. IFAK restores up to `hpPerUseMax` per use from its pool. Painkillers mask pain for
-`durationTurns`. Surgical kit needs Medical ≥ `requiresMedical` and brings an arm or leg at 0 HP back to
+exclusive. IFAK restores `hpPerUse` per use before the Medical multiplier (TAC-066), so a skilled medic
+restores more than that per use, from its pool. Painkillers mask pain for
+`durationTurns`. Surgical kit needs Medical ≥ `requiresMedical` and brings a disabled arm or leg (0 HP) back to
 `restoresToHp`. Medkit is `backpackOnly`.
-**Values.** IFAK `hpPool` 60, `hpPerUseMax` 15; medkit `hpPool` 300; painkillers `uses` 4,
+**Values.** IFAK `hpPool` 60, `hpPerUse` 15; medkit `hpPool` 300; painkillers `uses` 4,
 `durationTurns` 10; surgical kit `uses` 3, `requiresMedical` 40, `restoresToHp` 1 → data/items.json.
-**Source.** design/item-list.md › Medical items
+**Source.** design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft) › Using medical items
+
+## Grenades
+
+### [ITM-032] Grenade items
+**Rule.** `kind: "grenade"` adds, in addition to DAT-002 (`weightKg` required):
+
+| Field | Type | Unit | Range | Meaning |
+| --- | --- | --- | --- | --- |
+| `effect` | enum | — | `frag`, `smoke` | Effect on landing (TAC-079) |
+| `radiusTiles` | number | tiles | > 0 | Blast or cloud radius |
+| `damage` | number | HP | ≥ 0 | Frag: damage at the point of impact, falling evenly to 0 at the edge; smoke: 0 |
+| `penetrationClass` | integer | class | 0–6 | Frag: penetration class of the blast (TAC-050) |
+| `durationTurns` | integer or null | turns | ≥ 1 | Smoke: how long the cloud lasts; null for instant effects |
+| `blocksSight` | boolean | — | — | Smoke: blocks line of sight into, out of and through the cloud |
+| `loud` | boolean | — | — | Frag: heard across the map; smoke: quiet |
+
+Grenades go in the vest's or plate carrier's grenade pouches (`grenade` type limit, ITM-014) or the battle
+belt; from the backpack they cost the backpack surcharge (TAC-043, TAC-068). Strength sets the throwing
+distance; a wounded or disabled arm widens the landing scatter (TAC-043).
+Initial content: design/item-list.md › Grenades (2 grenades).
+**Values.** (all draft, placeholder) frag grenade — `weightKg` 0.6, `damage` 100, `radiusTiles` 4,
+`penetrationClass` 2, instant, `loud` true; smoke grenade — `weightKg` 0.5, `damage` 0, `radiusTiles` 3,
+`durationTurns` 4, `blocksSight` true, `loud` false → data/items.json.
+**Status.** Draft (design: "Draft — placeholder values").
+**Source.** design/item-list.md › Grenades
 
 ## Barter goods
 
@@ -652,11 +727,11 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 2. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open.
 3. DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
    calibre), modifier arithmetic (add vs multiply) and the meaning of the muzzle `flash` value are not stated.
-4. DAT-016/ITM-014 — Are spare magazines separate items (magazine mods) with loaded rounds tracked per
+4. **Resolved (design eb072a2):** magazines are items with calibre, capacity, weight and fitting weapons, their rounds are counted, and they are refilled from loose ammunition (DAT-030, ITM-031). DAT-016/ITM-014 — Are spare magazines separate items (magazine mods) with loaded rounds tracked per
    magazine, or abstract? The ammunition crate restocks "loose ammo", which suggests loose rounds exist too.
-5. ITM-014 — Grenades have a type limit but no grenade items or grenade profile exist in the design.
+5. **Resolved (design eb072a2):** the item list adds a Grenades section — frag and smoke grenades with draft weight, radius, damage, penetration and duration (ITM-032). ITM-014 — Grenades have a type limit but no grenade items or grenade profile exist in the design.
 6. DAT-019 — Design says recoil modifier "about ×0.6–×1.6", the item list uses ×0.5 for 9×18 mm.
-7. DAT-019/ITM-008 — The calibre profile has one damage and projectile count, but 12 gauge differs per
+7. **Resolved (design eb072a2):** confirmed — 12 gauge sets damage and projectile count per load (buckshot 8 × 25, slug 1 × 90), kept as overrides on the loads. DAT-019/ITM-008 — The calibre profile has one damage and projectile count, but 12 gauge differs per
    load; this spec adds `damageOverride`/`projectilesOverride` on loads. Confirm.
 8. DAT-021 — HP "higher bleeding chance" and tracer "less recoil spread in bursts; reveals the shooter" have
    no values; AP "+1 to +2 penetration" is only a description (per-load classes are given).
@@ -685,6 +760,19 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
     or a rules table may be preferable.
 22. DAT-006/DAT-013/ITM-005/ITM-007/ITM-010/ITM-012 — Constants placed in `data/tactical-rules.json`
     (proposed); must match the table TAC uses.
-23. DAT-011 — `feedType` is needed per weapon for the reload cost (TAC-041), but the item list gives none:
+23. **Resolved (design eb072a2):** the item list gives a feed type per weapon: pistols `pistol`; M249 and
+    PKM `belt`; Remington 870 `tube`; every other weapon, including RPK-74, SV-98, M24 and Saiga-12,
+    `boxMagazine` (DAT-011). DAT-011 — `feedType` is needed per weapon for the reload cost (TAC-041), but the item list gives none:
     which LMGs are belt-fed, and do the bolt rifles (SV-98, M24) reload as `boltAction`, `stripperClip` or
     `boxMagazine`; which shotguns are `tube`-fed? Only pistols map obviously (`pistol`).
+24. DAT-030/ITM-031 — Magazines have "a weight" but no values; empty magazine weights are needed for
+    carried weight. Which other weapons of the same calibre and feed type share magazine patterns (e.g. FN FAL
+    and HK G3, both 7.62×51 mm box)? Only the AK-74M / RPK-74 pair is stated.
+25. DAT-030 — Refilling a magazine from loose ammunition: does it happen in battle (AP cost?) or only between
+    fights (vehicle storage, MGT)? Can a magazine hold mixed loads, and in what order are they fired?
+26. DAT-016/DAT-030 — Is the `magazine` mod slot still needed now that magazines are items (an extended
+    magazine would be a `magazine` record with a larger `capacity`), or does it stay for `reloadAp` mods?
+27. DAT-011 — `stripperClip` and `boltAction` feed types (TAC-041 reload costs) are used by no weapon in the
+    item list; keep them in the enum for later content?
+28. ITM-032 — Do grenades have trader prices and rarity, and does the battle belt cap grenade count (the
+    belt has only a weight limit)?

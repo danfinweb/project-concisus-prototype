@@ -71,8 +71,11 @@ views of `roster`.
 **Rule.** Morale is a squad-wide value, starting at `morale_start` for a new squad, kept between fights in
 `roster`. Only casualties move it (allies killed or wounded lower it, enemies killed or wounded raise it);
 the in-fight changes and the low-morale disobedience rule are TAC. After a battle, Management stores the
-final morale from the battle result.
-**Values.** `morale_start` — 80; `morale_flee_below` — 20 (used by TAC) → data/management-rules.json
+final morale from the battle result. The low-morale flight rule (below `morale_flee_below` an activated
+soldier may disobey and flee toward the nearest exit, TAC) is optional, left out of the first build
+iterations; morale persistence itself is not.
+**Values.** `morale_start` — 80; `morale_flee_below` — 20 (used by TAC, optional rule) → data/management-rules.json
+**Status.** optional (flight rule only)
 **Source.** design/design.md › Management › Soldiers & progression › Contracts & morale
 
 ### [MGT-009] Perks
@@ -207,20 +210,19 @@ data/management-rules.json
 **Source.** design/design.md › Management › Soldier attributes › Rules
 
 ### [MGT-026] Action points
-**Rule.** `AP = ap_base + floor(agility / ap_agility_divisor)` (25–35). All AP costs are integers.
-**Values.** `ap_base` — 25; `ap_agility_divisor` — 10 → data/management-rules.json
-**Source.** design/design.md › Management › Soldier attributes › Derived values
+**Rule.** Action points derive from Agility (main). The formula is owned by the Tactical Layer (TAC-006);
+Management stores only the attribute and computes nothing here.
+**Source.** design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer (Action points)
 
 ### [MGT-027] Stamina pool
-**Rule.** `stamina = stamina_base + floor(endurance / stamina_endurance_divisor)` (2–7).
-**Values.** `stamina_base` — 2; `stamina_endurance_divisor` — 20 → data/management-rules.json
-**Source.** design/design.md › Management › Soldier attributes › Derived values
+**Rule.** The stamina pool derives from Endurance (main). The formula is owned by the Tactical Layer
+(TAC-009); Management stores only the attribute.
+**Source.** design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Turn structure (Stamina)
 
 ### [MGT-028] HP per zone
-**Rule.** `zone_hp = base_hp(zone) × (hp_factor_base + hp_factor_endurance × endurance / 100)`. `base_hp`
-per zone is TAC (Body zones). Rounding not stated.
-**Values.** `hp_factor_base` — 0.5; `hp_factor_endurance` — 0.75 → data/management-rules.json
-**Source.** design/design.md › Management › Soldier attributes › Derived values
+**Rule.** HP per body zone derives from Endurance (main). The formula, including rounding, is owned by the
+Tactical Layer (TAC-057); Management stores only the attribute.
+**Source.** design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Body zones and hitboxes
 
 ### [MGT-029] Carry capacity
 **Rule.** Carry capacity is derived from Strength (main) and Endurance (minor). Formula not designed.
@@ -229,31 +231,31 @@ per zone is TAC (Body zones). Rounding not stated.
 **Source.** design/design.md › Management › Soldier attributes › Derived values
 
 ### [MGT-030] Other derived values
-**Rule.** Each derived value uses at most a main and a minor attribute; formulas are owned by TAC unless
-given here:
+**Rule.** Each derived value uses at most a main and a minor attribute. This table only names the
+attributes; the formulas are owned by the Tactical Layer (or STR where noted), and Management holds no
+values for them:
 
-| Derived value | Main | Minor | Rule |
+| Derived value | Main | Minor | Formula owner |
 | --- | --- | --- | --- |
-| Shooter spread | marksmanship | perception (at range) | feeds the TAC hit model |
-| Recoil control | marksmanship | strength | lowers spread added per follow-up round |
-| Reload and weapon swap cost | marksmanship | agility | with weapon ergonomics (ITM) |
-| Spotting and sight range | perception | recon | night without flashlight: 1/3 of day range |
-| Reaction chance | perception (reactor) | agility (mover) | `clamp(50 + (reactor.perception − mover.agility) / 2, 10, 90)` % |
-| Noise and concealment | recon | agility | distance at which enemies notice the soldier |
+| Shooter spread | marksmanship | perception (at range) | TAC hit model |
+| Recoil control | marksmanship | strength | TAC hit model |
+| Reload and weapon swap cost | marksmanship | agility | TAC Tactical actions: reload from Marksmanship and weapon ergonomics; swap from Agility and weapon weight |
+| Spotting and sight range | perception | recon | TAC; night sight TAC-004 |
+| Reaction chance | perception (reactor) | agility (mover) | TAC-022 |
+| Noise and concealment | recon | agility | TAC |
 | Treatment speed and effect | medical | — | TAC Medical system |
-| Repairs, explosives, piloting | technical | — | piloting a helicopter needs technical ≥ 50 |
+| Repairs, explosives, piloting | technical | — | TAC; helicopter pilot minimum STR-034 |
 
-**Values.** `night_sight_factor` — 1/3; `reaction_base` — 50; `reaction_min` — 10; `reaction_max` — 90;
-`pilot_min_technical` — 50 → data/management-rules.json
-**Source.** design/design.md › Management › Soldier attributes › Derived values
+**Source.** design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md
 
 ### [MGT-031] Nerve
 **Rule.** `nerve` is not rolled; it starts at 0 and grows with deployments survived and fights under fire
 (from the service record). Higher nerve lowers the effect of suppression and how much casualties lower
-morale for that soldier (applied in TAC).
+morale for that soldier (applied in TAC). That effect is not implemented in the first build iterations
+(deferred); nerve is still tracked.
 **Values.** growth per deployment/fight, scale, effect sizes — not set (design: not stated) →
 data/management-rules.json
-**Status.** open
+**Status.** open; effect optional
 **Source.** design/design.md › Management › Soldier attributes › Nerve
 
 ## Gear, loot & return
@@ -354,9 +356,13 @@ on the board); or from world events and desperate measures (STR). Management sto
 **Source.** design/design.md › Management › Contracts and missions
 
 ### [MGT-044] Mission outcome conditions
-**Rule.** Each mission resolves to `success` or `failure`, evaluated by STR/TAC and reported to
-Management. A mission counts as completed (`success`) as soon as its goal is met, even if the squad is
-lost afterwards; later events of the op do not undo it (GEN-002):
+**Rule.** Each mission resolves to `success` or `failure`. A mission counts as completed (`success`) the
+moment its goal is met, even if the squad is lost afterwards; later events of the op do not undo it
+(GEN-002). The layer where the goal is met detects it at once and shows "Objective met": tactical (VIP
+killed or captured, target destroyed, cargo saved; TAC-076) or strategic (delivery, hand-over, holding a
+place long enough, deadline; STR-027). Strategic confirms the mission, from the battle result or its own
+check, and reports it to Management as `missionOutcome`; Management then books the mission's pay share
+(MGT-047). No mission needs the squad to return to an FOB:
 
 | Mission | Success | Failure |
 | --- | --- | --- |
@@ -389,19 +395,29 @@ not stated)
 **Source.** design/design.md › Management › Contracts and missions › Pay bands
 
 ### [MGT-047] Advance and remainder
-**Rule.** On signing, `advance = round(pay × advance_fraction)` is due; on success the remaining
-`pay − advance` is due. The money comes from the employer's funds, which Strategic owns: MGT names the
-payment due in its result (`contractId`, `employer`, `amountUsd`), Strategic deducts it from the
-employer's funds and sends a `contractPayment` request, and only then is the amount credited to `economy`
-(STR-093).
+**Rule.** On signing, `advance = round(pay × advance_fraction)` is due. The rest, `pay − advance`, is paid
+per mission: each mission pays its share when its goal is met (MGT-044). Spec: a mission's share is the
+rest split in proportion to mission pay, `share = round((pay − advance) × missionPay / pay)`, with the
+rounding difference on the contract's last mission paid (see Open questions). The money comes from the
+employer's funds, which Strategic owns: MGT names the payment due in its result (`contractId`,
+`employer`, `amountUsd`), Strategic deducts it from the employer's funds and, at the next strategic hour,
+sends a `contractPayment` request and a news-feed line; only then is the amount credited to `economy`,
+wherever the squad is (STR-093). A payment due that the employer cannot cover fails the contract at once;
+the player keeps the advance (MGT-048).
 **Values.** `advance_fraction` — 0.25 (draft) → data/management-rules.json
-**Source.** design/design.md › Management › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft))
+**Source.** design/design.md › Management › Contracts and missions › Contract terms; › Overview › Core loop; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-048] Contract failure
-**Rule.** On failure (a mission failed or the deadline passed with missions open): no further pay;
-reputation loss with the employer (MGT-056); the advance becomes a debt to the employer that the player
-must pay back, or it is written off as a debt entry in `economy` (MGT-070).
-**Source.** design/design.md › Management › Contracts and missions › Contract terms
+**Rule.**
+- **Failed mission:** loses only its own share (MGT-047) and its reputation (`rep_mission_failed`,
+  MGT-056); the contract goes on, and its other missions can still be met and paid.
+- **Failed contract** (the deadline passed with missions still open): no further pay; reputation loss
+  with the employer (MGT-056); the advance becomes a debt to the employer that the player must pay back,
+  or it is written off as a debt entry in `economy` (MGT-070).
+- **Employer default:** a payment due that the employer's funds cannot cover fails the contract at once
+  (`contractEnded` from Strategic, STR-093). No further pay; the player keeps the advance, and it does
+  not become a debt.
+**Source.** design/design.md › Management › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-049] Intel level
 **Rule.** Each contract has `intel_level` ∈ {`exact` (exact location), `last_known` (last known position),
@@ -421,15 +437,22 @@ data/factions.json
 **Rule.** Contract offers are shown on boards at FOBs, in cities, and (Krug work only) at Krug markets.
 An employer at standing Hostile shows no offers. At Unfriendly it shows fewer offers: only a share
 `unfriendly_contract_share` of its basic offers (selection seeded). Neutral or better shows all basic
-offers; contracts marked sensitive require Trusted; better contracts require Friendly (MGT-055).
+offers; contracts marked sensitive require Trusted; better contracts require Friendly (MGT-055). Krug
+work at Krug markets includes escort work for the Krug's own convoys (STR-094). An offer taken by a rival
+PMC leaves the board unless both race for it (MGT-052).
 **Values.** `unfriendly_contract_share` — not set (design: Open) → data/management-rules.json
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › Reputation
 
 ### [MGT-052] Rival PMC competition
-**Rule.** Some contracts have a rival PMC (Varyag or Aegis) pursuing the same mission (STR/SAI). If the
-rival completes it first, the player's mission fails. While competing, an Unfriendly faction treats the
-player as hostile (MGT-055).
-**Source.** design/design.md › Management › Contracts and missions; › Reputation › Standing
+**Rule.** Varyag and Aegis can take contract offers from their own side (SAI-015) and compete with the
+player. When a rival takes an offer that is on the player's board, either the offer leaves the player's
+board, or it stays and both race for it (which applies: not set). A rival pursuing the same mission as the
+player: if the rival completes it first, the player's mission fails. While competing, an Unfriendly
+faction treats the player as hostile (MGT-055). The Krug never takes other factions' contracts; paying a
+Krug squad to escort a shipment is a service, debited from `economy` (STR-094).
+**Values.** leave-or-race rule — not set (design: Open) → data/management-rules.json
+**Status.** open
+**Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › Reputation › Standing
 
 ## Reputation
 
@@ -596,14 +619,18 @@ the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is cre
    at 50 ops (MGT-017) re-trigger?
 7. MGT-023, MGT-024, MGT-025: xp per use, growth curve between 50 and 80, physical change events and drift
    values unset.
-8. MGT-028: rounding of zone HP not stated.
+8. **Resolved (design eb072a2):** the Tactical Layer owns the zone HP formula and its rounding (TAC-057);
+   MGT-026…MGT-030 only name the attributes. MGT-028: rounding of zone HP not stated.
 9. MGT-029, MGT-033: carry capacity formula (design: Open) and weight penalty to AP/stamina unset.
 10. MGT-034: is modding restricted to FOBs and does it require Technical?
 11. MGT-036, MGT-038: insurance terms; scav loadout contents; definition of "low-risk contract".
 12. MGT-040: Krug price fluctuation rule.
 13. MGT-044, MGT-046: "most of its cargo" fraction, capture-territory handover hours, pay scaling formula
     within bands.
-14. MGT-047, MGT-048: is the remainder paid per mission or only when every mission of the contract
+14. **Resolved (design eb072a2):** the rest is paid per mission, each mission paying its share when its
+    goal is met; a failed mission loses only its share and its reputation, and the contract goes on
+    (MGT-047, MGT-048). Whether the advance is repaid in money or booked as debt stays as before (both
+    allowed). MGT-047, MGT-048: is the remainder paid per mission or only when every mission of the contract
     succeeds? Does one failed mission fail the whole contract? Is the advance repaid in money or always
     booked as debt?
 15. MGT-050: deniability chance per employer; whether disowned contracts are paid.
@@ -628,11 +655,22 @@ the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is cre
 27. MGT-039, MGT-051: "fewer contracts and higher prices" at Unfriendly has no numbers; spec models them as
     `unfriendly_contract_share` and `unfriendly_price_markup`. Confirm the model (share of offers vs. only
     some contract types) and whether Unfriendly traders sell only basic stock.
-28. MGT-047, STR-093: what happens when the employer's funds cannot cover a payment due (late payment,
+28. **Resolved (design eb072a2):** the contract fails at once and the player keeps the advance (MGT-048,
+    STR-093). MGT-047, STR-093: what happens when the employer's funds cannot cover a payment due (late payment,
     debt owed to the player, contract fails)? VDK "late payments" suggests delay.
 29. MGT-048: is a repaid advance credited back to the employer's funds (STR-093)?
 30. MGT-005, MGT-070: which of the player's costs and incomes use the shared `data/economy-rules.json`
     formulas (salaries only, or FOB upkeep and plant income too)?
-31. MGT-044: "completed as soon as the goal is met" — for missions whose goal is a delivery or hand-over
+31. **Resolved (design eb072a2):** no mission needs the squad back at an FOB; the layer where the goal is
+    met detects it, Strategic confirms it, and the pay is credited at the next strategic hour (MGT-044,
+    MGT-047). MGT-044: "completed as soon as the goal is met" — for missions whose goal is a delivery or hand-over
     (retrieve_deliver, capture_vip), the goal is met only at the destination; for assassinate_vip it is the
     confirmed kill. Confirm that no mission needs the squad to return to an FOB.
+32. MGT-047: how is the rest split into mission shares — in proportion to each mission's pay (spec
+    assumption), or equally? Where does the rounding difference go?
+33. MGT-048: when does a contract fail now that a failed mission no longer fails it — only when the
+    deadline passes with missions open, or also when every mission has failed? On an employer default, does
+    the player lose reputation with anyone?
+34. MGT-052: when a rival PMC takes an offer on the player's board, which offers leave the board and which
+    become a race? How does Management learn of it?
+35. MGT-052, STR-094: price of a Krug escort and where the player hires it.

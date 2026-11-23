@@ -28,7 +28,10 @@ moves on the strategic map (STR); (3) tactical engagements happen as the route a
 **Rule.** An op succeeds if and only if at least one soldier of its squad reaches an FOB the player owns.
 Objective completion does not affect op success (objectives are scored separately per mission, MGT
 contract rules). A contract's mission counts as completed as soon as its goal is met, even if the squad is
-lost afterwards (MGT-044). Soldiers of the squad who do not reach an FOB are MIA, captured or dead (MGT);
+lost afterwards. The layer where the goal is met (tactical or strategic) detects it at once and shows
+"Objective met"; the strategic layer confirms the mission (STR-027, MGT-044), and its pay is deducted from
+the employer's funds and credited to the player at the next strategic hour, with a news-feed line
+(STR-093). No mission needs the squad back at an FOB. Soldiers of the squad who do not reach an FOB are MIA, captured or dead (MGT);
 gear carried by them is lost to the PMC unless recovered. An op whose squad has no soldier left who
 reaches an FOB fails.
 **Source.** design/design.md › Overview › Core loop; › Management › Gear, loot & return
@@ -70,10 +73,10 @@ named in any UI text. They hold no reputation value toward the player.
 **Source.** design/design.md › Factions & campaign › Factions
 
 ### [GEN-006] Civilian population
-**Rule.** The civilian population is a non-combat faction with one loyalty value per region (scale and
-effects in STR). Per region, loyalty drives income, intel and recruitment available there. It has no
-squads and cannot be fought as a faction.
-**Source.** design/design.md › Factions & campaign › Factions
+**Rule.** The civilian population is a non-combat faction. Its loyalty exists only on settlement tiles
+(cities, towns, villages), one value per faction from −100 to 100 (STR-009). Per settlement, loyalty
+drives income, intel and recruitment available there. It has no squads and cannot be fought as a faction.
+**Source.** design/design.md › Factions & campaign › Factions; › Strategic Layer › Map (draft)
 
 ### [GEN-007] Faction relations model
 **Rule.** Every ordered pair of map factions (GEN-004, excluding `player`) holds a relation value, integer
@@ -134,11 +137,12 @@ stories only from service records (MGT).
 `vdk_united` (united under the VDK), `reformed`, `endless_war` (locked into an endless proxy war),
 `player_coup` (seized by the player's PMC, GEN-013…GEN-016), `cash_out` (the player cashes out and
 leaves, at the player's choice). On end, a score is computed from money, reputation and surviving soldiers
-(MGT).
+(MGT). For now the only campaign-ending coup is the player's: a rival PMC that comes to hold the capital
+(STR-007) just becomes its holder, and the campaign goes on.
 **Values.** trigger conditions for `ssv_united`, `vdk_united`, `reformed`, `endless_war` — not set
 (design: not stated)
 **Status.** open
-**Source.** design/design.md › Factions & campaign › Player role; › Management › Base & meta progression
+**Source.** design/design.md › Factions & campaign › Player role; › Strategic Layer › Map (draft); › Management › Base & meta progression
 
 ## Coups
 
@@ -159,12 +163,16 @@ objectives: seize command, seize communications, seize the government district. 
 **Source.** design/design.md › Factions & campaign › Coups
 
 ### [GEN-015] Holding the capital
-**Rule.** After a successful coup op, both `east` and `west` turn against the PMC and drive counter-attacks
-on the capital (STR). The `player_coup` ending is reached when one of them accepts the new order; losing
-the capital before that ends the coup attempt.
-**Values.** acceptance condition, consequence of losing the capital — not set (design: not stated)
+**Rule.** The capital can fall and is then contested (STR-007). When the player's PMC holds the contested
+capital for `capitalHoldDays` (STR-007), it becomes the capital's holder, and that counts as the
+`player_coup` ending. After a successful coup op, both `east` and `west` turn against the PMC and drive
+counter-attacks on the capital (STR); the design also says the player must hold on until one of them
+accepts the new order. Losing the capital before the ending ends the coup attempt. How the hold time and
+"accepts the new order" fit together is open.
+**Values.** `capitalHoldDays` — 7 (draft) → data/strategic-rules.json (STR-007); acceptance condition,
+consequence of losing the capital — not set (design: not stated)
 **Status.** open
-**Source.** design/design.md › Factions & campaign › Coups
+**Source.** design/design.md › Factions & campaign › Coups; › Strategic Layer › Map (draft)
 
 ### [GEN-016] Coup epilogue
 **Rule.** The `player_coup` epilogue is selected from three inputs: civilian loyalty, Krug standing and
@@ -172,12 +180,16 @@ the number of soldiers lost during the campaign.
 **Source.** design/design.md › Factions & campaign › Coups
 
 ### [GEN-017] Rogue PMC chance
-**Rule.** At campaign start, roll once (seeded) whether a rogue PMC event is possible this campaign with
-base chance `rogue_pmc_chance`. At most one rogue PMC per campaign; candidates are `varyag` and `aegis`.
-The chance rises when the candidate's patron is losing, the candidate's contracts go unpaid, or it controls
-regions near the capital.
-**Values.** `rogue_pmc_chance` — design placeholder 5–10% → data/factions.json; modifiers per factor —
-not set (design: not stated)
+**Rule.** There is no fixed chance per campaign. Once per day (daily check, STR-004), for each candidate
+(`varyag`, `aegis`) roll (seeded) whether it stops serving its patron and attempts a coup of its own. The
+chance grows with the crisis signs its patron shows (STR-069: low funds, troop losses, lost territory and
+the rest) and rises further when the patron is losing, the candidate's contracts go unpaid, or it controls
+regions near the capital. Warning signs come first (GEN-018, STR-052): the coup starts only after its
+warning lead time. A capital that loses its holder (STR-007) can also trigger a PMC rushing it to take it.
+At most one rogue PMC per campaign. A rogue PMC that comes to hold the capital just becomes its holder; it
+does not end the campaign (GEN-012).
+**Values.** chance per crisis sign and per factor, capital-rush chance, warning lead time — not set
+(design: not stated) → data/factions.json
 **Status.** open
 **Source.** design/design.md › Factions & campaign › Coups › Rogue PMCs
 
@@ -198,10 +210,19 @@ the rest of the campaign.
    designed.
 3. GEN-013: "exhausted", "key regions" and the coup thresholds are undefined.
 4. GEN-015: what ends the holding phase in failure, and how "accepts the new order" is decided.
-5. GEN-017: is the 5–10% chance rolled once at start, or per day with rising modifiers? The design says
+5. **Resolved (design eb072a2):** checked once per day; the more crisis signs its patron shows, the higher
+   the chance, with warning signs first; a capital losing its holder can also trigger a PMC rushing it
+   (GEN-017). GEN-017: is the 5–10% chance rolled once at start, or per day with rising modifiers? The design says
    "in each campaign" plus "what raises it", which suggests a running check.
 6. GEN-007: initial relation values between factions are not given; Rook/Orlov/Sokolov effects (GEN-008)
    have no numbers.
 7. GEN-010: Krug standing levels for each unlock, and the gameplay effect of members resenting foreign
    soldiers.
 8. Design open: could the Krug be an ending of its own (rule by the Code)? Not in GEN-012 until decided.
+9. GEN-013, GEN-015: the player holding the capital for the hold time "counts as the coup ending" — must
+   the coup requirements (GEN-013) be met and the final operation (GEN-014) run first, and does the
+   holding-on phase until east or west accepts the new order still follow?
+10. GEN-017: how does the daily chance grow with the patron's crisis signs (per sign, curve)? Which
+    signs count (the design names low funds, troop losses, lost territory)? Is a "PMC rushing the
+    capital" the rogue-PMC event itself (counting toward the once-per-campaign limit) or a separate move
+    by any PMC?

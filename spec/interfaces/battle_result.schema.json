@@ -3,7 +3,7 @@
   "$id": "battle_result.schema.json",
   "title": "Battle result",
   "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/strategic", "modules/management"],
   "type": "object",
@@ -14,7 +14,7 @@
     "winnerFaction": { "type": ["string", "null"] },
     "gameTimeHours": { "const": 1, "description": "A battle always takes 1 hour (TAC-003)" },
     "turns": { "type": "integer", "minimum": 0 },
-    "objectives": { "type": "array", "description": "Final per objective: a mission whose goal is met counts as completed even if the squad is lost afterwards (GEN-002, MGT-044); op success is decided at op level (at least one soldier back at an FOB), not by outcome = wiped", "items": { "type": "object", "required": ["id", "met"], "properties": { "id": { "type": "string" }, "met": { "type": "boolean" } } } },
+    "objectives": { "type": "array", "description": "Final per objective: a mission whose goal is met counts as completed even if the squad is lost afterwards (GEN-002, MGT-044); op success is decided at op level (at least one soldier back at an FOB), not by outcome = wiped", "items": { "type": "object", "required": ["id", "met"], "properties": { "id": { "type": "string" }, "met": { "type": "boolean" }, "metTurn": { "type": ["integer", "null"], "description": "Turn the objective was met; it stays met (TAC-076)" } } } },
     "soldiers": {
       "type": "array", "description": "Every player soldier who took part",
       "items": {

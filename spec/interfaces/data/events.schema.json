@@ -3,7 +3,7 @@
   "$id": "data/events.schema.json",
   "title": "World events and measures",
   "description": "World events, desperate measures and flavour events (spec STR-050..STR-081).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -24,7 +24,7 @@
       "effects": { "type": "array", "description": "STR-055..STR-080" },
       "contracts": { "type": "array", "description": "STR-053" },
       "oncePerCampaign": { "type": "boolean", "description": "STR-080" },
-      "params": { "type": "object", "description": "event-specific values (compensation price, bounty pay-off, resistance squads)" }
+      "params": { "type": "object", "description": "event-specific values (compensation price, bounty pay-off, resistance squads, defectionJoinChance)" }
     }
   }
 }

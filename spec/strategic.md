@@ -24,19 +24,23 @@ fractions of an hour. Advancing from hour 23 sets hour 0 and `day + 1`. Every ti
 
 ### [STR-002] Action duration
 **Rule.** Every player strategic action has a duration `d`, a whole number of hours ≥ 0, fixed by the
-action type (STR-027…STR-043) or set by the player (Wait, Rest). An action may also cost money, fuel or
-standing; costs are applied when the action starts. `d = 0` actions (trade, hire, vehicle trade) resolve
-immediately and pass no time, so no faction acts (STR-003 does not run). An action with `d > 1` (travel,
-rest, healing) can be interrupted by an encounter or an event (STR-003); the hours already spent count
-(progress made stays), and the rest of the action is dropped.
+action type (STR-027…STR-043) or set by the player (Stand by, STR-037). An action may also cost money,
+fuel or standing; costs are applied when the action starts. `d = 0` actions (trade, hire, vehicle trade)
+resolve immediately and pass no time, so no faction acts (STR-003 does not run). An action with `d > 1`
+(travel, standing by, healing) can be interrupted by an encounter or an event, or cancelled by the player
+at a planning phase (STR-003); the hours already spent count (progress made stays, healing gained is
+kept), and the rest of the action is dropped. A move that is interrupted or cancelled before its last hour
+leaves the squad on its origin tile.
 **Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md (intro)
 
 ### [STR-003] Hour tick
 **Rule.** One strategic turn is one hour of game time. A turn has two phases:
-- **Planning.** The player chooses an action for each of their squads that has none in progress (a squad
-  in a multi-hour action keeps it), then commits by ending the turn. Nothing with `d ≥ 1` resolves before
-  the commit; `d = 0` actions resolve at once (STR-002). The world state does not change while the player
-  plans.
+- **Planning.** The player chooses an action for each of their squads that has none in progress, then
+  commits by ending the turn. A squad in a multi-hour action keeps it, unless the player cancels it now:
+  the hours already spent and any healing gained are kept, and a move cancelled midway leaves the squad on
+  its origin tile (STR-002); the squad then takes a new action like any idle squad. Nothing with `d ≥ 1`
+  resolves before the commit; `d = 0` actions resolve at once (STR-002). The world state does not change
+  while the player plans.
 - **Resolution.** After the commit, hour ticks run. Each tick, in this order:
   1. Each non-player faction receives its strategic perception view (STR-021), built from the state at
      the start of the tick, and returns one command set (STR-020). All views are built before any command
@@ -51,8 +55,10 @@ rest, healing) can be interrupted by an encounter or an event (STR-003); the hou
   6. Expire timed state whose due time ≤ now (intel, event durations, deadlines, warning signs).
 - **Interruption.** An encounter (STR-022) or an event that involves a player squad interrupts that
   squad's multi-hour action (STR-002); the hours already spent count. A tactical engagement resolves first
-  (STR-023). Ticks keep running only while every player squad still has an action in progress and none
-  was interrupted; otherwise the next planning phase starts (spec assumption, see Open questions).
+  (STR-023).
+- **End of a commit.** Hour ticks run until the first of the player's squads finishes its action or is
+  interrupted; then the next planning phase starts. The other player squads' longer actions keep running
+  into the next commit (and may be cancelled in that planning phase).
 **Values.** `factionTickOrder` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); › AI › Strategic AI (Controller hand-off)
@@ -67,38 +73,53 @@ uses the state after the tick's movement and fights.
 ## Map
 
 ### [STR-005] Region graph
-**Rule.** The map is a set of regions with an undirected adjacency list. Each region holds: `terrain`
-(exactly one base terrain, STR-006), `poi` (none or one point of interest, STR-010), `controller`
-(faction id or `none`), `loyalty` (civilian loyalty, per faction, integer, STR-009), `roads` (road
-links to adjacent regions, each `asphalt` or `dirt`, with optional `bridge`/`ford` flag), and flags
-(`hazard`, `contaminated`, `ruined`, `mined`, `martialLaw`, `ceasefire`, each with an expiry time or
-`permanent`).
+**Rule.** The map is a tile grid covering all of Veligrad; each tile is one region, and "region" in this
+file means one tile. The grid shape is `mapShape`: `square` (default, consistent with the tactical layer)
+or `hex` (a switchable option for testing). Adjacency follows from the shape (hex: 6 neighbours; square:
+neighbour rule see Open questions); region distance is counted in adjacency steps. Every faction moves its
+squads tile by tile. Each tile holds: `x`, `y`; `terrain` (exactly one base terrain, STR-006); `poi` (none
+or one point of interest, STR-010); `controller` (faction id or `none`); `road` (none, or a road lying on
+top of the terrain: kind `asphalt` or `dirt`, the adjacent tiles it continues to, and on a water tile a
+`bridge` or `ford` flag); `loyalty` (only on settlement tiles, STR-009); and flags (`hazard`,
+`contaminated`, `ruined`, `mined`, `martialLaw`, `ceasefire`, each with an expiry time or `permanent`).
+**Values.** `mapShape` — design `square`, `hex` as test option → data/mapgen/strategic.json.
 **Source.** design/design.md › Strategic Layer › Map (draft)
 
 ### [STR-006] Terrain movement costs
-**Rule.** Hours to move one region, by the destination region's terrain and the mode of travel:
+**Rule.** Hours to move one tile are set by the destination tile's terrain and the mode of travel:
 
 | Terrain | Vehicle | On foot |
 | --- | --- | --- |
-| Asphalt road | 1 | 2 |
-| Dirt/gravel road | 1 | 2 |
+| Road (asphalt or dirt, same speed) | 1 | 2 |
 | Steppe | 2 | 2 |
 | Woods | 3 | 2 |
-| Mountain | road link only | 3 |
+| Mountain | road only | 3 |
 | Water | impassable | impassable |
 
-A move along a road link uses the road row regardless of base terrain. Water is crossed only along a
-road link flagged `bridge` or `ford` (amphibious vehicles: DAT). Helicopters: STR-034. Off-road rating
-modifies steppe and woods (STR-032). Terrain also has a visibility class (`far`, `medium`, `open`,
-`low`) used by detection (STR-008) and evasion (STR-024).
-**Values.** `moveHours[terrain][mode]` — design values in the table → data/strategic-rules.json.
+A road between the two tiles (the origin's road continues to the destination, STR-005) overrides the
+destination's terrain: the move uses the road row, whatever the base terrain. Asphalt and dirt roads have
+the same speed. A vehicle enters a mountain tile only along a road. Water is crossed only along a road
+whose water tile is flagged `bridge` or `ford` (amphibious vehicles: DAT). Helicopters: STR-034. Off-road
+rating modifies steppe and woods (STR-032). Terrain also has a visibility class (`far`, `medium`, `open`,
+`low`) used by detection (STR-008) and evasion (STR-024); roads have their own (asphalt `far`, dirt
+`medium`; which applies on a road tile: see Open questions).
+**Values.** `moveHours[terrain][mode]` and `moveHours.road[mode]` — design values in the table → data/strategic-rules.json.
 **Source.** design/design.md › Strategic Layer › Map (draft) › Terrain types; design/strategic-actions.md › Movement and operations
 
 ### [STR-007] Capital control
-**Rule.** Exactly one region is the capital. Its `controller` is always `SSV` or `VDK`. Any control
-change on the capital is rejected unless it is the result of a coup (GEN: Coups), by the player or a
-rogue PMC; then it may pass to that PMC.
-**Source.** design/design.md › Strategic Layer › Map (draft)
+**Rule.** Exactly one tile is the capital. World state holds its `holder` (the faction with the
+capital's effects) apart from its tile `controller`. At campaign start the holder and controller are
+`SSV` or `VDK` (STR-089). The capital can fall: when its holder dissolves (STR-049) or loses control of
+the tile (STR-014, any faction may take it), `holder` becomes `none` and the capital is **contested**.
+While contested, the faction controlling the tile (if any) is its occupant; `contestedSince` is the time
+the current occupant took it, reset whenever control changes. An occupant that keeps control for
+`capitalHoldDays` becomes the holder, with the capital's effects, and the capital is no longer contested.
+If that faction is the player, the `player_coup` ending is reached (GEN-015); a rival PMC (or any other
+faction) just becomes the holder, and the campaign goes on (GEN-012). A capital that loses its holder may
+trigger a rogue PMC rushing it (GEN-017).
+**Values.** `capitalHoldDays` — 7 (draft) → data/strategic-rules.json.
+**Status.** open
+**Source.** design/design.md › Strategic Layer › Map (draft); › Factions & campaign › Coups
 
 ### [STR-008] Fog of war and detection
 **Rule.** Per faction, a region is **visible** if it lies within `reconRange` of one of its squads, FOBs
@@ -112,12 +133,15 @@ same rule.
 **Source.** design/design.md › Strategic Layer › Map (draft) (Fog of war); › Strategic Layer (Intel); › Vehicles (Noise)
 
 ### [STR-009] Civilian loyalty
-**Rule.** Each region holds a civilian loyalty value per faction (integer). Loyalty drives income,
-intel and recruitment in that region (amounts: MGT) and feeds events (STR-067). Loyalty changes only
-through rules that name it (events, measures, war crimes via MGT, off-screen fights).
-**Values.** `loyaltyMin`, `loyaltyMax`, `loyaltyStart` — not set (design: Open) → data/strategic-rules.json.
+**Rule.** Civilian loyalty exists only on settlement tiles (cities, towns, villages; POI types in
+data/poi.json flagged as settlements). Such a tile holds one loyalty value per faction, integer −100…100.
+Tiles without a settlement have no loyalty. Loyalty drives income, intel and recruitment in that
+settlement (amounts: MGT) and feeds events: a resistance group forms where loyalty toward the tile's
+controller is low (STR-067). Loyalty changes only through rules that name it (events, measures, war
+crimes via MGT, off-screen fights) and is clamped to range.
+**Values.** `loyaltyMin` −100, `loyaltyMax` 100 → data/strategic-rules.json; `loyaltyStart` — not set (design: Open) → data/strategic-rules.json; settlement flag per POI type → data/poi.json.
 **Status.** open
-**Source.** design/design.md › Factions & campaign › Factions; › Strategic Layer › Map (draft)
+**Source.** design/design.md › Strategic Layer › Map (draft); › Factions & campaign › Factions
 
 ### [STR-010] Points of interest
 **Rule.** A POI has a `type` from data/poi.json, a `controller` (from its region) and a state
@@ -166,8 +190,8 @@ or the first faction to find it.
 
 ### [STR-014] Control of a point of interest
 **Rule.** A faction controls a POI when it controls its region. Control changes by: winning a tactical
-engagement or off-screen fight for it, defection (STR-061), faction dissolution (STR-049 → `none`),
-or a coup (STR-007). Holding a POI yields income, supplies and recruits to its controller per hour or
+engagement or off-screen fight for it, defection (STR-061, to the pressing faction or `none`), faction
+dissolution (STR-049 → `none`); for the capital, holding it is STR-007. Holding a POI yields income, supplies and recruits to its controller per hour or
 per day (amounts in data/poi.json); losing POIs weakens the faction's squads over time (supply
 deficit reduces squad supplies and reinforcement rate).
 **Values.** per-type `income`, `supplyOutput`, `recruitOutput` — not set (design: Open) → data/poi.json; `supplyDeficitEffect` — not set (design: Open) → data/strategic-rules.json.
@@ -219,10 +243,12 @@ after the player. The strategic layer validates such commands with the normal ru
 
 ### [STR-020] One action per faction per hour
 **Rule.** For every hour that passes (STR-003), every faction issues one set of commands and each of its
-squads takes exactly one action that hour (start/continue a move, scout, fight, hold, wait). This holds
-for every faction squad, the player's included: the player's command set is the actions chosen in the
-planning phase, the AI factions' come from their controllers (STR-021). A move taking `h` hours occupies
-the squad for `h` ticks; it arrives at the end of the last tick unless interrupted (STR-002). All squads'
+squads takes exactly one action that hour (start/continue a move, scout, fight, hold, stand by). This
+holds for every faction squad, the player's included: the player's command set is the actions chosen in
+the planning phase, the AI factions' come from their controllers (STR-021). A move taking `h` hours
+occupies the squad for `h` ticks; the squad stays on its origin tile for the first `h − 1` ticks and is
+on the destination tile in the last one (STR-022), arriving at its end unless interrupted or cancelled
+(STR-002). All squads'
 actions of one hour resolve together (STR-003, step 2).
 **Source.** design/design.md › Overview › Pillars (4); › Strategic Layer (Time); › Squads and simulation (Strategic turn)
 
@@ -231,22 +257,25 @@ actions of one hour resolve together (STR-003, step 2).
 (each tick, STR-003), every non-player faction receives a `strategic_perception_view` (its fog-of-war
 view, STR-008, including its own funds, STR-092) and returns `strategic_commands` (set goal, move squad,
 offer contract). Strategic validates each command against the same rules as player actions
-(passability, fuel, durations, capital rule) and drops invalid ones with a logged reason; valid ones
+(passability, fuel, durations, funds limit, STR-092) and drops invalid ones with a logged reason; valid ones
 resolve together with the player's actions (STR-003). The controller never changes the world state
 directly. Contract offers go to MGT.
 **Source.** design/design.md › AI (intro); › AI › Strategic AI (Controller hand-off); › Strategic Layer › Squads and simulation (Faction funds)
 
 ### [STR-022] Encounter detection
-**Rule.** After movement in a tick, for every region containing squads of ≥ 2 factions, each pair
-is checked against the faction behaviour rules (SAI: low reputation, targeting mission, same objective;
-relations ≤ hostile threshold, STR-051). Krug market regions never turn hostile (STR-012). If neither
-side is hostile, nothing happens. If hostile and the player is involved → STR-023; otherwise → STR-026.
+**Rule.** After movement in a tick, for every tile on which squads of ≥ 2 factions are in that hour,
+each pair is checked against the faction behaviour rules (SAI: low reputation, targeting mission, same
+objective; relations ≤ hostile threshold, STR-051). A moving squad counts as on its origin tile until the
+move's last hour, then on the destination tile (STR-020). Krug market tiles never turn hostile (STR-012).
+If neither side is hostile, nothing happens. If hostile and the player is involved → STR-023; otherwise →
+STR-026. The encounter tile's terrain sets the tactical map (STR-023).
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Encounters); › AI › Strategic AI
 
 ### [STR-023] Tactical engagement
 **Rule.** A hostile encounter involving a player squad (or a player op objective that requires a
 fight) becomes a tactical engagement. Strategic sends a `tactical_map_request` and waits for the
-`battle_result`. The engagement always takes exactly 1 hour of strategic time, however long it runs.
+`battle_result`; the request carries the encounter tile's terrain, which sets the tactical map. The
+engagement always takes exactly 1 hour of strategic time, however long it runs.
 The result updates squads, control, loyalty and MIA/captured/dead soldiers (sent to MGT). Only
 player-attributed fights count for crisis sign 10 (STR-069).
 **Values.** `battleHours` — design 1 → data/strategic-rules.json.
@@ -286,20 +315,45 @@ The formulas (income per held region and plant, squad upkeep, salaries, when inc
 live in one shared rules table, `data/economy-rules.json`, which MGT also uses for the player's PMC
 (MGT-005, MGT-070). A faction whose income cannot cover its costs meets crisis sign 5, Low liquidity
 (STR-069). Each faction's own funds appear in its perception view (STR-021); other factions' funds do not.
+Funds never go below zero. `fundsMode` decides how they limit a faction:
+- `hardLimit` (default): Strategic rejects an `offerContract` or a command raising a squad that the
+  faction cannot pay for from its current funds (STR-021).
+- `scoreTerm` (switchable option for testing): such commands are not rejected for funds; funds only weigh
+  in the AI's scoring (SAI-014).
+A contract payment due that the employer cannot cover fails the contract at once (STR-093).
 **Values.** income formula, squad upkeep, salary formula, booking interval, start funds per faction — not
-set (design: Open) → data/economy-rules.json; per-POI-type `income` → data/poi.json (STR-014).
+set (design: Open) → data/economy-rules.json; per-POI-type `income` → data/poi.json (STR-014);
+`fundsMode` — design default `hardLimit`, `scoreTerm` as test option → data/economy-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); design/design.md (module table: `world` includes funds)
 
 ### [STR-093] Contract payment between modules
 **Rule.** Contract pay moves from the employer's funds to the player's money. When MGT books a payment
-on a contract with the player (advance on signing, remainder on success; MGT-047), its result to the
-triggering management request (`acceptContract`, `missionOutcome`) names the payment due
-(`contractId`, `employer`, `amountUsd`). Strategic deducts that amount from the employer's funds
-(STR-092) and sends a `contractPayment` management request with the same fields; MGT credits the
-player's `economy` only on that request. A contract between two AI factions (SAI-015) is settled inside
-the `world` slice: Strategic moves the pay from the employer's funds to the contractor's.
-**Source.** design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); › Management › Contracts and missions › Contract terms
+on a contract with the player (advance on signing, each mission's share when its goal is met; MGT-047),
+its result to the triggering management request (`acceptContract`, `missionOutcome`) names the payment
+due (`contractId`, `employer`, `amountUsd`). Strategic deducts that amount from the employer's funds
+(STR-092) and, at the next hour tick (STR-003), sends a `contractPayment` management request with the
+same fields and appends a news-feed line (STR-054); this happens wherever the squad is, with no return to
+an FOB. MGT credits the player's `economy` only on that request. If the employer's funds cannot cover a
+payment due, nothing is deducted and the contract fails at once: Strategic sends `contractEnded` (reason
+employer default) and the player keeps the advance already paid (MGT-048). A contract between two AI
+factions (SAI-015) is settled inside the `world` slice: Strategic moves the pay from the employer's funds
+to the contractor's, under the same rule.
+**Source.** design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); › Overview › Core loop; › Management › Contracts and missions › Contract terms
+
+### [STR-094] Krug escorts
+**Rule.** The Krug never takes other factions' contracts (SAI-015). Its escort work runs both ways:
+- **Krug work:** for its own convoys, the Krug offers escort contracts (escort_shipment missions, MGT-043)
+  shown at Krug markets (MGT-051).
+- **Paid Krug escort:** the player or an AI faction can pay the Krug to escort one of its shipments. A Krug
+  squad is then attached to that convoy and travels with it on the strategic map (it moves with the
+  convoy and joins its encounters on the convoy's side). The price is paid into the Krug's funds
+  (STR-092); for the player it is debited through MGT. The escort ends when the convoy arrives or is
+  destroyed or captured.
+Where and how the escort is hired, the price and the time it takes are not set.
+**Values.** `krugEscortPrice`, `krugEscortHireHours` — not set (design: Open) → data/strategic-rules.json.
+**Status.** open
+**Source.** design/design.md › Management › Contracts and missions › Where contracts come from
 
 ## Operations and strategic actions
 
@@ -308,9 +362,13 @@ the `world` slice: Strategic moves the pay from the employer's funds to the cont
 accepted contracts (MGT) and/or player objectives (scout a region, scavenge, resupply); one op may
 bundle several. The op ends when at least one soldier of the squad arrives at any PMC FOB: then it
 **succeeds**, whether or not objectives were met (GEN-002). An op whose last soldier is lost before
-reaching an FOB fails. A contract mission counts as completed as soon as its goal is met (reported to MGT
-at that moment as `missionOutcome`), even if the squad is lost afterwards. Soldiers who do not return are
-reported to MGT as MIA, captured or dead.
+reaching an FOB fails. A contract mission counts as completed as soon as its goal is met, even if the
+squad is lost afterwards. The layer where the goal is met detects it at once and shows "Objective met":
+tactical (a VIP killed or captured, a target destroyed, cargo saved; reported in the `battle_result`) or
+strategic (a delivery, a hand-over, a place held long enough; a deadline passing is a strategic failure
+check). Strategic confirms the mission, from the battle result or its own check, and reports it to MGT as
+`missionOutcome`; pay then follows STR-093. No mission needs the squad back at an FOB. Soldiers who do
+not return are reported to MGT as MIA, captured or dead.
 **Source.** design/design.md › Overview › Core loop; › Management › Gear, loot & return
 
 ### [STR-028] Launch an op
@@ -338,8 +396,9 @@ hours (STR-006). No fuel cost.
 **Source.** design/strategic-actions.md › Movement and operations
 
 ### [STR-032] Move one region by ground vehicle
-**Rule.** Move to an adjacent region in `moveHours[terrain].vehicle` hours (STR-006). Mountains only
-via a road link; water only via a bridge/ford road link (or amphibious vehicle, DAT). Off-road rating
+**Rule.** Move to an adjacent tile in `moveHours[terrain].vehicle` hours of the destination tile, or
+`moveHours.road.vehicle` along a road (STR-006). Mountains only along a road; water only along a road on
+a bridge/ford tile (or amphibious vehicle, DAT). Off-road rating
 (`poor`, `good`, `veryGood`, DAT) lowers the hours in steppe and woods: `hours = max(1,
 moveHours − offroadReduction[rating][terrain])`. Fuel: each region moved costs `1` fuel unit; a full
 tank holds `fuelRange` units (DAT). A move is rejected if fuel < 1.
@@ -379,11 +438,13 @@ intel (STR-048). Success chance not set.
 **Status.** open
 **Source.** design/design.md › Strategic Layer (Time); design/strategic-actions.md › Movement and operations
 
-### [STR-037] Wait and rest
-**Rule.** The player sets `n ≥ 1` hours; that many ticks run (STR-003). Rest: each tick, the squad's
-soldiers progress healing (MGT computes HP from the squad's best Medical; rate is higher when the squad
-is in a PMC FOB region). Wait is the same with no rest benefit (see Open questions). An encounter or event
-interrupts the rest (STR-002, STR-003): the hours already rested count, healing made so far stays.
+### [STR-037] Stand by
+**Rule.** One action, "Stand by", replaces Wait and Rest. The player sets `n ≥ 1` hours; the squad stays
+on its tile, on alert, for `n` ticks (STR-003). Each tick its soldiers progress healing (MGT computes HP
+from the squad's best Medical; the rate is higher when the squad is in a PMC FOB region). An encounter or
+event interrupts it, and the player may cancel it at a planning phase (STR-002, STR-003): the hours
+already spent count and the healing made so far stays. What "on alert" changes is not set (see Open
+questions).
 **Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md › Movement and operations
 
 ### [STR-038] Enter a point of interest
@@ -487,7 +548,7 @@ acquisition; after that it is stale (last known state only). Sources:
 ### [STR-049] Faction leader death
 **Rule.** When a faction leader dies, the faction dissolves at once: its squads scatter (each becomes
 a resistance group, STR-067, Krug recruits, or is removed — split not set), all its POIs and regions
-get `controller = none` (capital: see Open questions), its contracts end (sent to MGT), and a PMC it
+get `controller = none` (a capital it held becomes contested, STR-007), its contracts end (sent to MGT), and a PMC it
 backed loses its patron (GEN). The faction takes no further actions.
 **Values.** `scatterShares` (resistance / Krug / removed) — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
@@ -498,10 +559,11 @@ backed loses its patron (GEN). The faction takes no further actions.
 ### [STR-050] Event check
 **Rule.** At each daily check, for every event definition in data/events.json whose trigger condition
 is true (and which is not already running for the same subject), roll its chance with the seeded RNG.
-At most `maxConcurrentEvents` events run at once; when the cap is reached, no further event starts.
-An event instance is `{ eventId, subjects, startTime, endTime | condition }`. When it ends, its
-temporary effects are reverted.
-**Values.** `maxConcurrentEvents` — design 3; per-event `chance` — not set (design: Open) → data/events.json.
+World events and desperate measures (STR-070) share one cap: at most `maxConcurrentEvents` of them,
+counted together, run at once; when the cap is reached, no further event or measure starts. An event
+instance is `{ eventId, subjects, startTime, endTime | condition }`. When it ends, its temporary effects
+are reverted.
+**Values.** `maxConcurrentEvents` (events and measures together) — design 3; per-event `chance` — not set (design: Open) → data/events.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › World events (How events work)
 
@@ -592,9 +654,12 @@ breaks it (fights there) loses heavy reputation with both (MGT).
 
 ### [STR-061] Event: Defection
 **Rule.** Trigger: a garrison of a losing faction has supply below `defectionSupply`. Effect
-(instant): the garrison and its POI region switch to another faction. Handover contracts only to
-Friendly or better with the faction involved.
-**Values.** `defectionSupply`, target-faction rule — not set (design: Open) → data/events.json.
+(instant), one of two outcomes (seeded roll):
+- **Joins the faction pressing it:** the enemy faction that attacked it last, or else the nearest enemy
+  faction (spec order, see Open questions); the garrison and its POI tile pass to that faction.
+- **Disbands:** the garrison is removed and its POI tile becomes uncontrolled (`controller = none`).
+Handover contracts only to Friendly or better with the faction involved.
+**Values.** `defectionSupply`, `defectionJoinChance` (join vs disband) — not set (design: Open) → data/events.json.
 **Status.** open
 **Source.** design/world-events.md › Events; › Reputation in the event system
 
@@ -675,7 +740,8 @@ the list of player-attributed fights it lost in the last 7 days. This feeds STR-
 ### [STR-070] Measure selection
 **Rule.** After the sign check: if a faction has ≥ 3 true signs and no measure running, it may pick one
 measure available to it whose typical signs overlap its true signs (choice: SAI). At most one measure
-per faction runs at a time. If ≥ 5 signs and Capital threatened is among them, the nuclear strike
+per faction runs at a time, and a measure starts only while the shared cap on events and measures
+(STR-050) is not reached. If ≥ 5 signs and Capital threatened is among them, the nuclear strike
 (STR-080) becomes available. Measures are data/events.json records with `kind: "measure"`.
 **Values.** `measureSignsMin` 3, `nuclearSignsMin` 5 → data/strategic-rules.json; measure durations — not set (design: Open) → data/events.json.
 **Status.** open
@@ -720,9 +786,10 @@ present), plants become `ruined` and bridges and roads are removed.
 
 ### [STR-076] Measure: Mining the roads
 **Rule.** SSV, VDK; sign: area losses. Threatened regions get the `mined` flag on roads and
-approaches: a hazard for squads moving there; a Technical soldier can clear it.
+approaches: a hazard for squads moving there; a Technical soldier can clear it. Mines on the tactical
+map are optional (later build).
 **Values.** mine hazard effect, clear rule — not set (design: Open) → data/events.json.
-**Status.** open
+**Status.** open; tactical mines optional
 **Source.** design/world-events.md › Desperate measures (Measures)
 
 ### [STR-077] Measure: Martial law
@@ -749,11 +816,12 @@ the target's location intel and go only to Trusted players; refusing costs −5 
 under heavy escort, air defence massing, Krug rumours, radio silence). The convoy is a squad on the map;
 destroying it prevents the strike. Effect: the target region (enemy-held city or largest troop
 concentration) loses every unit; its POI becomes permanently `ruined`; it and its neighbours get
-`contaminated` (permanent): soldiers lose HP every tactical turn there, loot from there cannot be sold.
+`contaminated` (permanent): soldiers lose HP every tactical turn there (tactical effect optional, later
+build), loot from there cannot be sold.
 Aftermath: every other faction's relation to the striker is set hostile; its patron may cut support;
 loyalty collapses; Refugee movement fires for neighbours. Escort contracts only to Trusted players.
 **Values.** `nukeWarningDays` ("several") — not set; patron veto chance — not set; contamination HP loss — not set (design: Open) → data/events.json.
-**Status.** open
+**Status.** open; tactical contamination effect optional
 **Source.** design/world-events.md › Nuclear strike; › Reputation in the event system
 
 ### [STR-081] Flavour events
@@ -770,8 +838,9 @@ loyalty collapses; Refugee movement fires for neighbours. Escort contracts only 
 (STR-084), cities (STR-085), industry (STR-086), towns and governmental institutions (STR-087), roads
 (STR-088), war state (STR-089), start (STR-090), validate (STR-091). Each stage reads only earlier
 stages' output and its own record in data/mapgen/strategic.json (keyed by stage id). Seeded RNG only.
-If validation fails, regenerate with the next derived seed up to `maxAttempts`.
-**Values.** `regionCount`, `maxAttempts` — not set (design: Open) → data/mapgen/strategic.json.
+If validation fails, regenerate with the next derived seed up to `maxAttempts`. The output is a tile grid
+of shape `mapShape` (STR-005; `square` by default, `hex` as a test option), each tile one region.
+**Values.** `mapShape` — design `square` (`hex` test option); grid size (`width`, `height`), `maxAttempts` — not set (design: Open) → data/mapgen/strategic.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Map generation (draft)
 
@@ -812,9 +881,9 @@ institution in an adjacent free region (one POI per region).
 **Source.** design/design.md › Strategic Layer › Map generation (draft) (5)
 
 ### [STR-088] Stage: roads
-**Rule.** Asphalt roads: a spanning network over the capital and all cities plus `extraLoops` extra
-links. Dirt roads link every town and plant to the network. Where a road crosses water, mark the link
-`bridge` or `ford`. Gas stations placed every `gasInterval` regions along asphalt roads. Hidden cities
+**Rule.** Roads are laid on top of the tiles' terrain (STR-005). Asphalt roads: a spanning network over
+the capital and all cities plus `extraLoops` extra links. Dirt roads link every town and plant to the
+network. Where a road crosses a water tile, flag that tile `bridge` or `ford`. Gas stations placed every `gasInterval` regions along asphalt roads. Hidden cities
 get no road.
 **Values.** `extraLoops` ("a few"), `gasInterval`, bridge/ford ratio — not set (design: Open) → data/mapgen/strategic.json `roads`.
 **Status.** open
@@ -862,29 +931,37 @@ road, each with a non-water landable neighbour.
    turn, and all squads' actions resolve together (STR-003). How many hours one commit runs is still a spec
    assumption (question 27). STR-002/STR-017: with several player squads on ops at once, how do their
    actions share the clock (one global clock, per-squad orders that continue while another squad acts)?
-4. STR-006/STR-005: "every region shows one terrain type" but asphalt/dirt road are terrain types and
+4. **Resolved (design eb072a2):** a road lies on top of a tile's terrain (STR-005, STR-006).
+   STR-006/STR-005: "every region shows one terrain type" but asphalt/dirt road are terrain types and
    mountains are passable "by road". Spec models roads as links on top of base terrain. Confirm.
-5. STR-006: movement cost uses the destination region's terrain — or origin, or the worse of both?
+5. **Resolved (design eb072a2):** the destination tile's terrain sets the hours; a road between the two
+   tiles overrides it, asphalt and dirt at the same speed (STR-006). STR-006: movement cost uses the destination region's terrain — or origin, or the worse of both?
 6. STR-001: start hour of Day 1 not stated.
-7. STR-009: civilian loyalty range, start value, and whether it is per faction or one value toward the
+7. **Resolved (design eb072a2):** loyalty exists only on settlement tiles, one value per faction,
+   −100…100; the start value stays unset (STR-009). STR-009: civilian loyalty range, start value, and whether it is per faction or one value toward the
    controller.
 8. STR-024/STR-025/STR-028/STR-035/STR-038/STR-040…STR-043: times not stated (design: Open), plus evade
    formula and Krug pass price.
 9. STR-032: off-road rating reduction per rating not set; is fuel spent per region (fuel range in
    regions suggests yes) or per hour, and do steppe/woods cost more fuel?
-10. STR-037: Wait vs Rest — the design marks Wait as "Open (Rest covers set hours)". Is Wait a separate
+10. **Resolved (design eb072a2):** Wait and Rest are one action, Stand by; wounds heal meanwhile, faster
+    at an FOB (STR-037). STR-037: Wait vs Rest — the design marks Wait as "Open (Rest covers set hours)". Is Wait a separate
     action, and does healing progress during Wait?
 11. STR-047: a squad's rank for morale loss — the design gives soldier ranks; how is a squad's rank
     derived (majority, leader, average)? Does it apply per soldier instead?
-12. STR-049: when a leader dies, can the capital become `none`? This contradicts STR-007 (capital always
+12. **Resolved (design eb072a2):** yes — the capital can fall and is contested until a faction holds it
+    for a set time (STR-007, STR-049); the scatter split stays open. STR-049: when a leader dies, can the capital become `none`? This contradicts STR-007 (capital always
     SSV or VDK). Also: share of scattered squads becoming resistance vs Krug recruits.
 13. STR-014/STR-026: income, supply and recruit outputs per POI type and the auto-resolve formula are not
     given.
-14. STR-050: event chances not given; does the cap of 3 include desperate measures? Can the same event run
+14. **Resolved (design eb072a2):** the cap of 3 counts world events and desperate measures together
+    (STR-050, STR-070); event chances and whether one event may run twice for different subjects stay
+    open. STR-050: event chances not given; does the cap of 3 include desperate measures? Can the same event run
     twice for different subjects?
 15. STR-055…STR-065: many trigger thresholds are qualitative ("weakly held", "several days", "heavy
     losses", "repeated losses", "strength advantage") with no numbers.
-16. STR-061: Defection — which faction do defectors join (the one they fought, the strongest neighbour)?
+16. **Resolved (design eb072a2):** the garrison joins the faction pressing it (the nearest enemy, or the
+    one that attacked it last) or disbands, leaving the POI uncontrolled (STR-061). STR-061: Defection — which faction do defectors join (the one they fought, the strongest neighbour)?
 17. STR-067: the Resistance group uses loyalty "toward the controlling faction", supporting per-faction
     loyalty; it becomes a faction — does it count in crisis sign 8 (isolation) and in relations?
 18. **Resolved (design 8972470):** Strategic owns every AI faction's funds in the `world` slice; formulas
@@ -896,22 +973,50 @@ road, each with a non-water landable neighbour.
     the region? Patron veto chance not given.
 21. STR-034: what does "military points of interest may fire on it" do (damage, downing chance)?
 22. STR-016: FOB raids are "late game" — no trigger or timing rule.
-23. STR-082: region count, map size and region shape (grid, hex, Voronoi) not stated.
+23. **Resolved (design eb072a2):** a square tile grid, each tile one region, with hex tiles as a
+    switchable test option (STR-005, STR-082); the grid size stays unset. STR-082: region count, map size and region shape (grid, hex, Voronoi) not stated.
 24. STR-081: flavour event triggers not defined in the GDD (lore only).
 25. Workflow starting pipeline (regions → cities → roads → resources → frontline → validate) differs from
     the design order (industry before roads). Spec follows the design order.
-26. STR-003/STR-022: where is a squad during a multi-hour move for encounter purposes (origin,
+26. **Resolved (design eb072a2):** on its origin tile until the move's last hour, then on the
+    destination; the encounter tile's terrain sets the tactical map (STR-020, STR-022). STR-003/STR-022: where is a squad during a multi-hour move for encounter purposes (origin,
     destination, both)? Split from question 2.
-27. STR-003: how many hour ticks does one commit run when the player's squads have actions of different
+27. **Resolved (design eb072a2):** hours tick until the first player squad finishes its action or is
+    interrupted; longer actions keep running and can be cancelled at that planning phase, keeping the hours
+    spent and healing gained, a cancelled move leaving the squad on its origin tile (STR-002, STR-003).
+    STR-003: how many hour ticks does one commit run when the player's squads have actions of different
     lengths? Spec assumes ticks run until any player squad's action ends or is interrupted. May the player
     cancel a multi-hour action in progress at a planning phase?
 28. STR-003: which events interrupt a multi-hour action (any event naming the squad's region, only
     events that touch the squad)? And do `d = 0` actions (trade, hire) really resolve before the commit,
     given "nothing resolves before that"?
-29. STR-092: income/cost formulas, booking interval (hourly, daily) and start funds are not given. May
+29. **Resolved (design eb072a2):** funds never go below zero; a payment due that the employer cannot
+    cover fails the contract at once and the player keeps the advance (STR-092, STR-093); the formulas,
+    booking interval and start funds stay open. STR-092: income/cost formulas, booking interval (hourly, daily) and start funds are not given. May
     funds go negative? What does "contracts go unpaid" do to a contract with the player (late pay, debt
     owed to the player, failure)?
 30. STR-092: do resistance groups and a rogue PMC get funds (and from what start value) when they become
     factions?
 31. STR-093: when the player repays an advance (MGT-048) or pays compensation or a bounty (STR-043), is
     that money credited to the faction's funds?
+32. STR-005: on the square grid, are diagonal tiles adjacent (8 neighbours, as on the tactical grid) or
+    only the 4 edge neighbours, and do diagonal moves take more hours? The grid size is not set.
+33. STR-006: on a tile with a road, which visibility class applies for detection and evasion — the road's
+    (asphalt far, dirt medium) or the base terrain's? (A weather modifier for dirt roads is planned for
+    later; it is not in the design yet.)
+34. STR-007: what are "the capital's effects" a holder gains (leader seat STR-045, crisis sign 6,
+    income)? Must the hold time be unbroken control of the capital tile? Do the coup requirements
+    (GEN-013) and the holding phase (GEN-015) still apply when the player becomes holder this way?
+35. STR-009: villages are named as settlements, but there is no village POI type (towns, small and large
+    cities only). Are villages a town variant, a new POI type, or dropped?
+36. STR-037: what does "on alert" do for a squad standing by (evasion, no surprise, other)? STR-002: is
+    the fuel of a move cancelled or interrupted before its last hour spent?
+37. STR-061: which comes first when choosing the pressing faction — the last attacker or the nearest enemy
+    (spec: last attacker, else nearest)? The chance of joining vs disbanding is not set.
+38. STR-092: under `hardLimit`, must a faction hold the full contract pay when it offers a contract, or
+    only the advance? What does raising a squad cost? Under `scoreTerm`, how is spending beyond the funds
+    booked when funds still never go below zero?
+39. STR-093: when an employer's default fails the contract, does the player lose reputation, and is the
+    advance kept free of debt (MGT-048)? What if the advance itself cannot be paid at signing?
+40. STR-094: where and when is a Krug escort hired, at what price, and how does an AI faction ask for one
+    (a strategic command)?

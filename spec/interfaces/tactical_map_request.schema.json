@@ -3,7 +3,7 @@
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
   "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAI-009.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -21,7 +21,8 @@
       "type": "object", "required": ["id", "terrain"],
       "properties": {
         "id": { "type": "string" },
-        "terrain": { "type": "string", "description": "Strategic terrain type → biome for the tactical generator" },
+        "terrain": { "type": "string", "description": "Terrain of the encounter tile → biome for the tactical generator (STR-022)" },
+        "road": { "type": ["string", "null"], "enum": ["asphalt", "dirt", null] },
         "urbanization": { "type": "number", "minimum": 0, "maximum": 1 },
         "weather": { "type": "string" },
         "poi": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "type": { "type": "string", "x-ref": "poi" }, "state": { "type": "string" } } },
@@ -38,7 +39,7 @@
           "faction": { "type": "string" },
           "controller": { "enum": ["player", "ai"] },
           "doctrine": { "type": "string" },
-          "role": { "enum": ["attacker", "defender", "convoy", "vip", "neutral", "ally"] },
+          "role": { "enum": ["attacker", "defender", "convoy", "vip", "neutral", "ally"], "description": "neutral = the third side: never activates, only reacts or turns hostile when attacked (TAC-001)" },
           "morale": { "type": "number" },
           "vehicle": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "storageKg": { "type": "number" }, "fuel": { "type": "number" } } },
           "units": { "type": "array", "items": { "$ref": "#/$defs/unit" } }
@@ -56,7 +57,7 @@
       "additionalProperties": { "type": "object", "required": ["goal"], "properties": {
         "goal": { "type": "string" },
         "targets": { "type": "array", "items": { "type": "string" } },
-        "acceptableLoss": { "type": "number", "minimum": 0 } } }
+        "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the side's soldiers out of action (dead, disabled, fled); reached = retreat (TAI-009)" } } }
     },
     "exits": { "type": "array", "items": { "type": "object", "properties": {
       "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] }, "params": { "type": "object" } } } },
@@ -68,6 +69,8 @@
       "properties": {
         "id": { "type": "string", "description": "Roster ID (player) or generated ID (AI)" },
         "presetId": { "type": "string", "x-ref": "presets" },
+        "rank": { "type": "integer", "minimum": 0, "description": "Sets the AI squad leader (TAI-013)" },
+        "controller": { "enum": ["player", "ai"], "description": "Per-unit override, e.g. an escorted VIP (TAI-018)" },
         "attributes": { "type": "object" },
         "nerve": { "type": "number" },
         "zoneHp": { "type": "object" },

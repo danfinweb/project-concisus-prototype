@@ -3,7 +3,7 @@
   "$id": "data/factions.schema.json",
   "title": "Factions",
   "description": "The armed powers and their starting relations (spec GEN-004..GEN-018, STR-051, SAI-010).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -19,6 +19,7 @@
       "measures": { "type": "array", "description": "STR-070, desperate measures this faction may take" },
       "capitalHolder": { "type": "boolean", "description": "STR-007" },
       "deniableChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-050" },
+      "rogueChance": { "type": "object", "description": "GEN-017: daily chance per crisis sign of the patron, capital-rush chance, warning lead days (not set)" },
       "disownChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-050" }
     }
   }

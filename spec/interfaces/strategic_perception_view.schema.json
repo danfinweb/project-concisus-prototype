@@ -3,7 +3,7 @@
   "$id": "strategic_perception_view.schema.json",
   "title": "Strategic perception view",
   "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-020, STR-021, STR-092, SAI-002, SAI-003, SAI-005, SAI-015.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/strategic-ai"],
   "type": "object",
@@ -17,10 +17,13 @@
       "id": { "type": "string" }, "region": { "type": "string" }, "goal": { "type": "string" }, "target": { "type": "string" },
       "strength": { "type": "number" }, "supplies": { "type": "number" }, "fuel": { "type": "number" }, "morale": { "type": "number" }, "inTransit": { "type": "boolean" } } } },
     "knownRegions": { "type": "array", "items": { "type": "object", "required": ["id"], "properties": {
-      "id": { "type": "string" }, "terrain": { "type": "string" }, "poi": { "type": "string" }, "controller": { "type": ["string", "null"] }, "loyalty": { "type": "number" },
+      "id": { "type": "string" }, "x": { "type": "integer" }, "y": { "type": "integer" }, "terrain": { "type": "string" },
+      "road": { "type": ["string", "null"], "enum": ["asphalt", "dirt", null] }, "poi": { "type": "string" }, "controller": { "type": ["string", "null"] },
+      "loyalty": { "type": "object", "description": "Settlement tiles only: faction → −100..100 (STR-009)" },
       "flags": { "type": "array" }, "observed": { "type": "object", "description": "Day and hour this information is from" } } } },
     "knownSquads": { "type": "array", "description": "Noticed foreign squads, the player's included", "items": { "type": "object", "properties": {
       "faction": { "type": "string" }, "region": { "type": "string" }, "estimatedStrength": { "type": "number" }, "seen": { "type": "object" }, "knownGoal": { "type": "string" } } } },
+    "capital": { "type": "object", "description": "STR-007", "properties": { "tile": { "type": "string" }, "holder": { "type": ["string", "null"] }, "occupant": { "type": ["string", "null"] }, "contestedSince": { "type": ["object", "null"] } } },
     "vips": { "type": "array", "items": { "type": "object" }, "description": "Own VIPs and known enemy VIPs with intel expiry" },
     "relations": { "type": "object", "description": "faction → -100..100" },
     "reputationWithPlayer": { "type": "object", "properties": { "value": { "type": "number" }, "standing": { "enum": ["hostile", "unfriendly", "neutral", "friendly", "trusted"] } } },

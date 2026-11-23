@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
+Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 
 ## IDs
 
-378 IDs (first split 2026-11-22, updated from design 8972470). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+387 IDs (first split 2026-11-22, updated from design eb072a2). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -30,16 +30,16 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [GEN-003] | Op objectives and bundling | all modules | design/design.md › Overview › Core loop |
 | [GEN-004] | Faction roster | all modules | design/design.md › Factions & campaign › Factions |
 | [GEN-005] | Off-map influences | all modules | design/design.md › Factions & campaign › Factions |
-| [GEN-006] | Civilian population | all modules | design/design.md › Factions & campaign › Factions |
+| [GEN-006] | Civilian population | all modules | design/design.md › Factions & campaign › Factions; › Strategic Layer › Map (draft) |
 | [GEN-007] | Faction relations model | all modules | design/design.md › Strategic layer › World events; › Management › Reputation (draft) |
 | [GEN-008] | Leader effects (open) | all modules | design/design.md › Factions & campaign › Leaders |
 | [GEN-009] | Krug markets as no-fire zones | all modules | design/design.md › Factions & campaign › The Krug |
 | [GEN-010] | Krug standing unlocks (open) | all modules | design/design.md › Factions & campaign › The Krug |
 | [GEN-011] | Player allegiance (open) | all modules | design/design.md › Factions & campaign › Player role |
-| [GEN-012] | Campaign end states (open) | all modules | design/design.md › Factions & campaign › Player role; › Management › Base & meta progression |
+| [GEN-012] | Campaign end states (open) | all modules | design/design.md › Factions & campaign › Player role; › Strategic Layer › Map (draft); › Management › Base & meta progression |
 | [GEN-013] | Player coup requirements (open) | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-014] | Coup final operation | all modules | design/design.md › Factions & campaign › Coups |
-| [GEN-015] | Holding the capital (open) | all modules | design/design.md › Factions & campaign › Coups |
+| [GEN-015] | Holding the capital (open) | all modules | design/design.md › Factions & campaign › Coups; › Strategic Layer › Map (draft) |
 | [GEN-016] | Coup epilogue | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-017] | Rogue PMC chance (open) | all modules | design/design.md › Factions & campaign › Coups › Rogue PMCs |
 | [GEN-018] | Rogue PMC warning signs and aftermath | all modules | design/design.md › Factions & campaign › Coups › Rogue PMCs |
@@ -49,9 +49,9 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [STR-004] | Daily checks at 00:00 | modules/strategic | design/design.md › Strategic Layer (Time); design/strategic-actions.md › Trade; design/design.md › Management › Base & meta progression |
 | [STR-005] | Region graph | modules/strategic | design/design.md › Strategic Layer › Map (draft) |
 | [STR-006] | Terrain movement costs | modules/strategic | design/design.md › Strategic Layer › Map (draft) › Terrain types; design/strategic-actions.md › Movement and operations |
-| [STR-007] | Capital control | modules/strategic | design/design.md › Strategic Layer › Map (draft) |
+| [STR-007] | Capital control (open) | modules/strategic | design/design.md › Strategic Layer › Map (draft); › Factions & campaign › Coups |
 | [STR-008] | Fog of war and detection (open) | modules/strategic | design/design.md › Strategic Layer › Map (draft) (Fog of war); › Strategic Layer (Intel); › Vehicles (Noise) |
-| [STR-009] | Civilian loyalty (open) | modules/strategic | design/design.md › Factions & campaign › Factions; › Strategic Layer › Map (draft) |
+| [STR-009] | Civilian loyalty (open) | modules/strategic | design/design.md › Strategic Layer › Map (draft); › Factions & campaign › Factions |
 | [STR-010] | Points of interest | modules/strategic | design/design.md › Strategic Layer › Map (draft) › Points of interest |
 | [STR-011] | Mineral plant modifier (open) | modules/strategic | design/design.md › Strategic Layer › Map (draft) › Points of interest; › Management › Base & meta progression |
 | [STR-012] | Krug markets as no-fire zones | modules/strategic | design/design.md › Factions & campaign › The Krug (refer to GEN for the Code) |
@@ -70,7 +70,8 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [STR-025] | Pay your way through (Krug) (open) | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Encounters); design/strategic-actions.md › Movement and operations |
 | [STR-026] | Off-screen fights (open) | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Off-screen fights) |
 | [STR-092] | Faction funds (open) | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); design/design.md (module table: `world` includes funds) |
-| [STR-093] | Contract payment between modules | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); › Management › Contracts and missions › Contract terms |
+| [STR-093] | Contract payment between modules | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); › Overview › Core loop; › Management › Contracts and missions › Contract terms |
+| [STR-094] | Krug escorts (open) | modules/strategic | design/design.md › Management › Contracts and missions › Where contracts come from |
 | [STR-027] | Operation lifecycle | modules/strategic | design/design.md › Overview › Core loop; › Management › Gear, loot & return |
 | [STR-028] | Launch an op (open) | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-029] | Return to an FOB | modules/strategic | design/strategic-actions.md › Movement and operations |
@@ -81,7 +82,7 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [STR-034] | Fly one region by helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) › Helicopters |
 | [STR-035] | Land a helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) › Helicopters |
 | [STR-036] | Scout (open) | modules/strategic | design/design.md › Strategic Layer (Time); design/strategic-actions.md › Movement and operations |
-| [STR-037] | Wait and rest | modules/strategic | design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md › Movement and operations |
+| [STR-037] | Stand by | modules/strategic | design/design.md › Strategic Layer (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md › Movement and operations |
 | [STR-038] | Enter a point of interest (open) | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-039] | Zero-time trade actions | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions; design/design.md › Strategic Layer (Time) |
 | [STR-040] | Contract actions (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions |
@@ -120,11 +121,11 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [STR-073] | Measure: Open call for help (open) | modules/strategic | design/world-events.md › Desperate measures (Measures) |
 | [STR-074] | Measure: Paying any price (open) | modules/strategic | design/world-events.md › Desperate measures; › Reputation in the event system |
 | [STR-075] | Measure: Scorched earth (open) | modules/strategic | design/world-events.md › Desperate measures (Measures) |
-| [STR-076] | Measure: Mining the roads (open) | modules/strategic | design/world-events.md › Desperate measures (Measures) |
+| [STR-076] | Measure: Mining the roads (open; tactical mines optional) | modules/strategic | design/world-events.md › Desperate measures (Measures) |
 | [STR-077] | Measure: Martial law (open) | modules/strategic | design/world-events.md › Desperate measures (Measures) |
 | [STR-078] | Measure: Seizing Krug stocks | modules/strategic | design/world-events.md › Desperate measures (Measures) |
 | [STR-079] | Measure: VIP strike | modules/strategic | design/world-events.md › Desperate measures; › Reputation in the event system |
-| [STR-080] | Measure: Nuclear strike (open) | modules/strategic | design/world-events.md › Nuclear strike; › Reputation in the event system |
+| [STR-080] | Measure: Nuclear strike (open; tactical contamination effect optional) | modules/strategic | design/world-events.md › Nuclear strike; › Reputation in the event system |
 | [STR-081] | Flavour events (open) | modules/strategic | design/design.md › Strategic Layer › World events (Flavour events) |
 | [STR-082] | Generation pipeline (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) |
 | [STR-083] | Stage: land (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (1) |
@@ -136,39 +137,43 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [STR-089] | Stage: war state (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (7) |
 | [STR-090] | Stage: start (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (8) |
 | [STR-091] | Stage: validate (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (Validation rules) |
-| [TAC-001] | Two sides per map | modules/tactical | design/design.md › Tactical Layer › Turn structure; design/design.md › Tactical Layer (Enemy AI) |
+| [TAC-001] | Sides on a map (open (what a neutral unit does once hostile, how its reactions are chosen and paid — see Open questions)) | modules/tactical | design/design.md › Tactical Layer › Turn structure; design/design.md › Tactical Layer (Enemy AI) |
 | [TAC-002] | Turn-based from the start | modules/tactical | design/design.md › Tactical Layer (Turn structure bullet) |
 | [TAC-003] | Battle duration and day/night | modules/tactical | design/design.md › Tactical Layer › Time of day |
 | [TAC-004] | Night sight reduction (open) | modules/tactical | design/design.md › Tactical Layer › Time of day; design/design.md › Data definitions › Weapon profile (tactical modules) |
+| [TAC-076] | Objective met in battle | modules/tactical | design/design.md › Overview › Core loop; design/design.md › Management › Contracts and missions › Mission types |
+| [TAC-078] | Contamination and mines on the tactical map (optional) | modules/tactical | design/world-events.md › Desperate measures (Mining the roads); › Nuclear strike (rare) (Effect) |
 | [TAC-005] | Turn order and activation choice | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › Turn and activation |
 | [TAC-006] | Action points per activation | modules/tactical | design/design.md › Tactical Layer (Action points); design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md › Turn and activation, AP modifiers on an activation |
 | [TAC-007] | Set facing at end of activation | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing; design/tactical-actions.md › Turn and activation |
 | [TAC-008] | Activation stamina cost | modules/tactical | design/design.md › Tactical Layer › Turn structure › Stamina; design/tactical-actions.md › Turn and activation |
 | [TAC-009] | Stamina maximum | modules/tactical | design/design.md › Tactical Layer › Turn structure › Stamina; design/design.md › Management › Soldier attributes › Derived values |
 | [TAC-010] | Pass | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › Turn and activation |
-| [TAC-011] | Stamina recovery | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation, Stamina |
+| [TAC-011] | Stamina recovery | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation, Stamina; design/tactical-actions.md › Turn and activation (Pass) |
 | [TAC-012] | Exhaustion | modules/tactical | design/design.md › Tactical Layer › Turn structure › Stamina |
-| [TAC-013] | Stall rule (open) | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation |
+| [TAC-013] | Stall rule | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation |
 | [TAC-014] | Durations in turns | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation |
 | [TAC-015] | Suppression | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › AP modifiers on an activation; design/design.md › Management › Soldier attributes (Nerve) |
+| [TAC-077] | Morale flight and Nerve in battle (optional) | modules/tactical | design/design.md › Management › Soldiers & progression (Contracts & morale); › Soldier attributes (Nerve) |
 | [TAC-016] | Vision cone | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing; design/design.md › Tactical Layer (Cover & visibility); design/item-list.md › Helmets |
 | [TAC-017] | Turning during an activation | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing; design/tactical-actions.md › Movement |
 | [TAC-018] | Gunshot hearing range | modules/tactical | design/design.md › Tactical Layer › Turn structure › Gunshot noise; design/design.md › Tactical Layer › Derived per shot |
-| [TAC-019] | Reacting to heard shots and noise (open) | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing, Gunshot noise |
+| [TAC-019] | Reacting to heard shots and noise | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing, Gunshot noise |
 | [TAC-020] | Reaction trigger | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation |
 | [TAC-021] | Reaction setting | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation |
 | [TAC-022] | Reaction attempt cost and chance | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation |
-| [TAC-023] | Reaction resolution | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions |
-| [TAC-024] | Action cost composition | modules/tactical | design/design.md › Tactical Layer › Actions and costs; design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md (intro: whole numbers, rounded down after any multiplier, never below 1 AP) |
+| [TAC-023] | Reaction resolution | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation (Hold overwatch) |
+| [TAC-075] | Hold overwatch | modules/tactical | design/tactical-actions.md › Turn and activation (Hold overwatch); design/design.md › Tactical Layer › Turn structure › Reactions |
+| [TAC-024] | Action cost composition | modules/tactical | design/design.md › Tactical Layer (Action points), › Actions and costs; design/tactical-actions.md (intro: order of cost calculation) |
 | [TAC-025] | Stun (head hit) (open) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › AP modifiers on an activation |
 | [TAC-026] | Pain AP loss (open) | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; design/tactical-actions.md › AP modifiers on an activation |
 | [TAC-027] | Over-encumbrance (open) | modules/tactical | design/design.md › Tactical Layer (Action points); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Data definitions › Soldier equipment slots |
 | [TAC-028] | Tactical grid | modules/tactical | design/design.md › Tactical Layer (Movement) |
-| [TAC-029] | Walk one tile | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement (Walk one tile, Leg wound surcharge); design/design.md › Tactical Layer › Medical system › Conditions |
+| [TAC-029] | Walk one tile | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement (Walk one tile, Leg wounds) and intro; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; › Medical system › Conditions |
 | [TAC-030] | Move crouched | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement |
 | [TAC-031] | Crawl prone | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement |
 | [TAC-032] | Sprint | modules/tactical | design/tactical-actions.md › Movement; design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Backpacks |
-| [TAC-033] | Change stance (open) | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement; design/design.md › Management › Soldier attributes |
+| [TAC-033] | Change stance | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement (Change stance); design/design.md › Management › Soldier attributes (Agility row) |
 | [TAC-034] | Vault a window, climb a ladder | modules/tactical | design/design.md › Tactical Layer (Movement), Body zones and hitboxes › Stance; design/tactical-actions.md › Movement (Vault a window or low wall, Climb a ladder) |
 | [TAC-035] | Cover per tile edge | modules/tactical | design/design.md › Tactical Layer (Movement, Cover & visibility), Body zones and hitboxes › Stance |
 | [TAC-036] | Destruction recalculation | modules/tactical | design/design.md › Tactical Layer (Movement) |
@@ -176,9 +181,10 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [TAC-038] | Leave the map at an exit | modules/tactical | design/tactical-actions.md › Turn and activation; design/design.md › Management › Gear, loot & return |
 | [TAC-039] | Fire | modules/tactical | design/tactical-actions.md › Weapons (Fire); design/design.md › Data definitions › Weapon profile |
 | [TAC-040] | Aim longer | modules/tactical | design/design.md › Tactical Layer (Action points); design/tactical-actions.md › Weapons (Aim longer) |
-| [TAC-041] | Reload | modules/tactical | design/tactical-actions.md › Weapons (Reload); design/design.md › Data definitions › Weapon profile, Soldier equipment slots |
+| [TAC-041] | Reload | modules/tactical | design/tactical-actions.md › Weapons (Reload) and intro; design/item-list.md › Weapons (Feed type, magazines are items); design/design.md › Data definitions › Weapon profile, Soldier equipment slots |
 | [TAC-042] | Swap weapon 1 and 2 | modules/tactical | design/tactical-actions.md › Weapons (Swap between weapon 1 and 2); design/design.md › Data definitions › Soldier equipment slots |
-| [TAC-043] | Throw a grenade (open) | modules/tactical | design/tactical-actions.md › Weapons; design/design.md › Management › Soldier attributes |
+| [TAC-043] | Throw a grenade (open) | modules/tactical | design/tactical-actions.md › Weapons (Throw a grenade); design/item-list.md › Grenades; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes |
+| [TAC-079] | Grenade effects (open) | modules/tactical | design/item-list.md › Grenades |
 | [TAC-044] | Total spread (open) | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Weapon profile |
 | [TAC-045] | Simulated shot trace | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Calibre profile |
 | [TAC-046] | Hit chance and shot preview | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Tactical Layer (Readability) |
@@ -193,15 +199,15 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [TAC-055] | Prone hitboxes and limits | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Stance |
 | [TAC-056] | Cover occlusion | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Stance |
 | [TAC-057] | Zone HP | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes › Derived values |
-| [TAC-058] | Zone damage effects (open) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone |
-| [TAC-059] | Zone at 0 HP | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes; design/design.md › Tactical Layer › Medical system › Conditions; design/design.md › Data definitions › Soldier equipment slots |
+| [TAC-058] | Zone damage effects (open) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › Movement (Leg wounds), Weapons, AP modifiers on an activation |
+| [TAC-059] | Zone at 0 HP | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Tactical Layer › Medical system › Conditions; design/design.md › Data definitions › Soldier equipment slots |
 | [TAC-060] | Light bleeding | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions, Body zones and hitboxes |
 | [TAC-061] | Heavy bleeding | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions |
 | [TAC-062] | Fracture (open) | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions |
 | [TAC-063] | Pain (open) | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Medical items |
 | [TAC-064] | Medical item use permissions | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/tactical-actions.md › Medical |
 | [TAC-065] | Medical AP cost | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/tactical-actions.md › Medical; design/item-list.md › Medical items |
-| [TAC-066] | HP restored | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/item-list.md › Medical items |
+| [TAC-066] | HP restored | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/item-list.md › Medical items (IFAK) |
 | [TAC-067] | Medical item effects | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Medical items |
 | [TAC-068] | Item access tiers (open) | modules/tactical | design/tactical-actions.md › Gear and interaction, Medical; design/design.md › Data definitions › Soldier equipment slots; design/item-list.md › Backpacks |
 | [TAC-069] | Drop the backpack | modules/tactical | design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots |
@@ -209,7 +215,7 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [TAC-071] | Cut a lock | modules/tactical | design/tactical-actions.md › Gear and interaction |
 | [TAC-072] | Place a demolition charge | modules/tactical | design/tactical-actions.md › Gear and interaction |
 | [TAC-073] | Restrain a VIP | modules/tactical | design/tactical-actions.md › Gear and interaction |
-| [TAC-074] | Carry or drag a wounded squadmate | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a wounded squadmate) |
+| [TAC-074] | Carry or drag a body | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a body) |
 | [MGT-001] | Soldier record | modules/management | design/design.md › Management › Soldiers & progression |
 | [MGT-002] | Hiring pools (open) | modules/management | design/design.md › Management › Soldiers & progression |
 | [MGT-003] | Hire price (open) | modules/management | design/design.md › Management › Soldiers & progression |
@@ -217,7 +223,7 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [MGT-005] | Salaries and renewals (open) | modules/management | design/design.md › Management › Soldiers & progression › Contracts & morale; › Strategic Layer › Squads and simulation (Faction funds (draft)) |
 | [MGT-006] | Service record logging | modules/management | design/design.md › Management › Soldiers & progression › Service record |
 | [MGT-007] | Dossier and after-action report | modules/management | design/design.md › Management › Soldiers & progression › Service record |
-| [MGT-008] | Squad morale persistence | modules/management | design/design.md › Management › Soldiers & progression › Contracts & morale |
+| [MGT-008] | Squad morale persistence (optional (flight rule only)) | modules/management | design/design.md › Management › Soldiers & progression › Contracts & morale |
 | [MGT-009] | Perks (open) | modules/management | design/design.md › Management › Soldiers & progression › Attributes |
 | [MGT-010] | Persistent injuries | modules/management | design/design.md › Management › Soldiers & progression › Injuries |
 | [MGT-011] | Death, MIA and capture | modules/management | design/design.md › Management › Soldiers & progression › Death; › Gear, loot & return |
@@ -235,12 +241,12 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [MGT-023] | Skill growth by use (open) | modules/management | design/design.md › Management › Soldier attributes › Rules |
 | [MGT-024] | Physical attribute changes (open) | modules/management | design/design.md › Management › Soldier attributes › Rules |
 | [MGT-025] | Skill drift (optional) | modules/management | design/design.md › Management › Soldier attributes › Rules |
-| [MGT-026] | Action points | modules/management | design/design.md › Management › Soldier attributes › Derived values |
-| [MGT-027] | Stamina pool | modules/management | design/design.md › Management › Soldier attributes › Derived values |
-| [MGT-028] | HP per zone | modules/management | design/design.md › Management › Soldier attributes › Derived values |
+| [MGT-026] | Action points | modules/management | design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer (Action points) |
+| [MGT-027] | Stamina pool | modules/management | design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Turn structure (Stamina) |
+| [MGT-028] | HP per zone | modules/management | design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Body zones and hitboxes |
 | [MGT-029] | Carry capacity (open) | modules/management | design/design.md › Management › Soldier attributes › Derived values |
-| [MGT-030] | Other derived values | modules/management | design/design.md › Management › Soldier attributes › Derived values |
-| [MGT-031] | Nerve (open) | modules/management | design/design.md › Management › Soldier attributes › Nerve |
+| [MGT-030] | Other derived values | modules/management | design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md |
+| [MGT-031] | Nerve (open; effect optional) | modules/management | design/design.md › Management › Soldier attributes › Nerve |
 | [MGT-032] | Inventory model | modules/management | design/design.md › Management › Gear, loot & return |
 | [MGT-033] | Carried weight effect (open) | modules/management | design/design.md › Management › Gear, loot & return |
 | [MGT-034] | Weapon modding (open) | modules/management | design/design.md › Management › Gear, loot & return |
@@ -256,12 +262,12 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [MGT-044] | Mission outcome conditions (open) | modules/management | design/design.md › Management › Contracts and missions › Mission types; › Overview › Core loop |
 | [MGT-045] | Bundling missions into an op | modules/management | design/design.md › Management › Contracts and missions |
 | [MGT-046] | Contract pay (open) | modules/management | design/design.md › Management › Contracts and missions › Pay bands |
-| [MGT-047] | Advance and remainder | modules/management | design/design.md › Management › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft)) |
-| [MGT-048] | Contract failure | modules/management | design/design.md › Management › Contracts and missions › Contract terms |
+| [MGT-047] | Advance and remainder | modules/management | design/design.md › Management › Contracts and missions › Contract terms; › Overview › Core loop; › Strategic Layer › Squads and simulation (Faction funds (draft)) |
+| [MGT-048] | Contract failure | modules/management | design/design.md › Management › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft)) |
 | [MGT-049] | Intel level | modules/management | design/design.md › Management › Contracts and missions › Contract terms |
 | [MGT-050] | Deniability (open) | modules/management | design/design.md › Management › Contracts and missions › Contract terms; design.md › Factions |
 | [MGT-051] | Contract board and filtering | modules/management | design/design.md › Management › Contracts and missions › Where contracts come from; › Reputation |
-| [MGT-052] | Rival PMC competition | modules/management | design/design.md › Management › Contracts and missions; › Reputation › Standing |
+| [MGT-052] | Rival PMC competition (open) | modules/management | design/design.md › Management › Contracts and missions › Where contracts come from; › Reputation › Standing |
 | [MGT-053] | Reputation value | modules/management | design/design.md › Management › Reputation (draft) |
 | [MGT-054] | Standing levels | modules/management | design/design.md › Management › Reputation › Standing |
 | [MGT-055] | Standing effects | modules/management | design/design.md › Management › Reputation › Standing |
@@ -295,30 +301,30 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [SAI-012] | Own goals | modules/strategic-ai | design/design.md › AI › Strategic AI › Faction behaviour |
 | [SAI-013] | Hostility toward the player | modules/strategic-ai | design/design.md › AI › Strategic AI › Faction behaviour; › Management › Reputation › Standing |
 | [SAI-014] | Contract offers | modules/strategic-ai | design/design.md › Management › Contracts and missions › Where contracts come from; › AI › Strategic AI › Faction AI tiers; › Controller hand-off |
-| [SAI-015] | Contract offer evaluation (open) | modules/strategic-ai | design/design.md › AI › Strategic AI › Faction AI tiers |
+| [SAI-015] | Contract offer evaluation (open) | modules/strategic-ai | design/design.md › AI › Strategic AI › Faction AI tiers; › Management › Contracts and missions › Where contracts come from |
 | [TAI-001] | Controller role | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [TAI-002] | Invocation | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off; › Tactical Layer › Turn structure › Reactions |
-| [TAI-003] | Pluggable controller | modules/tactical-ai | design/design.md › AI › Tactical AI (last paragraph) |
-| [TAI-004] | Tactical perception view | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (1); › Unit scoring; › Tactical Layer (Readability, Path preview) |
-| [TAI-005] | Tactical command set | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (3, 4); design/tactical-actions.md |
+| [TAI-003] | Pluggable controller | modules/tactical-ai | design/design.md › AI › Tactical AI (last paragraph); design/design.md › Tactical Layer › Turn structure (neutral side); design/design.md › Management › Contracts and missions (Escort a VIP) |
+| [TAI-004] | Tactical perception view | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (1); › Unit scoring; › Tactical Layer (Readability, Path preview); › Tactical Layer › Turn structure › Gunshot noise |
+| [TAI-005] | Tactical command set | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (3, 4); design/tactical-actions.md (Hold overwatch, Reload, Carry or drag a body, Pick up or loot, Leave the map) |
 | [TAI-006] | No hidden information, no illegal actions | modules/tactical-ai | design/design.md › AI › Tactical AI (last paragraph) |
 | [TAI-007] | Utility score | modules/tactical-ai | design/design.md › AI (intro, Data); › AI › Tactical AI › Unit scoring |
 | [TAI-008] | Survival | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
-| [TAI-009] | Battle goal (open) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
+| [TAI-009] | Battle goal (open (threshold values; what "disabled" means for a whole soldier)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
 | [TAI-010] | Action fit | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › Data definitions › Weapon profile (Weapon type → AI role) |
 | [TAI-011] | Coordination | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
 | [TAI-012] | Squad blackboard | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; CLAUDE.md › State ownership |
-| [TAI-013] | Squad leader plan (open) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles) |
+| [TAI-013] | Squad leader plan (open (rank tie-break, rank source for AI soldiers)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles) |
 | [TAI-014] | Squad roles (open (how reinforcements arrive is not designed)) | modules/tactical-ai | design/design.md › AI › Tactical AI; › Tactical Layer (Enemy AI) |
 | [TAI-015] | Doctrines | modules/tactical-ai | design/design.md › AI (Data); CLAUDE.md (data/ai) |
 | [TAI-016] | Decision log | modules/tactical-ai | design/design.md › AI (Logging); › Presentation & tech › Prototype tech stack (Debugging) |
-| [TAI-017] | Non-hostile units | modules/tactical-ai | design/design.md › AI › Tactical AI; › AI › Strategic AI › Faction behaviour |
-| [TAI-018] | Allied AI units | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (2); › Management › Contracts and missions |
-| [DAT-001] | Data tables for items and vehicles | /data, tools | design/design.md › Data definitions; design/item-list.md |
+| [TAI-017] | Neutral side (open) | modules/tactical-ai | design/design.md › Tactical Layer › Turn structure; › AI › Tactical AI; › AI › Strategic AI › Faction behaviour |
+| [TAI-018] | Allied AI units | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (2); › Management › Contracts and missions (Escort a VIP) |
+| [DAT-001] | Data tables for items and vehicles | /data, tools | design/design.md › Data definitions; design/item-list.md › Weapons (magazines are items), Grenades |
 | [DAT-002] | Common item fields | /data, tools | design/design.md › Data definitions; design/item-list.md |
 | [DAT-003] | Units | /data, tools | design/design.md › Data definitions; › Tactical Layer › Movement; › Strategic Layer |
-| [DAT-004] | Definitions versus instance state | /data, tools | design/design.md › Data definitions (intro); › Weapon profile › State, not profile |
-| [DAT-005] | Seven equipment slots (Draft (design: "Draft — not final")) | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft) |
+| [DAT-004] | Definitions versus instance state | /data, tools | design/design.md › Data definitions (intro); › Weapon profile › State, not profile; design/item-list.md › Weapons (magazine rounds are counted) |
+| [DAT-005] | Seven equipment slots (Draft (design: "Draft — not final")) | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft); design/tactical-actions.md › Weapons (Swap between weapon 1 and 2) |
 | [DAT-006] | Access tiers | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft); › Medical system › Using medical items; design/tactical-actions.md › Medical, Gear and interaction |
 | [DAT-007] | Everything carried counts toward weight | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft) |
 | [DAT-008] | Container limits | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits; › Gear, loot & return › Inventory |
@@ -329,11 +335,12 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [DAT-013] | Base MoA game scale | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › Base MoA; › Tactical Layer › Hit model |
 | [DAT-014] | Weapon condition (open) | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › State, not profile |
 | [DAT-015] | Mod slots and handguard sub-slots | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › Mod slots; › How mods change the profile |
-| [DAT-016] | Weapon mod profile (Draft; initial content: none in design/item-list.md (no mods listed)) | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile |
+| [DAT-016] | Weapon mod profile (Draft; initial content: none in design/item-list.md (no mods listed)) | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; design/item-list.md › Weapons (magazines are items) |
 | [DAT-017] | Tactical modules (open) | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › Tactical modules |
 | [DAT-018] | Suppressors and hearing | /data, tools | design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; › Tactical Layer › Gunshot noise |
+| [DAT-030] | Magazine profile (open) | /data, tools | design/item-list.md › Weapons (Feed type, magazines are items) |
 | [DAT-019] | Calibre profile (Draft (design: "Draft — not final")) | /data, tools | design/design.md › Data definitions › Calibre profile (draft); design/item-list.md › Calibres |
-| [DAT-020] | Calibre fit | /data, tools | design/design.md › Data definitions › Calibre profile (draft) › Designation |
+| [DAT-020] | Calibre fit | /data, tools | design/design.md › Data definitions › Calibre profile (draft) › Designation; design/item-list.md › Weapons (magazines are items) |
 | [DAT-021] | Ammunition load profile (Draft (design: "Draft — not final")) | /data, tools | design/design.md › Data definitions › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition |
 | [DAT-022] | Ammo type defaults (Draft (falloff ranges marked placeholder)) | /data, tools | design/design.md › Data definitions › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition |
 | [DAT-023] | Per-shot inputs | /data, tools | design/design.md › Tactical Layer › Derived per shot (draft); › Data definitions › Calibre profile (draft) |
@@ -350,19 +357,21 @@ Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 | [ITM-005] | Falloff floor | /data, tools | design/item-list.md › Ammunition; design/design.md › Tactical Layer › Derived per shot (draft) |
 | [ITM-006] | Penetration class | /data, tools | design/item-list.md › Ammunition; design/design.md › Tactical Layer › Derived per shot (draft) |
 | [ITM-007] | Subsonic through a suppressor | /data, tools | design/item-list.md › Ammunition; design/design.md › Tactical Layer › Gunshot noise |
-| [ITM-008] | Load-specific damage and projectiles | /data, tools | design/item-list.md › Calibres (12 gauge row) |
+| [ITM-008] | Load-specific damage and projectiles | /data, tools | design/item-list.md › Calibres (intro and 12 gauge row) |
+| [ITM-031] | Magazine items (open (weights; which other weapons share patterns)) | /data, tools | design/item-list.md › Weapons (Feed type, magazines are items) |
 | [ITM-009] | Helmet items | /data, tools | design/item-list.md › Helmets |
 | [ITM-010] | Helmet hearing and vision | /data, tools | design/item-list.md › Helmets; design/design.md › Tactical Layer › Gunshot noise |
 | [ITM-011] | Body armour items | /data, tools | design/item-list.md › Body armour |
 | [ITM-012] | Armour durability (open) | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft); › Tactical Layer › Derived per shot (draft) |
 | [ITM-013] | Vest items | /data, tools | design/item-list.md › Load-bearing vests |
-| [ITM-014] | Pouch type limits | /data, tools | design/item-list.md › Load-bearing vests; design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits |
+| [ITM-014] | Pouch type limits | /data, tools | design/item-list.md › Load-bearing vests; › Weapons (magazines are items); › Grenades; design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits |
 | [ITM-015] | Other items | /data, tools | design/item-list.md › Load-bearing vests |
 | [ITM-016] | Pouch item weight limit | /data, tools | design/item-list.md › Load-bearing vests |
 | [ITM-017] | Battle belt items (open (holster meaning)) | /data, tools | design/item-list.md › Battle belts |
 | [ITM-018] | Backpack items | /data, tools | design/item-list.md › Backpacks |
 | [ITM-019] | Medical items | /data, tools | design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft) |
-| [ITM-020] | Medical item restrictions | /data, tools | design/item-list.md › Medical items |
+| [ITM-020] | Medical item restrictions | /data, tools | design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft) › Using medical items |
+| [ITM-032] | Grenade items (Draft (design: "Draft — placeholder values")) | /data, tools | design/item-list.md › Grenades |
 | [ITM-021] | Barter goods | /data, tools | design/item-list.md › Barter goods; › Operation and faction items (hard drive) |
 | [ITM-022] | Trader buy rates | /data, tools | design/item-list.md › Barter goods › Trading rules |
 | [ITM-023] | Daily barter deals | /data, tools | design/item-list.md › Barter goods › Trading rules |

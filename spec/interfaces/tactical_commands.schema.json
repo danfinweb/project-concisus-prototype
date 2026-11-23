@@ -3,7 +3,7 @@
   "$id": "tactical_commands.schema.json",
   "title": "Tactical commands",
   "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-074.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "x-producer": "modules/tactical-ai",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -17,7 +17,10 @@
     "command": {
       "type": "object", "required": ["type"],
       "properties": {
-        "type": { "enum": ["activate", "pass", "move", "turn", "changeStance", "vault", "climb", "shoot", "reload", "swapWeapon", "throwGrenade", "setReaction", "useItem", "dropBackpack", "pickUp", "cutLock", "placeCharge", "restrainVip", "carry", "leaveMap", "endActivation"] },
+        "type": { "enum": ["activate", "pass", "move", "turn", "changeStance", "vault", "climb", "shoot", "reload", "swapWeapon", "throwGrenade", "setReaction", "holdOverwatch", "useItem", "dropBackpack", "pickUpBackpack", "search", "pickUp", "cutLock", "placeCharge", "restrainVip", "liftBody", "putDownBody", "leaveMap", "endActivation"] },
+        "mode": { "enum": ["carry", "drag"], "description": "liftBody (TAC-074)" },
+        "magazine": { "type": "string", "description": "reload: magazine item instance" },
+        "shells": { "type": "integer", "minimum": 1, "description": "reload, tube-fed: shells to load (partial reload)" },
         "unit": { "type": "string" },
         "path": { "type": "array", "items": { "type": "object" } },
         "stance": { "enum": ["upright", "crouched", "prone"] },

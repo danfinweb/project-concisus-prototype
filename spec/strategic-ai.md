@@ -96,8 +96,17 @@ situation maps, toward the faction's ultimate goal:
 `score = ownGain + damageToRivals − cost − risk + commitmentBonus`, where `commitmentBonus` applies only
 to objectives the faction is already pursuing. Each term is a consideration through its response curve,
 weighted by the doctrine (SAI-010). It follows SAI-012: objectives serve the faction's own aims, not the
-player.
-**Values.** term inputs, curves, weights, commitment bonus — not set (design: all behaviour values unset) → data/ai/doctrines.json.
+player. `ownGain` is rated against the faction's ultimate goal:
+
+| Faction | Ultimate goal |
+| --- | --- |
+| `ssv`, `vdk` | hold the capital (STR-007) and most of the country |
+| `varyag`, `aegis` | profit, and keep their patron standing |
+| `krug` | keep its trade routes and markets, and avoid open war |
+| resistance groups (STR-067) | drive the controller out of their area |
+
+How each goal turns into gain terms is doctrine data.
+**Values.** term inputs, curves, weights, commitment bonus, gain terms per ultimate goal — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Faction behaviour; › Strategic Layer › Squads and simulation
 
 ### [SAI-009] Tier 3 — operational planner
@@ -146,19 +155,26 @@ reputation (MGT).
 **Rule.** A faction posts a contract (`offerContract`) for an objective its own squads can't reach, or
 whose squads are worth more elsewhere (SAI-009), or that it wants deniable. With intel on a rival's goal it
 may post a counter-contract against it. How readily it does so is the doctrine's `contractUse` (SAI-010).
-The pay is a cost to its funds (STR-092, STR-093). Offers carry the MGT contract terms; Management
-validates pay, filters by reputation and shows them.
+The pay is a cost to its funds (STR-092, STR-093). Funds are a hard limit by default: a faction cannot
+offer a contract or raise a squad it cannot pay for, and STR rejects such a command, so the AI should not
+emit it; in the test mode `fundsMode = scoreTerm` funds only weigh in the score (STR-092). Offers carry the
+MGT contract terms; Management validates pay, filters by reputation and shows them.
 **Values.** offer scoring, deniability thresholds — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › AI › Strategic AI › Faction AI tiers; › Controller hand-off
 
 ### [SAI-015] Contract offer evaluation
-**Rule.** Factions other than the employer evaluate open contract offers (`contractOffers` in the view)
-with the same utility scoring as their own objectives (SAI-006, SAI-008): an offer is a candidate
-objective whose gain includes its pay. A faction that takes one returns `acceptContract`; STR validates it
-and settles the pay between the two factions' funds (STR-093).
+**Rule.** Only the rival PMCs (`varyag`, `aegis`) take other factions' contracts, and only offers from
+their own side (their patron's side: Varyag SSV, Aegis VDK). `contractOffers` in their view holds those
+offers; the other factions' views hold none. A rival PMC evaluates them with the same utility scoring as
+its own objectives (SAI-006, SAI-008): an offer is a candidate objective whose gain includes its pay. A
+rival that takes one returns `acceptContract`; STR validates it and settles the pay between the two
+factions' funds (STR-093). A taken offer that is also on the player's board either leaves the board or
+both race for it (MGT-052). The Krug never takes other factions' contracts. Its escort work runs both
+ways (STR-094): it offers escort contracts for its own convoys, and a faction can pay the Krug to escort
+one of its shipments (a Krug squad travels with the convoy; price not set).
 **Values.** offer scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Status.** open
-**Source.** design/design.md › AI › Strategic AI › Faction AI tiers
+**Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Management › Contracts and missions › Where contracts come from
 
 ## Open questions
 
@@ -184,10 +200,21 @@ and settles the pay between the two factions' funds (STR-093).
    controller? Spec: no.
 8. SAI-010 — Per-faction doctrines and their character (SSV, VDK, Aegis) are not described beyond the faction
    roles.
-9. SAI-015 — Which factions may take other factions' contracts (rival PMCs only, or the Krug and the states
+9. **Resolved (design eb072a2):** only Varyag and Aegis take other factions' contracts, from their own
+   side; a taken offer leaves the player's board or both race for it; the Krug takes none (SAI-015).
+   How MGT learns of a taken offer stays open (MGT open question 34). SAI-015 — Which factions may take other factions' contracts (rival PMCs only, or the Krug and the states
    too)? Is an offer taken by an AI faction removed from the player's board, and how does MGT learn of it
    (`acceptContract` is a new command)?
-10. SAI-014/STR-092 — May a faction offer a contract its funds cannot pay? Are funds a hard limit on offers
+10. **Resolved (design eb072a2):** funds are a hard limit by default; a score-term-only mode is a
+    switchable test option (SAI-014, STR-092). SAI-014/STR-092 — May a faction offer a contract its funds cannot pay? Are funds a hard limit on offers
     and squads, or only a cost term in the score?
-11. SAI-008 — Each faction's "ultimate goal" (win the war, profit, neutrality) is not defined; the
+11. **Resolved (design eb072a2):** SSV and VDK hold the capital and most of the country; Varyag and Aegis
+    profit and keep their patron standing; the Krug keeps its trade routes and markets and avoids open
+    war; resistance groups drive the controller out of their area (SAI-008). SAI-008 — Each faction's "ultimate goal" (win the war, profit, neutrality) is not defined; the
     strategist needs it to rate own gain.
+12. SAI-002, SAI-008 — resistance groups now have an ultimate goal, but SAI-002 calls controllers only for
+    `ssv`, `vdk`, `varyag`, `aegis`, `krug`. Do resistance groups (and a rogue PMC with no patron) get
+    their own controller call and doctrine? What is a rogue PMC's ultimate goal once it has no patron to
+    keep standing?
+13. SAI-004, SAI-015 — how does a faction ask the Krug to escort one of its shipments (a new command, e.g.
+    `hireEscort`), and how is the Krug's side of it decided (always accept, or scored by the Krug AI)?

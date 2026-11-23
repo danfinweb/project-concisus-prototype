@@ -5,6 +5,17 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-23 | tactical_map_request | 0.4.0 | Per-unit `rank` and `controller`; neutral role described; `acceptableLoss` as a 0–1 share; encounter tile terrain and `road` | strategic, tactical, tactical-ai |
+| 2026-11-23 | battle_result | 0.3.0 | Objectives carry `metTurn` (TAC-076) | tactical, strategic, management |
+| 2026-11-23 | tactical_perception_view | 0.3.0 | Unit `rank`, limb states, `overwatch`, `alerted`, `outOfAction`, `carrying`, `magazines`; enemy gear as the player sees it | tactical, tactical-ai |
+| 2026-11-23 | tactical_commands | 0.3.0 | `holdOverwatch`, `liftBody` (carry/drag), `putDownBody`, `search`, `pickUpBackpack`; reload `magazine` and `shells`; `carry` replaced | tactical, tactical-ai |
+| 2026-11-23 | strategic_perception_view | 0.4.0 | Tiles with `x`, `y`, `road`; loyalty per faction on settlements; `capital` state | strategic, strategic-ai |
+| 2026-11-23 | strategic_commands | 0.4.0 | `hireEscort` (Krug escort); `toRegion` is an adjacent tile | strategic, strategic-ai |
+| 2026-11-23 | management_requests | 0.3.0 | `contractEnded.reason` (incl. employerDefault); `payKrugEscort` | strategic, management |
+| 2026-11-23 | data/items | 0.4.0 | New kinds `magazine` and `grenade`; medical `hpPerUse` replaces `hpPerUseMax` | tools, tactical |
+| 2026-11-23 | data/tactical-rules | 0.4.0 | Wound, overwatch, suppression and cover fields; `aimSpreadFactor`, `aimPainSurcharge`; swap-weight and arm surcharges removed | tools, tactical |
+| 2026-11-23 | data/strategic-rules, mapgen-strategic, factions, poi, events | 0.3.0 | Capital hold days, road entry, Krug escort, loyalty range; `mapShape`, width, height; rogue chance; settlement flag; defection params | tools, strategic |
+| 2026-11-23 | data/management-rules, economy-rules | 0.4.0, 0.2.0 | Rival offer rule; `fundsMode` | tools, strategic, management |
 | 2026-11-22 | strategic_perception_view | 0.3.0 | Adds own `funds` (STR-092) and other factions' `contractOffers` (SAI-015); one view per faction per hour | strategic, strategic-ai |
 | 2026-11-22 | strategic_commands | 0.3.0 | Adds `acceptContract` (contractId, squads); command sets resolve together with the player's | strategic, strategic-ai, management |
 | 2026-11-22 | management_requests | 0.2.0 | Adds `contractPayment` and per-request `results` with `paymentDue` (STR-093, MGT-047) | strategic, management |

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/items.schema.json",
   "title": "Items",
-  "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, ITM-001..ITM-030.",
-  "version": "0.3.0",
+  "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, ITM-001..ITM-032, DAT-030.",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -16,7 +16,7 @@
       "required": ["id", "kind", "name"],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
-        "kind": { "enum": ["weapon", "mod", "calibre", "ammo", "helmet", "bodyArmour", "vest", "belt", "backpack", "medical", "barter", "opItem"] },
+        "kind": { "enum": ["weapon", "mod", "calibre", "ammo", "helmet", "bodyArmour", "vest", "belt", "backpack", "medical", "barter", "opItem", "magazine", "grenade"] },
         "name": { "type": "string", "minLength": 1 },
         "weightKg": { "type": "number", "minimum": 0 },
         "valueUsd": { "type": "number", "minimum": 0 },
@@ -26,7 +26,8 @@
       "oneOf": [
         { "$ref": "#/$defs/weapon" }, { "$ref": "#/$defs/mod" }, { "$ref": "#/$defs/calibre" }, { "$ref": "#/$defs/ammo" },
         { "$ref": "#/$defs/helmet" }, { "$ref": "#/$defs/bodyArmour" }, { "$ref": "#/$defs/vest" }, { "$ref": "#/$defs/belt" },
-        { "$ref": "#/$defs/backpack" }, { "$ref": "#/$defs/medical" }, { "$ref": "#/$defs/barter" }, { "$ref": "#/$defs/opItem" }
+        { "$ref": "#/$defs/backpack" }, { "$ref": "#/$defs/medical" }, { "$ref": "#/$defs/barter" }, { "$ref": "#/$defs/opItem" },
+        { "$ref": "#/$defs/magazine" }, { "$ref": "#/$defs/grenade" }
       ]
     },
     "weapon": {
@@ -152,7 +153,7 @@
         "apCost": { "type": "integer", "minimum": 1 },
         "uses": { "type": ["integer", "null"], "minimum": 1 },
         "hpPool": { "type": "number", "exclusiveMinimum": 0 },
-        "hpPerUseMax": { "type": "number", "exclusiveMinimum": 0 },
+        "hpPerUse": { "type": "number", "exclusiveMinimum": 0, "description": "Base HP per use before the Medical multiplier (TAC-066)" },
         "durationTurns": { "type": "integer", "minimum": 1 },
         "restoresToHp": { "type": "number", "minimum": 1 },
         "causesPain": { "type": "boolean" },
@@ -187,6 +188,31 @@
           "effect": { "type": "object" } } } }
       },
       "required": ["weightKg", "foundIn"]
+    },
+    "magazine": {
+      "description": "DAT-030, ITM-031: magazine or belt; rounds are counted per instance and refilled from loose ammunition",
+      "properties": {
+        "kind": { "const": "magazine" },
+        "calibre": { "$ref": "#/$defs/ref" },
+        "feedType": { "enum": ["pistol", "boxMagazine", "belt"] },
+        "capacity": { "type": "integer", "minimum": 1 },
+        "fits": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ref" } }
+      },
+      "required": ["calibre", "feedType", "capacity", "fits"]
+    },
+    "grenade": {
+      "description": "ITM-032, TAC-079: thrown items (draft values in the item list)",
+      "properties": {
+        "kind": { "const": "grenade" },
+        "effect": { "enum": ["frag", "smoke"] },
+        "damage": { "type": "number", "minimum": 0 },
+        "radiusTiles": { "type": "number", "exclusiveMinimum": 0 },
+        "penetrationClass": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "durationTurns": { "type": ["integer", "null"], "minimum": 1 },
+        "blocksSight": { "type": "boolean" },
+        "loud": { "type": "boolean" }
+      },
+      "required": ["effect", "radiusTiles", "weightKg"]
     }
   }
 }

@@ -3,7 +3,7 @@
   "$id": "management_requests.schema.json",
   "title": "Management requests",
   "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: player services at a location, op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request. Spec: STR-004, STR-015, STR-029, STR-039..STR-043, STR-093, MGT-002..MGT-005, MGT-039..MGT-051, MGT-056..MGT-060, MGT-064, MGT-068, MGT-070.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/management"],
   "type": "object",
@@ -30,8 +30,9 @@
           "hire", "trade", "barter", "vehicleTrade", "acceptContract", "handOver", "handIn", "hospital", "repair", "refuel",
           "buyFob", "buyIntel", "payCompensation", "payOffBounty", "payKrugPass",
           "opReturn", "soldierFate", "healingTick", "plantOutput", "dailyRollover", "priceModifier", "localRecruits",
-          "reputationAct", "missionOutcome", "contractEnded", "contractPayment"
+          "reputationAct", "missionOutcome", "contractEnded", "contractPayment", "payKrugEscort"
         ] },
+        "reason": { "enum": ["completed", "deadline", "employerDefault", "factionDissolved"], "description": "contractEnded; employerDefault = advance kept, no debt (MGT-048)" },
         "employer": { "type": "string", "x-ref": "factions", "description": "contractPayment: the faction whose funds paid (STR-093)" },
         "location": { "type": "string", "description": "Region or POI where it happens" },
         "squad": { "type": "string" },
