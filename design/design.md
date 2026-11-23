@@ -104,7 +104,7 @@ Any armed company strong enough to hold the capital can try.
 
 **Rogue PMCs (rare event)**
 
-- **Chance:** in each campaign there is a small chance (draft: 5–10%) that Varyag Solutions or Aegis Group stops serving its patron and attempts a coup of its own. At most one per campaign.
+- **Chance:** checked once per day: the more crisis signs its patron shows (low funds, troop losses, lost territory), the higher the chance that Varyag Solutions or Aegis Group stops serving it and attempts a coup of its own; warning signs come first. A capital that loses its holder can also trigger a PMC rushing it. At most one per campaign.
 - **What raises it:** its patron is losing, its contracts go unpaid, or it controls regions near the capital.
 - **Warning signs:** intel the player can find or miss — unusual troop movements, large arms purchases reported by the Krug, contractors pulled off the front.
 - **What follows:** a new power on the map. The SSV and the VDK may hire the player to stop it; the player can also side with it, or stay out. If the rogue PMC holds the capital, it becomes the main antagonist for the rest of the campaign.
@@ -117,7 +117,7 @@ Any armed company strong enough to hold the capital can try.
 
 A turn-based region map (JA2 layout, roguelike timing) where the player moves squads, launches operations from its FOBs and manages the PMC's money and reputation.
 
-- **Time:** a 24-hour clock that only runs when the player acts. Every player action takes game time, and for every hour that passes, every faction issues one set of commands and each of its squads takes one action. Moving a vehicle one region takes 1 hour on roads, more on rough terrain (see Terrain types). Travel and healing progress per hour. Waiting is an action too and passes time. Trading and hiring take no time; resting takes as many hours as the player sets; scouting takes 3 hours (placeholder); a battle always takes 1 hour, however long it runs in real time. The clock runs in full hours only: every duration is a whole number of hours, with no fractions. A day counter starts at Day 1 when the campaign begins and goes up by one at 00:00. Every point in time is written as day and hour (e.g. Day 14, 06:00) and serves as the time reference for anything in the game, past or future: when an event happened in the news feed, service records and after-action reports, and when a deadline, intel expiry or scheduled event is due. The daily checks (world events, desperate measures, barter deals) run at 00:00.
+- **Time:** a 24-hour clock that only runs when the player acts. Every player action takes game time, and for every hour that passes, every faction issues one set of commands and each of its squads takes one action. Moving a vehicle one region takes 1 hour on roads, more on rough terrain (see Terrain types); the destination tile's terrain sets the time, and a road (asphalt or dirt, same speed) overrides it. Travel and healing progress per hour. Waiting is an action too and passes time. Trading and hiring take no time; resting takes as many hours as the player sets; scouting takes 3 hours (placeholder); a battle always takes 1 hour, however long it runs in real time. The clock runs in full hours only: every duration is a whole number of hours, with no fractions. A day counter starts at Day 1 when the campaign begins and goes up by one at 00:00. Every point in time is written as day and hour (e.g. Day 14, 06:00) and serves as the time reference for anything in the game, past or future: when an event happened in the news feed, service records and after-action reports, and when a deadline, intel expiry or scheduled event is due. The daily checks (world events, desperate measures, barter deals) run at 00:00.
 - **Intel:** fog of war on enemy strength. Recon, informants and drones reveal operation areas, layouts, loot hints and exits.
 - **Escalation:** the enemy adapts: better gear, counter-raids on your regions, rival PMC hunt squads (XCOM pressure).
 
@@ -125,9 +125,9 @@ Every player action on the strategic map takes a whole number of hours (some tak
 
 ### Map (draft)
 
-**Draft — not final.** The strategic map is the whole of Veligrad, divided into small regions. Every faction moves squads across it, and every region shows one terrain type, at most one point of interest, its controlling faction and civilian loyalty.
+**Draft — not final.** The strategic map is the whole of Veligrad on a square tile grid, consistent with the tactical layer (hex tiles are a switchable option for testing). Each tile is one region: one terrain type, at most one point of interest and its controlling faction; a road can lie on top of the terrain. Settlements (cities, towns, villages) also hold civilian loyalty, one value per faction from −100 to 100. Every faction moves its squads across the map tile by tile.
 
-- **The capital** is always held by either the SSV or the VDK. Only a coup (by the player or a rogue PMC, see Coups) can change that.
+- **The capital** starts in the hands of the SSV or the VDK, but it can fall. If its holder dissolves or loses it, the capital is uncontrolled and contested; whoever holds it for a set time (draft 7 days) becomes its holder. If that is the player, it counts as the coup ending; a rival PMC holding it just becomes its holder, and for now only the player's coup ends the campaign (see Coups).
 - **Roads connect every point of interest except hidden cities, which only helicopters can reach (hidden cities are an optional feature).** Off-road travel is possible where the terrain allows it.
 - **Fog of war:** the player sees regions within the recon range of their squads, FOBs and intel sources; everything else shows the last known state.
 
@@ -172,13 +172,13 @@ Deep in the woods and mountains lie closed Soviet-era cities (background in Stor
 Every faction — the SSV, the VDK, Varyag, Aegis, the Krug and the player — fields squads on the map. Each non-player squad has a goal and pursues it with the same rules as the player: it moves, burns fuel, uses supplies and fights.
 
 - **Goals:** patrol, supply run, attack or hold a point of interest, escort, trade route, hunt (a squad sent after a specific target, including the player).
-- **Strategic turn:** one strategic turn is one hour of game time. The player's action runs for its duration, and every faction squad takes one action toward its goal for each hour that passes. An action that takes several hours (travel, rest, healing) can be interrupted by an encounter or an event; the hours already spent count. The player chooses an action for each of their squads, then commits by ending the turn. Nothing resolves before that: once the turn ends, the actions of all squads, the player's and every AI faction's, resolve together.
-- **Encounters:** when squads meet in a region, the faction behaviour rules decide whether it turns hostile. If the player is involved, it becomes a tactical engagement; the player can also try to evade (Recon and terrain) or, with the Krug, pay their way.
+- **Strategic turn:** one strategic turn is one hour of game time. The player's action runs for its duration, and every faction squad takes one action toward its goal for each hour that passes. An action that takes several hours (travel, rest, healing) can be interrupted by an encounter or an event; the hours already spent count. The player chooses an action for each of their squads, then commits by ending the turn. Nothing resolves before that: once the turn ends, the actions of all squads, the player's and every AI faction's, resolve together. Hours then tick until the first of the player's squads finishes its action or is interrupted, and the player plans again. Longer actions keep running and can be cancelled at that point: the hours spent and any healing gained are kept, and a move cancelled midway leaves the squad on its origin tile.
+- **Encounters:** when squads are on the same tile in the same hour (a moving squad stays on its origin tile until the move's last hour), the faction behaviour rules decide whether it turns hostile; that tile's terrain sets the tactical map. If the player is involved, it becomes a tactical engagement; the player can also try to evade (Recon and terrain) or, with the Krug, pay their way.
 - **Off-screen fights:** battles between non-player squads are resolved automatically from squad strength, gear and terrain; the result changes control, loyalty and supply on the map.
 - **Control:** holding points of interest gives factions income, supplies and recruits; losing them weakens their squads over time. This is how the war shifts without the player — and how the player's choices tip it.
 - **Operations:** a player op is the player's squad leaving an FOB, moving across this map to its objectives and getting back (see Core loop).
 
-**Faction funds (draft):** the Strategic layer owns every AI faction's money. Income comes from the regions and plants the faction holds; it pays for its squads, salaries and the contracts it offers. The formulas live in a shared rules file that Management also uses for the player's PMC. Contract pay crosses modules through an interface: Strategic deducts it from the employer's funds and Management credits the player. A faction whose income cannot cover its costs meets the Low liquidity crisis sign.
+**Faction funds (draft):** the Strategic layer owns every AI faction's money. Income comes from the regions and plants the faction holds; it pays for its squads, salaries and the contracts it offers. The formulas live in a shared rules file that Management also uses for the player's PMC. Contract pay crosses modules through an interface: Strategic deducts it from the employer's funds and Management credits the player. A faction whose income cannot cover its costs meets the Low liquidity crisis sign. Funds never go below zero: by default a faction cannot offer a contract or raise a squad it cannot pay for (a mode where funds only weigh in the AI's scoring is a switchable option for testing), and a payment due that the employer cannot cover fails the contract at once; the player keeps the advance.
 
 ### **VIPs**
 
@@ -207,7 +207,7 @@ Intel shows the VIP's region and guard size for 72 hours; after that the VIP may
 
 **How events work**
 
-- **Check:** once per day, every event whose trigger conditions are met rolls its chance. At most three events run at the same time.
+- **Check:** once per day, every event whose trigger conditions are met rolls its chance. At most three events and desperate measures, counted together, run at the same time.
 - **Faction relations:** besides each faction's reputation with the player, factions hold relations toward each other (−100 to 100). Many events shift these, which changes who attacks whom.
 - **Warning signs:** most events show signs a few days ahead — intel, Krug rumours, captured documents, unusual squad movements. A player who reads them can prepare, profit or prevent.
 - **Player influence:** the player's ops can trigger events (see Operation dispute) or stop them (intercepting a shipment, breaking up an assault).
@@ -503,7 +503,7 @@ The Tarkov layer: what you carry in is at risk, what you carry out pays for the 
 - Factions with intel on a rival's goal may post a **counter-contract** against it, so the player can be offered both sides of the same job.
 - World events and desperate measures add contracts of their own (a weapon shipment to escort or intercept, a strike on a VIP, a defector to bring in).
 - Varyag and Aegis compete for the same mission on some of the player's contracts (see Squads and simulation).
-- Contracts appear at the FOB, in cities and — for Krug work — at Krug markets, filtered by the player's reputation with the employer.
+- Contracts appear at the FOB, in cities and — for Krug work — at Krug markets, filtered by the player's reputation with the employer. Varyag and Aegis can take offers from their own side and compete with the player: a taken offer leaves the player's board, or both race for it. The Krug never takes other factions' contracts; it offers escort work for its own convoys, and the player or a faction can pay a Krug squad to escort a shipment.
 
 | Faction goal | Missions it generates |
 | --- | --- |
@@ -530,11 +530,11 @@ The Tarkov layer: what you carry in is at risk, what you carry out pays for the 
 **Contract terms**
 
 - **Employer, mission(s), targets and locations, deadline** (in hours).
-- **Pay:** an advance (draft 25%) on signing, the rest on success; pay scales with distance, danger and how much the employer wants it.
+- **Pay:** an advance (draft 25%) on signing; the rest is paid per mission, each mission paying its share when its goal is met; pay scales with distance, danger and how much the employer wants it.
 - **Reputation:** gain with the employer on success; loss with the target faction whenever it learns who did it.
 - **Intel level:** how much the contract reveals — exact location, last known position, or rumours only.
 - **Deniability:** some employers (often the VDK) may disown a contract that goes wrong; the reputation hit then falls on the player alone.
-- **Failure:** no further pay, a reputation loss with the employer, and an advance that must be paid back or written off as debt.
+- **Failure:** a failed mission loses only its share and its reputation, and the contract goes on. A failed contract: no further pay, a reputation loss with the employer, and an advance that must be paid back or written off as debt.
 
 **Pay bands (draft)**
 
@@ -620,7 +620,7 @@ Each layer's AI is a separate module. It sees only what its side knows under fog
 
 Otherwise its units go about their business, on the strategic map and in tactical engagements alike. Attacking a non-hostile faction is the player's choice — and costs reputation.
 
-**Faction AI tiers.** Each faction AI works toward its ultimate goal in three tiers:
+**Faction AI tiers.** Each faction AI works toward its ultimate goal (SSV and VDK: hold the capital and most of the country; Varyag and Aegis: profit and keep their patron standing; the Krug: keep its trade routes and markets and avoid open war; resistance groups: drive the controller out of their area) in three tiers:
 
 | Tier | Role |
 | --- | --- |

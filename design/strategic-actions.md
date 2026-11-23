@@ -2,21 +2,20 @@
 
 Nov 22, 2026 · @Dan
 
-**Draft — not final.** Every action the player can take on the strategic map, with the game time it takes and its other costs, collected from the Strategic Layer and Management sections of the [Game Design Document](https://claude.ai/artifact/EntHEaJm8q32rPTHWXMbvo). Time runs in full hours only, and for every hour that passes every faction takes one action of its own. "Open" marks a value not set yet.
+**Draft — not final.** Every action the player can take on the strategic map, with the game time it takes and its other costs, collected from the Strategic Layer and Management sections of the [Game Design Document](https://claude.ai/artifact/EntHEaJm8q32rPTHWXMbvo). Time runs in full hours only, and for every hour that passes every faction issues one set of commands and each of its squads takes one action. "Open" marks a value not set yet.
 
 ## Movement and operations
 
 | Action | Where | Time | Other cost | Status |
 | --- | --- | --- | --- | --- |
 | Launch an op (leave an FOB) | Any FOB | Not stated | Squad, loadout and vehicle committed | Time open |
-| Move one region by ground vehicle | Any passable region | 1 hour on roads, 2 on steppe, 3 in woods; mountains by road only; water only at bridges and fords | Fuel (vehicle fuel range); off-road rating lowers the time in steppe and woods | Defined |
+| Move one region by ground vehicle | Any passable region | Set by the destination tile: 1 hour along a road (asphalt or dirt), 2 on steppe, 3 in woods; mountains by road only; water only at bridges and fords | Fuel (vehicle fuel range); off-road rating lowers the time in steppe and woods | Defined |
 | Move one region on foot | Any passable region | 2 hours on most ground, 3 in mountains | — | Defined |
 | Fly one region by helicopter | Anywhere | 1 hour, any terrain | Fuel; needs a pilot with Technical 50+ or a hired pilot; noticed by every faction in range | Defined |
 | Land a helicopter | Any open ground except water; the only way into hidden cities | Not stated | — | Open |
 | Enter a point of interest | The region's point of interest | Not stated | — | Open |
 | Scout | Current region | 3 hours (placeholder) | — | Defined |
-| Wait | Anywhere | As set by the player | — | Open (Rest covers set hours) |
-| Rest | Anywhere; healing is faster at an FOB | As many hours as the player sets | — | Defined |
+| Stand by | Anywhere; the squad stays where it is, on alert, and wounds heal meanwhile, faster at an FOB (replaces Wait and Rest) | As many hours as the player sets | — | Defined |
 | Fight a tactical engagement | Where squads meet and the encounter turns hostile | Always 1 hour | Ammunition, wounds, gear at risk | Defined |
 | Evade an encounter | Where squads meet | Not stated | Chance from Recon and terrain | Open |
 | Pay your way through (Krug) | Encounter with a Krug squad | Not stated | Money | Open |
