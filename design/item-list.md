@@ -33,7 +33,7 @@ The barrel is part of the weapon, not a mod: each weapon has a fixed barrel leng
 
 ## Calibres
 
-Damage is the base damage per projectile at the muzzle with barrel multiplier 1.0. Falloff is set per load (see Ammunition).
+Damage is the base damage per projectile at the muzzle with barrel multiplier 1.0. Falloff is set per load (see Ammunition). 12 gauge sets damage and projectile count per load (buckshot 8 × 25, slug 1 × 90).
 
 | Calibre | Damage | Projectiles | Recoil modifier | Round weight |
 | --- | --- | --- | --- | --- |
@@ -141,7 +141,7 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | Hemostatic dressing | Heavy bleeding in any zone | 4 | 1 | Light and quick; the medkit also stops heavy bleeding in any zone |
 | Splint | Fracture | 5 | 1 |  |
 | Painkillers | Pain | 2 | 4 | Effect lasts 10 turns |
-| IFAK (individual first aid kit) | Restores HP; stops light bleeding | 6 | 60 HP total | Up to 15 HP per use |
+| IFAK (individual first aid kit) | Restores HP; stops light bleeding | 6 | 60 HP total | 15 HP per use before the Medical multiplier, so a skilled medic heals more |
 | Medkit | Restores HP; stops light and heavy bleeding | 8 | 300 HP total | Large; backpack item |
 | Surgical kit | Brings an arm or leg at 0 HP back to 1 HP | 15 | 3 | Needs Medical 40+ |
 

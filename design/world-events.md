@@ -48,7 +48,7 @@ Nov 22, 2026 · @Dan
 | Open call for help | VDK | Little territory, key plants lost, its PMC gone rogue | Asks the western influence for open support: more Aegis squads and better gear, but the VDK loses legitimacy and civilian loyalty | Contracts surge; Aegis grows stronger and bolder |
 | Paying any price | SSV, VDK, Krug | Troop losses or repeated defeats by the player, while money is still available | Contract pay doubles; the faction even hires PMCs it has fought | Big money from a former enemy, at a reputation cost elsewhere |
 | Scorched earth | SSV, VDK | Area losses | Plants, bridges and roads in regions about to be lost are destroyed | Lost income and routes for everyone; contracts to stop or carry out demolitions |
-| Mining the roads | SSV, VDK | Area losses | Minefields on roads and approaches in threatened regions | Hazards on the strategic map; Technical soldiers clear them |
+| Mining the roads | SSV, VDK | Area losses | Minefields on roads and approaches in threatened regions | Hazards on the strategic map; Technical soldiers clear them (mines on the tactical map: OPTIONAL, later build) |
 | Martial law | SSV, VDK | Resistance in its territory, capital threatened | Curfews and checkpoints in all held cities; trade restricted, civilians searched | Harder movement and trade; smuggling contracts with the Krug |
 | Seizing Krug stocks | SSV, VDK | Low liquidity | Raids Krug markets for fuel and ammunition | The Krug turns hostile to that faction; contracts to defend or loot the markets |
 | VIP strike | SSV, VDK | Little territory, isolation | Sends a team to kill a high-ranking officer of the opposing faction (see VIPs in the GDD). The death hits that faction's best troops hardest | Contracts to protect the VIP or carry out the strike; intel on the target's location is part of the contract |
@@ -60,7 +60,7 @@ Both the SSV and the VDK hold a few tactical warheads (background in Story & Lor
 
 - **Trigger:** five or more crisis signs, one of them Capital threatened, and its patron does not stop it. At most once per campaign.
 - **Warning signs:** several days ahead — a special convoy moving under heavy escort, air defence massing, Krug rumours of evacuations among officers' families, radio silence on command channels.
-- **Effect:** the target region (usually an enemy-held city or a major troop concentration) is destroyed: every unit there is lost and its point of interest is ruined for the rest of the campaign. That region and its neighbours become a contaminated zone: soldiers lose HP every turn they spend there, and loot cannot be sold.
+- **Effect:** the target region (usually an enemy-held city or a major troop concentration) is destroyed: every unit there is lost and its point of interest is ruined for the rest of the campaign. That region and its neighbours become a contaminated zone: soldiers lose HP every turn they spend there (tactical effect OPTIONAL, later build), and loot cannot be sold.
 - **Aftermath:** every other faction turns hostile toward the striking faction; its patron may cut support; civilian loyalty collapses and refugees flood neighbouring regions. The war's balance changes for good.
 - **Player hooks:** find the convoy through intel and intercept or sabotage it to prevent the strike; warn the target faction; or escort it for a huge price and lasting hostility from everyone else.
 
