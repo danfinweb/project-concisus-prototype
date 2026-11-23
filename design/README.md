@@ -13,4 +13,4 @@ refreshed by exporting them again (Export → Markdown, or ask Claude to re-expo
 | callsigns.md | [Callsigns](https://claude.ai/artifact/G1VpofmrmhUf2J8JNSY58o) |
 | story-lore.md | [Story & Lore](https://claude.ai/artifact/QKZMoCYw1dk6DrBsicjvS8) |
 
-Workflow: [Development Workflow](https://claude.ai/artifact/MtPiB5ywYhqZWJ1WV7CWog). Last export: 2026-11-22.
+Workflow: [Development Workflow](https://claude.ai/artifact/MtPiB5ywYhqZWJ1WV7CWog). Last export: 2026-11-23.

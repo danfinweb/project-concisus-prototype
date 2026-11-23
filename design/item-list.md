@@ -1,4 +1,4 @@
-# Untitled Tactical RPG – Item list
+# Concisus – Item list
 
 Nov 22, 2026 · @Dan
 

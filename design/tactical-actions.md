@@ -1,4 +1,4 @@
-# Untitled Tactical RPG – Tactical actions
+# Concisus – Tactical actions
 
 Nov 22, 2026 · @Dan
 
