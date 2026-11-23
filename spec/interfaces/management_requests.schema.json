@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "management_requests.schema.json",
   "title": "Management requests",
-  "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: player services at a location, op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request. Spec: STR-004, STR-015, STR-029, STR-039..STR-043, STR-093, MGT-002..MGT-005, MGT-039..MGT-051, MGT-056..MGT-060, MGT-064, MGT-068, MGT-070.",
-  "version": "0.3.0",
+  "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: contract offers, player services at a location, op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request; it publishes the resulting state in management_view (MGT-072). Spec: STR-004, STR-015, STR-029, STR-039..STR-044, STR-093, MGT-001, MGT-002..MGT-005, MGT-011, MGT-039..MGT-051, MGT-056..MGT-060, MGT-064, MGT-068, MGT-070.",
+  "version": "0.4.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/management"],
   "type": "object",
@@ -27,26 +27,56 @@
       "type": "object", "required": ["type"],
       "properties": {
         "type": { "enum": [
+          "contractOffer",
           "hire", "trade", "barter", "vehicleTrade", "acceptContract", "handOver", "handIn", "hospital", "repair", "refuel",
           "buyFob", "buyIntel", "payCompensation", "payOffBounty", "payKrugPass",
           "opReturn", "soldierFate", "healingTick", "plantOutput", "dailyRollover", "priceModifier", "localRecruits",
           "reputationAct", "missionOutcome", "contractEnded", "contractPayment", "payKrugEscort"
         ] },
+        "offer": { "$ref": "#/$defs/contractOffer", "description": "contractOffer: the offer to store in contracts with status offered (STR-044, MGT-041, MGT-042)" },
         "reason": { "enum": ["completed", "deadline", "employerDefault", "factionDissolved"], "description": "contractEnded; employerDefault = advance kept, no debt (MGT-048)" },
         "employer": { "type": "string", "x-ref": "factions", "description": "contractPayment: the faction whose funds paid (STR-093)" },
         "location": { "type": "string", "description": "Region or POI where it happens" },
         "squad": { "type": "string" },
         "faction": { "type": "string", "x-ref": "factions" },
         "soldiers": { "type": "array", "items": { "type": "string" } },
+        "fate": { "enum": ["mia", "captured", "dead"], "description": "soldierFate: the final status of the listed soldiers who did not reach an FOB (MGT-011); battle_result leftMap stays active (MGT-001)" },
         "items": { "type": "array", "items": { "type": "object", "properties": { "item": { "type": "string", "x-ref": "items" }, "count": { "type": "integer" } } } },
         "contractId": { "type": "string" },
         "missionId": { "type": "string" },
+        "outcome": { "enum": ["success", "failure"], "description": "missionOutcome (MGT-044)" },
         "amountUsd": { "type": "number" },
-        "act": { "type": "string", "description": "reputationAct: the act type (MGT-056..MGT-059)" },
+        "act": { "enum": ["joinFight", "rescue", "sellSupplies", "krugKeepDeal", "contractBroken", "attackNonHostile", "killSoldier", "cargo", "captureVip", "assassinateVip", "takeRegion", "krugBreak", "warCrime"], "description": "reputationAct: the act, named by its management-rules repActs key (MGT-056..MGT-060)" },
         "attributed": { "type": "boolean" },
+        "plantId": { "type": "string", "description": "plantOutput: the held plant POI that delivers (STR-015, MGT-068)" },
+        "fobId": { "type": "string", "description": "plantOutput: the receiving PMC FOB (STR-015)" },
+        "day": { "type": "integer", "minimum": 1, "description": "dailyRollover: the day that starts (STR-004)" },
         "hours": { "type": "integer", "minimum": 1 },
         "atFob": { "type": "boolean" },
         "params": { "type": "object" }
+      }
+    },
+    "contractOffer": {
+      "description": "Local copy of strategic_commands.schema.json $defs/contractOffer (0.5.0); keep the two identical (no cross-file refs, shared/schema.js).",
+      "type": "object", "required": ["id", "employer", "missions"],
+      "properties": {
+        "id": { "type": "string", "description": "Offer ID, unique per campaign; acceptContract.contractId and MGT refer to it" },
+        "employer": { "type": "string", "x-ref": "factions" },
+        "targetFaction": { "type": ["string", "null"], "x-ref": "factions", "description": "The faction the missions act against, if any (reputation acts, MGT-056)" },
+        "sourceGoal": { "type": "string", "description": "The STR-018 goal the offer serves (MGT-043)" },
+        "missions": { "type": "array", "items": { "type": "object", "required": ["key", "missionId"], "properties": { "key": { "type": "string", "description": "Per-mission key, unique within the offer (two missions of one type are told apart by it)" }, "missionId": { "type": "string", "x-ref": "missions", "description": "Mission type" }, "targets": { "type": "array" }, "location": { "type": "string" } } } },
+        "deadline": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+        "payInputs": { "type": "object", "description": "Distance, danger, urgency (MGT-046)" },
+        "reputationGain": { "type": "integer", "description": "Reputation with the employer on success (MGT-056)" },
+        "intelLevel": { "enum": ["exact", "lastKnown", "rumour"], "description": "MGT-049" },
+        "deniable": { "type": "boolean" },
+        "reputationGate": {
+          "type": "object", "description": "MGT-055 contract flags set by the offering faction: better = Friendly or better only, sensitive = Trusted only",
+          "properties": { "better": { "type": "boolean" }, "sensitive": { "type": "boolean" } },
+          "additionalProperties": false
+        },
+        "boardLocation": { "type": "string" },
+        "counterContractOf": { "type": ["string", "null"] }
       }
     }
   }

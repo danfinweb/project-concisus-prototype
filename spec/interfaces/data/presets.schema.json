@@ -2,18 +2,17 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/presets.schema.json",
   "title": "Soldier presets",
-  "description": "Stats, loadout of item IDs, skills (spec MGT-001, MGT-021, MGT-037, MGT-038).",
-  "version": "0.2.0",
+  "description": "Stats, loadout of item IDs, skills (spec MGT-001, MGT-021, MGT-037). The scav loadout and its price live in management-rules.scavLoadout (MGT-038).",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
     "required": ["id", "attributes"],
     "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
       "attributes": { "type": "object", "description": "MGT-021: the eight attributes, 1-100" },
-      "loadout": { "type": "object", "description": "DAT-005: slot → item ID" },
-      "nerve": { "type": "integer", "description": "MGT-031" },
-      "priceUsd": { "type": "number", "description": "MGT-038, scav loadout price" }
+      "loadout": { "type": "object", "description": "DAT-005: slot to item ID" },
+      "nerve": { "type": "integer", "description": "MGT-031" }
     }
   }
 }

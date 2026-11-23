@@ -34,7 +34,7 @@ every record has a `kind` that selects its profile:
 Calibres and ammunition loads stay in `data/items.json` (not own tables): they are authored together with
 the weapons in the item editor, ammo loads are carried and traded like any item, and one registry lookup
 resolves every weapon → calibre → load reference. Vehicles are not items (they are bought, crewed and
-moved on the strategic map) and live in their own table `data/vehicles.json` (proposed new table).
+moved on the strategic map) and live in their own table `data/vehicles.json` (listed in data/tables.json).
 **Source.** design/design.md › Data definitions; design/item-list.md › Weapons (magazines are items), Grenades
 
 ### [DAT-002] Common item fields
@@ -45,7 +45,7 @@ moved on the strategic map) and live in their own table `data/vehicles.json` (pr
 | `id` | string | — | unique; equals the record key | Stable reference used by all other data and state |
 | `kind` | enum | — | DAT-001 list | Selects the profile |
 | `name` | string | — | non-empty | Display name |
-| `weightKg` | number | kg | ≥ 0 | Weight of one item. Required for every kind except `calibre` and `ammo` (ammo weight comes from the calibre's `roundWeightG`, DAT-019) |
+| `weightKg` | number | kg | ≥ 0 | Weight of one item. Required for every kind except `calibre` and `ammo` (ammo weight comes from the calibre's `roundWeightG`, DAT-019), including `medical` and `magazine`: where the design gives no weight the value is entered as data |
 | `valueUsd` | number | USD | ≥ 0 | Full trade/barter value. Optional; set for barter goods (ITM-021), otherwise not set (design: not stated) |
 | `rarity` | enum | — | `common`, `uncommon`, `rare` | Loot roll weight class (ITM-024). Optional |
 | `notes` | string | — | — | Display text only; no rule reads it |
@@ -137,7 +137,7 @@ on the body until another soldier recovers it.
 | `recoil` | integer | — | 1–100 | Base kick per shot; × calibre `recoilModifier` = effective recoil (TAC) |
 | `modSlots` | array of enum | — | subset of `muzzle`, `stock`, `pistolGrip`, `magazine`, `optic`, `handguard` | Which mod slots exist; the barrel is not a slot |
 | `action` | enum | — | `pump`, `bolt` | Optional descriptor from the item list; no rule uses it yet |
-| `feedType` | enum | — | `pistol`, `boxMagazine`, `stripperClip`, `boltAction`, `belt`, `tube` | Selects the reload base AP (TAC-041) and how the weapon is fed: `pistol`, `boxMagazine`, `belt` take a fitting `magazine` item (DAT-030); `tube` loads loose shells (partial reload) |
+| `feedType` | enum | — | `pistol`, `boxMagazine`, `stripperClip`, `boltAction`, `belt`, `tube` | Required. Selects the reload base AP (TAC-041) and how the weapon is fed: `pistol`, `boxMagazine`, `belt` take a fitting `magazine` item (DAT-030); `tube` loads loose shells (partial reload) |
 | `fireApCost` | integer | AP | ≥ 1 | Optional; overrides the weapon-type default fire AP (TAC-039) before fire-mode and ergonomics modifiers |
 
 Mods change these values directly (DAT-016) except `barrelMultiplier` and `baseMoa`.
@@ -171,8 +171,9 @@ change `baseMoa`.
 ### [DAT-014] Weapon condition
 **Rule.** Every gun instance tracks `condition`, integer 0–100 (instance state, DAT-004). Wear raises jam
 chance and spread (TAC); repair uses the Technical attribute (MGT). Condition is not part of the profile.
-**Values.** wear per shot, jam curve, spread curve, repair rate — not set (design: Open) →
-data/tactical-rules.json / data/management-rules.json.
+**Values.** `weaponWearPerShot`, `jamChanceCurve`, `conditionSpreadCurve` — not set (design: Open) →
+data/tactical-rules.json (owned by TAC); repair rate `weaponRepair` — not set (design: Open) →
+data/management-rules.json (MGT-067).
 **Status.** open
 **Source.** design/design.md › Data definitions › Weapon profile (draft) › State, not profile
 
@@ -196,7 +197,9 @@ them. Each slot holds at most one mod.
 
 Allowed `modifiers` keys per slot: muzzle — `recoil`, `flash`; stock, pistolGrip, frontGrip — `ergonomics`,
 `recoil`; handguard — `ergonomics` (plus own `weightKg`); magazine — `magazineSize`, `reloadAp`; optic —
-`shooterSpreadAtRange`. A fitted magazine mod replaces `magazineSize`. Spare magazines are not mods: they are
+`shooterSpreadAtRange`; tactical — none (its effect is the `module`, DAT-017). The items schema checks the
+`modifiers` keys per `slot` (a key not allowed for the slot is rejected). A fitted magazine mod replaces
+`magazineSize`. Spare magazines are not mods: they are
 `magazine` items (DAT-030) and count as magazines for type limits (ITM-014). The weapon's
 effective weight = `weightKg` + Σ fitted mod `weightKg`.
 **Values.** all mod values; whether modifiers add or multiply — not set (design: Open) → data/items.json.
@@ -315,7 +318,7 @@ Each load carries its own values; the per-type values in DAT-022 are authoring d
 ## Vehicles
 
 ### [DAT-024] Vehicle profile
-**Rule.** `data/vehicles.json` (proposed new table), object keyed by ID; each record:
+**Rule.** `data/vehicles.json`, object keyed by ID; each record:
 
 | Field | Type | Unit | Range | Meaning |
 | --- | --- | --- | --- | --- |
@@ -330,7 +333,7 @@ Each load carries its own values; the per-type values in DAT-022 are authoring d
 | `armourClass` | integer or null | class | 1–6 or null | Passenger protection in road encounters; null = none |
 | `mineProtection` | boolean | — | — | MRAP |
 | `noise` | enum | — | `low`, `medium`, `high`, `veryHigh`, `extreme` | How far away factions notice it (STR) |
-| `profile` | enum | — | `civilian`, `military` | Civilian draws less attention at checkpoints (STR) |
+| `profile` | enum | — | `civilian`, `military` | Descriptor only; no rule effect since checkpoints were removed from the design (STR-033) |
 | `features` | array of enum | — | DAT-026 | Special abilities |
 | `availability` | object | — | DAT-027 | Where and to whom it is sold |
 | `requiresPilot` | boolean | — | — | Helicopters: DAT-028 |
@@ -341,11 +344,14 @@ Initial content: design/design.md › Data definitions › Vehicles (14 vehicles
 **Status.** Draft (design: "Draft — not final").
 **Source.** design/design.md › Data definitions › Vehicles (draft) › Vehicle parameters
 
-### [DAT-025] A squad on the map is its vehicle
-**Rule.** A strategic squad has exactly one vehicle; `seats` caps its soldiers (plus any VIP seat a mission
-takes, MGT). Vehicles are not upgraded. Storage is one item list ≤ `storageKg` holding supplies
+### [DAT-025] A squad has at most one vehicle
+**Rule.** A strategic squad has at most one vehicle. With a vehicle, `seats` caps its soldiers (plus any VIP
+seat a mission takes, MGT) and the vehicle storage is one item list ≤ `storageKg` holding supplies
 (ammunition, fuel cans, medical supplies, spare parts) and loot alike; soldiers restock from it between
-engagements. Several vehicles = several squads that can run ops at the same time.
+engagements. A squad without a vehicle travels on foot (`onFootHours` per tile, mountains separate,
+data/strategic-rules.json, STR-031) and carries only what its soldiers carry (their seven slots and
+containers, DAT-005, DAT-007); it has no storage list. Vehicles are not upgraded. Several vehicles allow
+several vehicle squads to run ops at the same time.
 **Source.** design/design.md › Data definitions › Vehicles (draft)
 
 ### [DAT-026] Vehicle features
@@ -372,20 +378,20 @@ other fields and get no feature.
 ### [DAT-027] Vehicle availability
 **Rule.** `availability = { where: array of enum (largeCity, mechanicalPlant, krugMarket), standing:
 null or { factions: array of faction ID, minStanding: enum (friendly, trusted) } }`. A vehicle is offered
-where listed; with `standing` set it is sold only to a PMC with that standing with one of the listed
-factions, or through the Krug. At campaign start the player buys the first vehicle from the starting
+where listed (`krugMarket` = a town or city tile with the `krugMarket` flag, STR); with `standing` set it
+is sold only to a PMC with that standing with one of the listed factions, or through the Krug. At campaign start the player buys the first vehicle from the starting
 budget; only the cheapest few are affordable (MGT economy).
 **Values.** standing level per restricted vehicle — not set (design: "high standing") → data/vehicles.json.
 **Source.** design/design.md › Data definitions › Vehicles (draft) › Buying and selling, Start; › Management › Reputation › Standing
 
 ### [DAT-028] Helicopter data
-**Rule.** `vehicleType: "helicopter"` implies: travel 1 hour per region over any terrain incl. water;
-landing on any open, non-water tile; one seat is the pilot, who needs Technical ≥ `pilotTechnicalMin` or
-is a hired pilot on salary; refuel only at FOBs and oil plants; noticed by every faction in range; a downed
-helicopter becomes a crash site and starts an emergency op (STR). Hidden cities are reachable only this way
-(optional feature).
-**Values.** `pilotTechnicalMin` — design 50 → data/vehicles.json; `hoursPerRegion` — design 1 →
-data/vehicles.json.
+**Rule.** `vehicleType: "helicopter"` implies: travel `heliMoveHours` per region over any terrain incl.
+water; landing on any open, non-water tile; one seat is the pilot, who needs Technical ≥
+`pilotTechnicalMin` or is a hired pilot on salary; refuel only at FOBs and oil plants; noticed by every
+faction in range; a downed helicopter becomes a crash site and starts an emergency op (STR). Hidden cities
+are reachable only this way (optional feature).
+**Values.** → see STR-034: `pilotTechnicalMin` — design 50 and `heliMoveHours` — design 1 are single values in
+data/strategic-rules.json, not vehicle record fields.
 **Source.** design/design.md › Data definitions › Vehicles (draft) › Helicopters (draft)
 
 ### [DAT-029] Vehicle instance state and loss
@@ -464,7 +470,8 @@ records (100 rounds). Other sharing between weapons of the same calibre and feed
 Initial content: one magazine per weapon from design/item-list.md › Weapons (17 non-tube weapons), with
 the AK-74M / RPK-74 pair sharing `fits`.
 **Values.** `capacity` per magazine (from `magazineSize`; RPK-74 40, AK-74M 30, M249/PKM belt 100) →
-data/items.json; magazine weights — not set (design: no values).
+data/items.json; magazine weights — not set (design: no values; `weightKg` is required, DAT-002, so they are
+entered as data).
 **Status.** open (weights; which other weapons share patterns)
 **Source.** design/item-list.md › Weapons (Feed type, magazines are items)
 
@@ -541,7 +548,8 @@ magazine, grenade or medical item.
 ### [ITM-016] Pouch item weight limit
 **Rule.** Only items with `weightKg` ≤ `pouchItemMaxKg` fit in a vest or plate-carrier pouch; heavier items
 go in a backpack (or vehicle storage).
-**Values.** `pouchItemMaxKg` — design 1 kg → data/items.json (table-level constant; see Open questions).
+**Values.** `pouchItemMaxKg` — design 1 kg → data/tactical-rules.json (a table constant; data/items.json holds
+only item records).
 **Source.** design/item-list.md › Load-bearing vests
 
 ## Battle belts
@@ -581,6 +589,7 @@ Initial content: design/item-list.md › Backpacks (4 backpacks).
 | `requiresMedical` | integer | attribute | 1–100 | Optional minimum Medical |
 | `backpackOnly` | boolean | — | — | Can be carried only in a backpack (medkit) |
 
+`weightKg` is required (DAT-002); the item list gives no medical weights, so they are entered as data.
 Initial content: design/item-list.md › Medical items (8 items).
 **Source.** design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft)
 
@@ -653,7 +662,7 @@ barter-only — not set (design: Open) → data/traders.json.
 the location tags listed in `rareLocations`. An item can be rolled only at a location whose tag is in its
 `foundIn`.
 **Values.** rarity weights — design common 60 / uncommon 30 / rare 10; `rareLocations` — design
-apartments, safes, churches, bodies; location tag list → data/loot.json (proposed new table).
+apartments, safes, churches, bodies; location tag list → data/loot.json (listed in data/tables.json).
 **Source.** design/item-list.md › Barter goods › Trading rules
 
 ## Operation and faction items
@@ -664,12 +673,13 @@ apartments, safes, churches, bodies; location tag list → data/loot.json (propo
 | Field | Type | Unit | Range | Meaning |
 | --- | --- | --- | --- | --- |
 | `foundIn` | array of string | — | loot location tags | Where it is found (bodies by role, POIs) |
-| `perFaction` | boolean | — | — | Instance carries `faction` (ID → GEN-004) — dog tags, checkpoint pass, field orders, radio, codebook, Krug marker |
+| `perFaction` | boolean | — | — | Instance carries `faction` (ID → GEN-004) — dog tags, field orders, radio, codebook, Krug marker |
 | `perPoi` | boolean | — | — | Instance carries a point-of-interest ID (POI key) |
 | `opEffect` | object or null | — | ITM-026 | Use during operations |
 | `handIn` | array of hand-in entries | — | ITM-028 | Rewards per receiver |
 
-Initial content: design/item-list.md › Operation and faction items (14 items).
+Initial content: design/item-list.md › Operation and faction items (13 items; the checkpoint pass was
+deleted from the design together with checkpoints).
 **Source.** design/item-list.md › Operation and faction items
 
 ### [ITM-026] Operation effects
@@ -680,14 +690,14 @@ Initial content: design/item-list.md › Operation and faction items (14 items).
 | `revealSquadPlan` | Field orders | Read: shows that squad's goal and route (STR intel) | `durationHours` 72 |
 | `revealAdjacentSquads` | Encrypted radio | Carried by a squad: shows that faction's squads within range (STR) | `rangeRegions` 1, `durationDays` 7 |
 | `extendRadio` | Codebook | With an encrypted radio of the same faction: extends it (STR) | `rangeRegions` 2, `durationDays` 14 |
-| `checkpointPass` | Checkpoint pass | That faction's checkpoints let the squad pass without an encounter while standing > threshold (STR) | `durationDays` 7, `minReputation` −50 (exclusive) |
 | `demolition` | Demolition charge | Destroys a wall or vehicle; required for sabotage objectives (TAC/MGT missions) | — |
 | `cutLock` | Bolt cutters | Opens locked gates and containers silently (TAC) | `apCost` 10 |
 | `poiKey` | POI key | Opens the locked rooms of its point of interest (TAC) | — |
 | `restockMedical` | Medical supply crate | Restocks a squad once (MGT) | 4 bandages, 2 tourniquets |
 | `restockAmmo` | Ammunition crate | Restocks a squad's loose ammo once (MGT) | — |
 
-Items without a row have no operation use.
+Items without a row have no operation use. The former `checkpointPass` type is removed (the checkpoint
+pass item and checkpoints are gone from the design).
 **Values.** params as listed → data/items.json.
 **Source.** design/item-list.md › Operation and faction items
 
@@ -700,7 +710,7 @@ or at a Krug market when the receiver is the Krug. It consumes the item.
 ### [ITM-028] Hand-in rewards
 **Rule.** A hand-in entry is `{ receiver, moneyUsd?, reputation?, dailyCap?, effect? }`, where `receiver` is
 one of: `issuingFaction` (the item's own faction), `enemiesOfIssuer` (factions hostile to the issuer,
-relation ≤ −50, GEN-007), a fixed list of faction IDs, `rivalOfOwningPmc`, `plantHolder` (faction holding a
+relation ≤ `hostileAt`, → see STR-051), a fixed list of faction IDs, `rivalOfOwningPmc`, `plantHolder` (faction holding a
 plant), `cityHolder`, `resistanceGroup`. `dailyCap` limits how many count per day. `effect` covers extras:
 plant output +25% for 7 days (plant spare parts), resistance group lasts 7 days longer (ammunition
 crate), resistance group standing (crates). Selling a Krug marker to anyone but the Krug costs Krug
@@ -724,7 +734,9 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 ## Open questions
 
 1. **Resolved (design 8972470):** burst 3 rounds +2 AP, full auto 5 rounds +4 AP on top of the weapon-type default fire AP (draft), per-weapon override `fireApCost`. DAT-012 — Rounds fired by an `"auto"` fire mode and AP per shot action per mode are not designed.
-2. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open.
+2. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open (values;
+   the fields are now named: `weaponWearPerShot`, `jamChanceCurve`, `conditionSpreadCurve` in tactical-rules,
+   `weaponRepair` in management-rules).
 3. DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
    calibre), modifier arithmetic (add vs multiply) and the meaning of the muzzle `flash` value are not stated.
 4. **Resolved (design eb072a2):** magazines are items with calibre, capacity, weight and fitting weapons, their rounds are counted, and they are refilled from loose ammunition (DAT-030, ITM-031). DAT-016/ITM-014 — Are spare magazines separate items (magazine mods) with loaded rounds tracked per
@@ -738,7 +750,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 9. DAT-022 — Per-load spread modifiers are missing in the item list; spec uses the type defaults.
 10. DAT-002 — No purchase prices for weapons, armour, gear, medical or operation items; only barter goods
     have `valueUsd`. Trader prices are needed for MGT trading.
-11. ITM-019 — Medical items have no weights; medkit "large; backpack item" cannot be checked against the
+11. ITM-019 — Medical items have no weights (`weightKg` is required, DAT-002; values to be entered as data); medkit "large; backpack item" cannot be checked against the
     1 kg pouch rule. Medkit HP per use is not stated.
 12. **Resolved (design 8972470):** the note now reads "Light and quick; the medkit also stops heavy bleeding in any zone" — both treat heavy bleeding in every zone. ITM-020 — Hemostatic dressing is called "the only fix for thorax and head bleeding in the field", yet the
     medkit also stops heavy bleeding.
@@ -756,9 +768,10 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 19. DAT-027 — Standing level for restricted vehicles ("high standing"); whether the civilian R44 needs it.
 20. DAT-026/DAT-024 — Vehicle armour "Light (cockpit)" (Mi-8) is not an armour class; upkeep scaling,
     noise → notice distance and feature effect values are not set. Fuel capacity units (fuel cans) unclear.
-21. ITM-016 — `pouchItemMaxKg` is a global constant inside data/items.json; a table-level constants record
+21. **Resolved (cleanup 2026-11-23):** `pouchItemMaxKg` lives in data/tactical-rules.json (ITM-016). ITM-016 — `pouchItemMaxKg` is a global constant inside data/items.json; a table-level constants record
     or a rules table may be preferable.
-22. DAT-006/DAT-013/ITM-005/ITM-007/ITM-010/ITM-012 — Constants placed in `data/tactical-rules.json`
+22. **Resolved (cleanup 2026-11-23):** data/tactical-rules.json is an existing table (data/tables.json) owned by
+    TAC. DAT-006/DAT-013/ITM-005/ITM-007/ITM-010/ITM-012 — Constants placed in `data/tactical-rules.json`
     (proposed); must match the table TAC uses.
 23. **Resolved (design eb072a2):** the item list gives a feed type per weapon: pistols `pistol`; M249 and
     PKM `belt`; Remington 870 `tube`; every other weapon, including RPK-74, SV-98, M24 and Saiga-12,
@@ -776,3 +789,15 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
     item list; keep them in the enum for later content?
 28. ITM-032 — Do grenades have trader prices and rarity, and does the battle belt cap grenade count (the
     belt has only a weight limit)?
+29. **Resolved (cleanup 2026-11-23):** schema follows DAT-002 — `weightKg` is required for `medical` and
+    `magazine` too (the design gives no exemption; missing weights are entered as data); weapon `feedType` is
+    required (DAT-011); the items schema checks the `modifiers` keys per mod `slot` (DAT-016).
+30. **Resolved (cleanup 2026-11-23):** `data/vehicles.json` and `data/loot.json` are existing tables
+    (DAT-001, DAT-024, ITM-024); `pilotTechnicalMin` and `heliMoveHours` are single values in strategic-rules
+    (DAT-028 → STR-034); vehicle `armourClass` is integer or null (DAT-024).
+31. **Resolved (design 44887c7):** a squad has at most one vehicle; without one it moves on foot and carries
+    only what its soldiers carry (DAT-025). The checkpoint pass item and the `checkpointPass` op effect are
+    removed (ITM-025, ITM-026); vehicle `profile` has no rule effect (DAT-024).
+32. DAT-016 — The tactical sub-slot has no `modifiers` keys in the design (only its `module`); the schema
+    accepts only an empty `modifiers` object there. Confirm that flashlight and laser mods never change
+    profile values.

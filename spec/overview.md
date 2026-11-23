@@ -80,12 +80,14 @@ drives income, intel and recruitment available there. It has no squads and canno
 
 ### [GEN-007] Faction relations model
 **Rule.** Every ordered pair of map factions (GEN-004, excluding `player`) holds a relation value, integer
-−100…100. A relation ≤ −50 means hostile, ≥ 50 means allied, otherwise neutral. Relations are changed
+−100…100. A relation at or below the hostile threshold means hostile, at or above the allied threshold
+allied, otherwise neutral (range and thresholds → see STR-051). Relations are changed
 only by world events and their effects (STR); they decide who attacks whom. They do not change the
 player's reputation: there is no spill-over to a faction's allies or enemies (MGT-053). The Krug is neutral
 to every faction.
-**Values.** `relation_min` — −100; `relation_max` — 100; `hostile_at` — −50; `allied_at` — 50 →
-data/factions.json; initial relations per pair — not set (design: not stated) → data/factions.json
+**Values.** range and thresholds → see STR-051 (`relationMin` −100, `relationMax` 100, `hostileAt` −50,
+`alliedAt` 50 in data/strategic-rules.json); initial relations per pair `startRelations` — not set (design:
+not stated) → data/factions.json
 **Source.** design/design.md › Strategic layer › World events; › Management › Reputation (draft)
 
 ### [GEN-008] Leader effects
@@ -100,14 +102,15 @@ data/factions.json; initial relations per pair — not set (design: not stated) 
 | Karsin (`krug`) | Every debt with the Krug is a ledger entry; paying the entry's amount clears it (MGT economy). |
 
 **Values.** protocol breach reputation cost, letter frequency, adaptation rate — not set (design: not
-stated) → data/factions.json
+stated) → data/factions.json `leaderEffect`
 **Status.** open
 **Source.** design/design.md › Factions & campaign › Leaders
 
 ## The Krug
 
 ### [GEN-009] Krug markets as no-fire zones
-**Rule.** A Krug market is a no-fire zone. Any player attack or weapon fire inside a Krug market sets the
+**Rule.** A Krug market (a town or city tile flagged `krugMarket`, STR-010) is a no-fire zone. Any player
+attack or weapon fire inside a Krug market sets the
 player's Krug reputation per the "fight in a Krug market" act (MGT) and turns the whole Krug network
 hostile to the player.
 **Source.** design/design.md › Factions & campaign › The Krug
@@ -118,6 +121,7 @@ order of standing: better market stock, smuggling routes usable by ops (STR), sa
 recruits (MGT hiring pool). Some Krug members resent all foreign soldiers including the player's,
 independent of standing (effect: STR/lore).
 **Values.** standing level required per unlock — not set (design: not stated) → data/factions.json
+`standingUnlocks` (Krug record)
 **Status.** open
 **Source.** design/design.md › Factions & campaign › The Krug
 
@@ -133,13 +137,13 @@ stories only from service records (MGT).
 **Source.** design/design.md › Factions & campaign › Player role
 
 ### [GEN-012] Campaign end states
-**Rule.** The campaign ends in exactly one of: `ssv_united` (Veligrad united under the SSV),
-`vdk_united` (united under the VDK), `reformed`, `endless_war` (locked into an endless proxy war),
-`player_coup` (seized by the player's PMC, GEN-013…GEN-016), `cash_out` (the player cashes out and
+**Rule.** The campaign ends in exactly one of: `ssvUnited` (Veligrad united under the SSV),
+`vdkUnited` (united under the VDK), `reformed`, `endlessWar` (locked into an endless proxy war),
+`playerCoup` (seized by the player's PMC, GEN-013…GEN-016), `cashOut` (the player cashes out and
 leaves, at the player's choice). On end, a score is computed from money, reputation and surviving soldiers
 (MGT). For now the only campaign-ending coup is the player's: a rival PMC that comes to hold the capital
 (STR-007) just becomes its holder, and the campaign goes on.
-**Values.** trigger conditions for `ssv_united`, `vdk_united`, `reformed`, `endless_war` — not set
+**Values.** trigger conditions for `ssvUnited`, `vdkUnited`, `reformed`, `endlessWar` — not set
 (design: not stated)
 **Status.** open
 **Source.** design/design.md › Factions & campaign › Player role; › Strategic Layer › Map (draft); › Management › Base & meta progression
@@ -148,11 +152,11 @@ leaves, at the player's choice). On end, a score is computed from money, reputat
 
 ### [GEN-013] Player coup requirements
 **Rule.** The player may launch a coup only when all hold: the PMC controls the capital's approaches; the
-PMC controls at least `coup_key_regions` key regions; the roster has at least `coup_min_soldiers`
+PMC controls at least `coup.keyRegions` key regions; the roster has at least `coup.minSoldiers`
 soldiers; both the SSV and the VDK are exhausted. Civilian loyalty and Krug standing do not gate the coup;
 they scale its difficulty.
-**Values.** `coup_key_regions`, `coup_min_soldiers`, definition of "exhausted", difficulty scaling — not
-set (design: draft, no numbers) → data/factions.json (campaign section)
+**Values.** `coup.keyRegions`, `coup.minSoldiers` — not set → data/strategic-rules.json; definition of "exhausted", difficulty scaling — not
+set (design: draft, no numbers)
 **Status.** open
 **Source.** design/design.md › Factions & campaign › Coups
 
@@ -165,7 +169,7 @@ objectives: seize command, seize communications, seize the government district. 
 ### [GEN-015] Holding the capital
 **Rule.** The capital can fall and is then contested (STR-007). When the player's PMC holds the contested
 capital for `capitalHoldDays` (STR-007), it becomes the capital's holder, and that counts as the
-`player_coup` ending. After a successful coup op, both `east` and `west` turn against the PMC and drive
+`playerCoup` ending. After a successful coup op, both `east` and `west` turn against the PMC and drive
 counter-attacks on the capital (STR); the design also says the player must hold on until one of them
 accepts the new order. Losing the capital before the ending ends the coup attempt. How the hold time and
 "accepts the new order" fit together is open.
@@ -175,7 +179,7 @@ consequence of losing the capital — not set (design: not stated)
 **Source.** design/design.md › Factions & campaign › Coups; › Strategic Layer › Map (draft)
 
 ### [GEN-016] Coup epilogue
-**Rule.** The `player_coup` epilogue is selected from three inputs: civilian loyalty, Krug standing and
+**Rule.** The `playerCoup` epilogue is selected from three inputs: civilian loyalty, Krug standing and
 the number of soldiers lost during the campaign.
 **Source.** design/design.md › Factions & campaign › Coups
 
@@ -189,7 +193,7 @@ warning lead time. A capital that loses its holder (STR-007) can also trigger a 
 At most one rogue PMC per campaign. A rogue PMC that comes to hold the capital just becomes its holder; it
 does not end the campaign (GEN-012).
 **Values.** chance per crisis sign and per factor, capital-rush chance, warning lead time — not set
-(design: not stated) → data/factions.json
+(design: not stated) → data/factions.json `rogueChance` (Varyag and Aegis records)
 **Status.** open
 **Source.** design/design.md › Factions & campaign › Coups › Rogue PMCs
 
@@ -206,7 +210,7 @@ the rest of the campaign.
 1. **Resolved (design 8972470):** yes — an op succeeds when at least one soldier gets back to an FOB; a
    contract's missions count as completed as soon as their goal is met. GEN-002: does an op count as succeeded if only part of the squad returns? Assumed yes (any soldier
    reaching an FOB), failure only if none returns.
-2. GEN-012: trigger conditions for the four non-coup endings and for when `cash_out` is offered are not
+2. GEN-012: trigger conditions for the four non-coup endings and for when `cashOut` is offered are not
    designed.
 3. GEN-013: "exhausted", "key regions" and the coup thresholds are undefined.
 4. GEN-015: what ends the holding phase in failure, and how "accepts the new order" is decided.

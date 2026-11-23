@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "management_view.schema.json",
+  "title": "Management view",
+  "description": "What other modules may read of the Management-owned slices: reputation per faction with the derived standing, the contracts with their status, and the PMC's funds. Produced after each batch of management_requests and on load. Spec: MGT-042, MGT-053, MGT-054, MGT-070, MGT-072, STR-093, SAI-013.",
+  "version": "0.1.0",
+  "x-producer": "modules/management",
+  "x-consumers": ["modules/strategic"],
+  "type": "object",
+  "required": ["time", "reputation", "contracts", "funds"],
+  "additionalProperties": false,
+  "properties": {
+    "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+    "reputation": {
+      "type": "object",
+      "description": "Faction ID (every non-player faction, GEN-004) → reputation with the player",
+      "additionalProperties": {
+        "type": "object", "required": ["value", "standing"], "additionalProperties": false,
+        "properties": {
+          "value": { "type": "integer", "minimum": -100, "maximum": 100, "description": "MGT-053 (range repMin..repMax)" },
+          "standing": { "$ref": "#/$defs/standing" }
+        }
+      }
+    },
+    "contracts": {
+      "type": "array",
+      "description": "Every offered or signed contract, plus those ended since the previous view (MGT-042, MGT-072)",
+      "items": { "$ref": "#/$defs/contract" }
+    },
+    "funds": {
+      "type": "object", "required": ["balanceUsd"], "additionalProperties": false,
+      "properties": {
+        "balanceUsd": { "type": "number", "description": "economy balance (MGT-070); whether it may go negative is open" },
+        "debtsUsd": { "type": "number", "minimum": 0, "description": "Sum of open debts (MGT-070)" }
+      }
+    }
+  },
+  "$defs": {
+    "standing": { "enum": ["hostile", "unfriendly", "neutral", "friendly", "trusted"], "description": "MGT-054, derived from value by management-rules standingThresholds" },
+    "contract": {
+      "type": "object", "required": ["id", "employer", "status"], "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "employer": { "type": "string", "x-ref": "factions" },
+        "targetFaction": { "type": ["string", "null"], "x-ref": "factions" },
+        "status": { "enum": ["offered", "signed", "ended"] },
+        "endReason": { "enum": ["completed", "deadline", "employerDefault", "factionDissolved"], "description": "Set when status is ended (contractEnded reason, MGT-048)" },
+        "deadline": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+        "pay": { "type": "number", "minimum": 0, "description": "MGT-046" },
+        "advance": { "type": "number", "minimum": 0, "description": "MGT-047" },
+        "missions": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["missionId", "outcome"], "additionalProperties": false,
+            "properties": {
+              "missionId": { "type": "string", "x-ref": "missions" },
+              "location": { "type": "string" },
+              "outcome": { "enum": ["open", "success", "failure"], "description": "MGT-044" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

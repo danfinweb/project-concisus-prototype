@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/prefabs.schema.json",
   "title": "Prefabs",
-  "description": "Structures for tactical maps: tiles, walls, doors, cover, spawn points (spec TAC-035, TAC-056).",
-  "version": "0.2.0",
+  "description": "Structures for tactical maps: tiles, walls, doors, cover, spawn points (spec TAC-035, TAC-056, TAC-080).",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -15,7 +15,8 @@
       "edges": { "type": "array", "description": "cover per tile edge {none, half, full} and material (TAC-035)" },
       "doors": { "type": "array", "description": "door and window positions" },
       "spawns": { "type": "array", "description": "spawn points" },
-      "tags": { "type": "array", "description": "biome and placement tags" }
+      "tags": { "type": "array", "description": "biome and placement tags" },
+      "tables": { "type": "array", "items": { "type": "string" }, "description": "TAC-080: prefab tables (named by STR-095 prefabTable) this prefab belongs to" }
     }
   }
 }

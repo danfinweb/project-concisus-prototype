@@ -3,7 +3,7 @@
   "$id": "battle_result.schema.json",
   "title": "Battle result",
   "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/strategic", "modules/management"],
   "type": "object",
@@ -22,7 +22,7 @@
         "properties": {
           "id": { "type": "string" },
           "status": { "enum": ["active", "leftMap", "dead", "mia", "captured"] },
-          "exitId": { "type": ["string", "null"] },
+          "exitId": { "type": ["string", "null"], "description": "status leftMap: id of the exit used, from the map's exits (tactical_map_request exits[].id or mapgen-tactical exits[].id; TAC-038, TAC-080)" },
           "zoneHp": { "type": "object" },
           "conditions": { "type": "array", "items": { "type": "object" } },
           "stamina": { "type": "integer" },

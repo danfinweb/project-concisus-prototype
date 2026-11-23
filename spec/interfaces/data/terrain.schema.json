@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/terrain.schema.json",
   "title": "Terrain and props",
-  "description": "Tactical terrain types and props (spec TAC-029, TAC-036).",
-  "version": "0.2.0",
+  "description": "Tactical terrain types and props (spec TAC-029, TAC-036, TAC-080).",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -11,7 +11,8 @@
     "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
       "moveCost": { "type": "integer", "description": "TAC-029, extra AP per tile (road, grass, mud, rubble, stairs)" },
-      "material": { "type": "string", "description": "TAC-036, destructible material for cover" }
+      "material": { "type": "string", "description": "TAC-036, destructible material for cover" },
+      "tables": { "type": "array", "items": { "type": "string" }, "description": "TAC-080: tactical terrain tables (named by STR-095 tacticalTerrainTable) this terrain belongs to" }
     }
   }
 }

@@ -13,7 +13,7 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 ## Battle frame
 
 ### [TAC-001] Sides on a map
-**Rule.** A tactical map holds the player side, one opponent side and, when such units are present, a third **neutral side**. The player side may include allied units controlled by AI (defenders, convoy, escorted VIP); they belong to the player side for turn order, but their activations are commanded by the AI controller (TAC-005, TAI-018). Units hostile to neither side (a non-involved faction, civilians; strategic layer input `hostile` flag per unit = false) form the neutral side, controlled by the tactical AI (TAI-017). The neutral side never activates and never takes an activation slot in the turn (TAC-005): its units only react (take cover, flee) or turn hostile. A neutral unit that is attacked turns hostile toward the attacking side (the side whose unit attacked it).
+**Rule.** A tactical map holds the player side, one opponent side and, when such units are present, a third **neutral side**. The player side may include allied units controlled by AI (defenders, convoy, escorted VIP); they belong to the player side for turn order, but their activations are commanded by the AI controller (TAC-005, TAI-018). Units hostile to neither side (a non-involved faction, civilians) form the neutral side, controlled by the tactical AI (TAI-017). The tactical map request marks them: every `sides[]` entry with `role: "neutral"` belongs to the neutral side; who is hostile to whom among the factions present comes from the request's `hostility` map (faction → faction → boolean). There is no per-unit hostile flag. The neutral side never activates and never takes an activation slot in the turn (TAC-005): its units only react (take cover, flee) or turn hostile. A neutral unit that is attacked turns hostile toward the attacking side (the side whose unit attacked it).
 **Status.** open (what a neutral unit does once hostile, how its reactions are chosen and paid — see Open questions)
 **Source.** design/design.md › Tactical Layer › Turn structure; design/design.md › Tactical Layer (Enemy AI)
 
@@ -22,8 +22,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer (Turn structure bullet)
 
 ### [TAC-003] Battle duration and day/night
-**Rule.** Every battle consumes exactly 1 hour of strategic game time regardless of turns played; the battle result reports `gameTimeSpent = 1 h`. The battle uses the strategic clock time at its start: start time in [06:00, 21:00) → day battle; [21:00, 06:00) → night battle. The day/night flag is fixed for the whole battle.
-**Values.** `battleDurationHours` — 1 → data/tactical-rules.json; `dayStartHour` — 6, `nightStartHour` — 21 → data/tactical-rules.json
+**Rule.** Every battle consumes exactly 1 hour of strategic game time regardless of turns played; the battle result reports it as `battle_result.gameTimeHours`. TAC-003 owns the battle duration; STR-023 only points here. The battle uses the strategic clock time at its start: start time in [06:00, 21:00) → day battle; [21:00, 06:00) → night battle. The day/night flag is fixed for the whole battle.
+**Values.** `battleDurationHours` — 1 → data/tactical-rules.json (single owner; strategic-rules has no battle duration); `dayStartHour` — 6, `nightStartHour` — 21 → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Time of day
 
 ### [TAC-004] Night sight reduction
@@ -33,14 +33,20 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Time of day; design/design.md › Data definitions › Weapon profile (tactical modules)
 
 ### [TAC-076] Objective met in battle
-**Rule.** The tactical map request lists the battle's mission objectives that can be met on the tactical map: a VIP killed (with the proof its mission asks for, MGT-044) or captured (restrained, TAC-073), a target destroyed, cargo saved. TAC checks them after every resolved action and reaction; the moment an objective's goal is met it is marked met, and the player is shown an "Objective met" notification at once. A met objective stays met whatever happens afterwards in the battle, including the loss of the whole squad. The battle result lists every objective met with the turn it was met; the strategic layer confirms the mission (STR) and passes it to Management. Objectives met on the strategic map (delivery, hand-over, holding a place, deadline) are not TAC's.
+**Rule.** The tactical map request (`objectives[]`) lists only the battle's mission objectives that can be met on the tactical map; its objective `type` is one of `killVip` (a VIP killed, with the proof its mission asks for, MGT-044), `captureVip` (captured: restrained, TAC-073), `destroyTarget` (a target destroyed), `saveCargo` (cargo saved). TAC checks them after every resolved action and reaction; the moment an objective's goal is met it is marked met, and the player is shown an "Objective met" notification at once. A met objective stays met whatever happens afterwards in the battle, including the loss of the whole squad. The battle result lists every objective met with the turn it was met; the strategic layer confirms the mission (STR) and passes it to Management. Objectives met on the strategic map (delivery, hand-over, holding a place, deadline) are not TAC's and are never put in the request; an AI side's own aim in the battle (attack, defend, hold, escort) is its `battleGoal` (TAI-009), not an objective.
 **Source.** design/design.md › Overview › Core loop; design/design.md › Management › Contracts and missions › Mission types
 
 ### [TAC-078] Contamination and mines on the tactical map (optional)
 **Rule.** OPTIONAL — left out of the first build iterations. A battle in a contaminated region (`contaminated` region flag in the tactical map request, STR-080) makes soldiers lose HP every turn they spend there; a `mined` region places mines on roads and approaches of the tactical map, cleared by Technical soldiers. Until this is built, TAC ignores both flags.
-**Values.** contamination HP loss per turn — not set (design: Open) → data/events.json (STR-080); mine placement, mine damage and clearing rule — not set (design: Open) → data/tactical-rules.json
+**Values.** contamination HP loss per turn — not set (design: Open) → data/events.json (STR-080); mine placement, mine damage and clearing rule — not set (design: Open) → data/tactical-rules.json `mines` (object)
 **Status.** optional
 **Source.** design/world-events.md › Desperate measures (Mining the roads); › Nuclear strike (rare) (Effect)
+
+### [TAC-080] Tactical map from the encounter tile
+**Rule.** The tactical layer generates the battle map from the tactical map request alone (`seed`, `rulesVersion`, `region`); the same request and rules version always give the same map. The encounter tile's strategic terrain sets the map: the request carries `region.terrain` and `region.biome`, the biome of that terrain in the strategic terrain table (STR-095). The biome selects the tactical terrain table and the prefab table that STR-095 names for it (`tacticalTerrainTable`, `prefabTable` in data/strategic-terrain.json); the generator draws tactical terrain only from data/terrain.json records listed in that terrain table and prefabs only from data/prefabs.json records listed in that prefab table (record field `tables`). The map has 2–4 exits; each exit has an `id`, unique on the map, and a condition (`none`, `fuel`, `boatAtTurn`, `paidCrossing`; TAC-038); the battle result reports the exit a soldier used as `soldiers[].exitId`. The generation stages and their rules (terrain layout, roads, prefab placement, cover scatter, spawns and objective placement, playability checks) are not in the design.
+**Values.** `exitCount` — min 2, max 4 → data/mapgen/tactical.json; exit conditions and their parameters → data/mapgen/tactical.json `exits[]`; stage rules (`pipeline`, `terrain`, `roads`, `prefabs`, `cover`, `spawns`, `validate`) — not set (design: none) → data/mapgen/tactical.json
+**Status.** open (generation stages are not designed; which exits the request fixes and which the generator adds)
+**Source.** design/design.md › Strategic Layer › Map (draft) (biome per strategic terrain type); › Strategic Layer › Squads and simulation (draft) (Encounters: the tile's terrain sets the tactical map); › Management › Gear, loot & return (2–4 exits with conditions)
 
 ## Turn and activation
 
@@ -81,8 +87,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Turn structure › Stamina
 
 ### [TAC-013] Stall rule
-**Rule.** If for `stallPassTurns` consecutive turns both sides pass and no soldier sees or hears an enemy, turns advance automatically: each automatic turn is a turn in which both sides pass (stamina recovers, TAC-011; durations count down, TAC-014). Automatic advance stops as soon as a soldier sees or hears an enemy, or a side's controller activates a soldier instead of passing.
-**Values.** `stallPassTurns` — 2 → data/tactical-rules.json
+**Rule.** If for `stallTurns` consecutive turns both sides pass and no soldier sees or hears an enemy, turns advance automatically: each automatic turn is a turn in which both sides pass (stamina recovers, TAC-011; durations count down, TAC-014). Automatic advance stops as soon as a soldier sees or hears an enemy, or a side's controller activates a soldier instead of passing.
+**Values.** `stallTurns` — 2 → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Turn structure › Turns and activation
 
 ### [TAC-014] Durations in turns
@@ -95,8 +101,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › AP modifiers on an activation; design/design.md › Management › Soldier attributes (Nerve)
 
 ### [TAC-077] Morale flight and Nerve in battle (optional)
-**Rule.** OPTIONAL — left out of the first build iterations. (a) Morale flight: while the squad's morale (MGT-008, read from the tactical map request) is below the flee threshold, an activated soldier may disobey and flee toward the nearest exit. (b) Nerve (from the service record) lowers the effect of suppression (TAC-015) and how much casualties shake the squad's morale. Until built, TAC applies neither: no flight roll, and suppression has its full effect for every soldier.
-**Values.** flee threshold — 20 (MGT-008, data/management-rules.json); flight chance, Nerve's reduction of suppression and of morale loss — not set (design: Open) → data/tactical-rules.json
+**Rule.** OPTIONAL — left out of the first build iterations. (a) Morale flight: while the squad's morale (MGT-008, read from the tactical map request `sides[].morale`) is below the flee threshold `moraleFleeBelow`, an activated soldier may disobey and flee toward the nearest exit. (b) Nerve (from the service record) lowers the effect of suppression (TAC-015) and how much casualties shake the squad's morale. Until built, TAC applies neither: no flight roll, and suppression has its full effect for every soldier.
+**Values.** `moraleFleeBelow` — 20 (MGT-008) → data/management-rules.json; `moraleFlight.chance` (flight chance), `moraleFlight.nerveSuppressionReduction`, `moraleFlight.nerveMoraleReduction` (Nerve's reduction of suppression and of morale loss) — not set (design: Open) → data/tactical-rules.json
 **Status.** optional
 **Source.** design/design.md › Management › Soldiers & progression (Contracts & morale); › Soldier attributes (Nerve)
 
@@ -166,8 +172,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions; design/tactical-actions.md › AP modifiers on an activation
 
 ### [TAC-027] Over-encumbrance
-**Rule.** If total carried weight (all seven equipment slots and contents) exceeds the soldier's carry capacity, the soldier is over-encumbered: −`encumbranceApPenalty` AP on each activation, or −`heavyEncumbranceApPenalty` AP instead if carried weight exceeds `heavyEncumbranceThreshold` × carry capacity (the two do not stack), plus the activation stamina surcharge (TAC-008). Strength lowers the penalty for heavy kit (amount not set, design: Open). Carry capacity derives from Strength (main) and Endurance (minor); formula not set (design: Open), owned by MGT/DAT.
-**Values.** `encumbranceApPenalty` — 5 (draft), `heavyEncumbranceApPenalty` — 10 (draft), `heavyEncumbranceThreshold` — 1.25 (draft) → data/tactical-rules.json; Strength reduction — not set (design: Open) → data/tactical-rules.json
+**Rule.** If total carried weight (all seven equipment slots and contents) exceeds the soldier's carry capacity, the soldier is over-encumbered: −`encumbranceApPenalty` AP on each activation, or −`heavyEncumbranceApPenalty` AP instead if carried weight exceeds `heavyEncumbranceThreshold` × carry capacity (the two do not stack), plus the activation stamina surcharge (TAC-008). Strength lowers the penalty for heavy kit (amount not set, design: Open). Carry capacity derives from Strength (main) and Endurance (minor); formula not set (design: Open), owned by MGT/DAT. TAC-027 owns the weight → AP and stamina penalty and its values; MGT-033 only points here.
+**Values.** `encumbranceApPenalty` — 5 (draft), `heavyEncumbranceApPenalty` — 10 (draft), `heavyEncumbranceThreshold` — 1.25 (draft) → data/tactical-rules.json; `encumbranceStrengthReduction` (Strength's reduction of the penalty) — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer (Action points); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Data definitions › Soldier equipment slots
 
@@ -222,8 +228,8 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/design.md › Tactical Layer (Movement)
 
 ### [TAC-038] Leave the map at an exit
-**Rule.** Each map has exits (count from map generation); each exit carries its own condition (vehicle fuel, a boat at a set turn, a paid crossing). A soldier on an exit tile whose condition is met may leave the map — either by ending a move there, or, already standing there, at the start of its activation without moving; leaving is free. Soldiers who left are out of the battle and count as survivors in the battle result.
-**Values.** `exitCost` — 0 (draft: free) → data/tactical-rules.json; exit conditions → data/mapgen/tactical.json
+**Rule.** Each map has 2–4 exits (TAC-080); each exit has an `id` and carries its own condition (vehicle fuel, a boat at a set turn, a paid crossing). A soldier on an exit tile whose condition is met may leave the map — either by ending a move there, or, already standing there, at the start of its activation without moving; leaving is free. Soldiers who left are out of the battle and count as survivors in the battle result, with `status: leftMap` and the `exitId` of the exit they used.
+**Values.** `exitCost` — 0 (draft: free) → data/tactical-rules.json; exit count and conditions → TAC-080, data/mapgen/tactical.json
 **Source.** design/tactical-actions.md › Turn and activation; design/design.md › Management › Gear, loot & return
 
 ## Weapons
@@ -250,13 +256,13 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 
 ### [TAC-043] Throw a grenade
 **Rule.** Throwing a grenade (ITM-032) from the vest or belt costs `throwCost` AP; from the backpack + `backpackSurcharge` (TAC-068). Arm wounds add no AP. Strength sets the maximum throwing distance; arm wounds do not change it. The grenade lands at the target tile with a seeded landing scatter; the scatter is × `woundedArmScatterFactor` if the worse arm (TAC-058) is wounded, × `disabledArmScatterFactor` if it is disabled. Effects on landing: TAC-079.
-**Values.** `throwCost` — 5 (draft), `woundedArmScatterFactor` — 1.5 (draft), `disabledArmScatterFactor` — 2 (draft) → data/tactical-rules.json (`woundedArmThrowSurcharge` removed); base landing scatter, throw-distance formula — not set (design: Open) → data/tactical-rules.json
+**Values.** `throwCost` — 5 (draft), `woundedArmScatterFactor` — 1.5 (draft), `disabledArmScatterFactor` — 2 (draft) → data/tactical-rules.json (`woundedArmThrowSurcharge` removed); `grenadeScatterBase` (base landing scatter, tiles), `throwDistance` (Strength → throw distance coefficients) — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/tactical-actions.md › Weapons (Throw a grenade); design/item-list.md › Grenades; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes
 
 ### [TAC-079] Grenade effects
 **Rule.** A grenade (ITM-032) takes effect on landing, at its landing tile. Frag (`effect: frag`): every soldier within `radiusTiles` of the landing tile takes blast damage = `damage` × (1 − d ÷ `radiusTiles`) at distance d tiles (full at the point of impact, falling evenly to 0 at the edge), checked against armour with the grenade's `penetrationClass` (TAC-050/051); solid cover between the landing point and the soldier blocks it. The blast is loud: heard across the whole map (as an unsuppressed shot, TAC-018/019). Smoke (`effect: smoke`): a cloud of `radiusTiles` around the landing tile for `durationTurns` turns (TAC-014) that blocks line of sight into, out of and through it; no damage; quiet (no noise event). Which body zone the blast damage hits, and what counts as "solid" cover, are not set.
-**Values.** grenade `damage`, `radiusTiles`, `penetrationClass`, `durationTurns`, `loud` → data/items.json (ITM-032); blast zone distribution, cover that blocks a blast — not set (design: Open) → data/tactical-rules.json
+**Values.** grenade `damage`, `radiusTiles`, `penetrationClass`, `durationTurns`, `loud` → data/items.json (ITM-032); `blastZoneShares` (zone → share of blast damage), `blastBlockingCover` (cover levels that block a blast: `full`, or `half` and `full`) — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/item-list.md › Grenades
 
@@ -264,7 +270,7 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 
 ### [TAC-044] Total spread
 **Rule.** Total spread (MoA, game scale) = (Base MoA × ammo spread modifier + shooter spread) × arm wound factor. Shooter spread is a function of Marksmanship, Perception (at range), stance (prone lowest), arm fracture, pain and suppression, is multiplied by the aim factor (TAC-040), and is reduced at range by optics and for hip/snap shots by lasers. Arm wound factor = `woundedArmConeFactor` if the worse arm is wounded, `disabledArmConeFactor` if it is disabled, else 1 (TAC-058). Weapon condition wear raises spread. 1 MoA ≈ 17 cm of cone width at 50 m (33 tiles), scaling linearly with distance.
-**Values.** shooter-spread coefficients — not set (design: Open) → data/tactical-rules.json; `baseMoA`, ammo `spreadModifier`, optic/laser modifiers → data/items.json
+**Values.** `shooterSpread` (coefficients) — not set (design: Open) → data/tactical-rules.json; `baseMoA`, ammo `spreadModifier`, optic/laser modifiers → data/items.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Weapon profile
 
@@ -280,15 +286,15 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 
 ### [TAC-047] Burst recoil
 **Rule.** Each extra round within one shot action adds recoil spread = effective recoil (TAC-049) × `recoilSpreadPerRound`, accumulating per round, reduced by recoil control (Marksmanship main, Strength minor). Tracer ammo reduces it (value open).
-**Values.** `recoilSpreadPerRound`, recoil-control formula, tracer modifier — not set (design: Open) → data/tactical-rules.json / data/items.json
+**Values.** `recoilSpreadPerRound`, `recoilControl` (Marksmanship and Strength coefficients) — not set (design: Open) → data/tactical-rules.json; tracer modifier — not set → data/items.json (ammo)
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Hit model; design/design.md › Management › Soldier attributes › Derived values
 
 ## Derived per shot
 
 ### [TAC-048] Muzzle damage and falloff
-**Rule.** Muzzle damage = calibre damage × ammo damage modifier × weapon barrel multiplier. Damage at distance d (tiles) = muzzle damage × (1 − falloffShare × d ÷ falloffRange), never below `minDamageShare` × muzzle damage. falloffShare and falloffRange come from the loaded ammo. Example: 6% per 15 tiles → −6% at 15, −12% at 30.
-**Values.** `minDamageShare` — 0.10 → data/tactical-rules.json; calibre `damage`, ammo `damageModifier`, `falloffShare`, `falloffRange`, weapon `barrelMultiplier` → data/items.json
+**Rule.** Muzzle damage = calibre damage × ammo damage modifier × weapon barrel multiplier. Damage at distance d (tiles) = muzzle damage × (1 − falloffShare × d ÷ falloffRange), never below `falloffFloor` × muzzle damage. falloffShare and falloffRange come from the loaded ammo. Example: 6% per 15 tiles → −6% at 15, −12% at 30.
+**Values.** `falloffFloor` — 0.10 → data/tactical-rules.json (the single name for the floor; ITM-005 points here); calibre `damage`, ammo `damageModifier`, `falloffShare`, `falloffRange`, weapon `barrelMultiplier` → data/items.json
 **Source.** design/design.md › Tactical Layer › Derived per shot
 
 ### [TAC-049] Effective recoil
@@ -310,23 +316,23 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 
 ### [TAC-052] Body zones and upright hitboxes
 **Rule.** Six zones, each one axis-aligned box in the soldier's local frame, each with its own HP pool. Upright soldier (~1.80 m), width × depth × height, height above ground: head 0.22×0.25×0.25, 1.53–1.78 m; thorax (incl. abdomen) 0.40×0.25×0.55, 0.95–1.50 m; left/right arm 0.12×0.12×0.60, 0.85–1.45 m, beside the thorax; left/right leg 0.16×0.16×0.95, 0.00–0.95 m.
-**Values.** box dimensions and offsets per zone and stance → data/tactical-rules.json
+**Values.** box dimensions and offsets per zone and stance → data/tactical-rules.json `zones.<zone>.hitboxes.<stance>`
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes
 
 ### [TAC-053] Aiming arm pose
 **Rule.** While the soldier is aiming (in a shot action or with Fire reaction readied), the arm boxes swing forward in front of the thorax, partly shielding it from the front.
-**Values.** aiming arm offsets — not set (design: Open) → data/tactical-rules.json
+**Values.** aiming arm offsets — not set (design: Open) → data/tactical-rules.json `zones.<arm>.hitboxes.aiming`
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes
 
 ### [TAC-054] Crouched hitboxes
 **Rule.** Crouched: total height ~1.20 m, legs folded under the thorax, head at ~1.00–1.20 m. Behind half cover the legs and most of the thorax are hidden.
-**Values.** crouched box layout → data/tactical-rules.json
+**Values.** crouched box layout → data/tactical-rules.json `zones.<zone>.hitboxes.crouched`
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Stance
 
 ### [TAC-055] Prone hitboxes and limits
 **Rule.** Prone: lying flat along the facing, total height ~0.40 m. From the front only head, arms (when aiming) and top of thorax are exposed; from the side the whole body. Behind half cover a prone soldier is fully hidden until they fire over it. Prone gives the lowest shooter spread; no sprinting, vaulting or climbing while prone.
-**Values.** prone box layout → data/tactical-rules.json
+**Values.** prone box layout → data/tactical-rules.json `zones.<zone>.hitboxes.prone`
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Stance
 
 ### [TAC-056] Cover occlusion
@@ -335,12 +341,12 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 
 ### [TAC-057] Zone HP
 **Rule.** Zone max HP = floor(base HP × (0.5 + 0.75 × Endurance / 100)). Base HP: head 35, thorax 85, each arm 60, each leg 70. E.g. Endurance 20 → ×0.65, 67 → ×1.0, 100 → ×1.25. Zone HP never goes below 0; damage beyond 0 in a zone is discarded (damage to an already disabled limb is redistributed, TAC-059). This formula, including the rounding down, is owned by TAC; MGT-028 only points here.
-**Values.** `baseHp` per zone — head 35, thorax 85, arm 60, leg 70 → data/tactical-rules.json; `hpScaleBase` — 0.5, `hpScaleEndurance` — 0.75 → data/tactical-rules.json
+**Values.** `zones.<zone>.baseHp` — head 35, thorax 85, arm 60, leg 70 → data/tactical-rules.json; `hpScaleBase` — 0.5, `hpScaleEndurance` — 0.75 → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes › Derived values
 
 ### [TAC-058] Zone damage effects
 **Rule.** Damage to a zone may trigger: head → stun chance (TAC-025); thorax → high bleeding chance (TAC-060/061). Limb states (TAC-062): an arm or leg is **wounded** below `woundedThreshold` of its max HP and above 0 HP, **disabled** at 0 HP (TAC-059). Arms: only the worse of the two arms counts (disabled worse than wounded worse than neither; no handedness). Worse arm wounded → shooting cone (TAC-044) × `woundedArmConeFactor` and grenade landing scatter (TAC-043) × `woundedArmScatterFactor`; worse arm disabled → cone × `disabledArmConeFactor` and scatter × `disabledArmScatterFactor`. Arm wounds add no AP to aim, reload or throw, and do not change throwing distance. Legs: wounded → + `legWoundMoveSurcharge` per tile per wounded leg and max stamina −1 per wounded leg (TAC-009); disabled → movement base tile cost × `disabledLegMoveFactor`, once however many legs (TAC-029). Wounds never reduce the AP pool (TAC-006).
-**Values.** `woundedArmConeFactor` — 1.5, `disabledArmConeFactor` — 2, `woundedArmScatterFactor` — 1.5, `disabledArmScatterFactor` — 2, `disabledLegMoveFactor` — 2 (draft) → data/tactical-rules.json; per-zone bleeding chances — not set (design: Open) → data/tactical-rules.json
+**Values.** `woundedArmConeFactor` — 1.5, `disabledArmConeFactor` — 2, `woundedArmScatterFactor` — 1.5, `disabledArmScatterFactor` — 2, `disabledLegMoveFactor` — 2 (draft) → data/tactical-rules.json; per-zone bleeding chances `zones.<zone>.lightBleedChance`, `zones.<zone>.heavyBleedChance` — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › Movement (Leg wounds), Weapons, AP modifiers on an activation
 
@@ -352,23 +358,23 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 
 ### [TAC-060] Light bleeding
 **Rule.** Caused by most hits (chance per hit). Effect: −`lightBleedHp` HP per turn in that zone (end of turn, TAC-014) until treated. Treated by bandage, IFAK or medkit. Endurance gives bleed resistance (formula not set).
-**Values.** `lightBleedHp` — 1, `lightBleedChance` — not set (design: Open) → data/tactical-rules.json
+**Values.** `lightBleedHp` — 1 → data/tactical-rules.json; light bleeding chance per hit `zones.<zone>.lightBleedChance` — not set (design: Open) → data/tactical-rules.json
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions, Body zones and hitboxes
 
 ### [TAC-061] Heavy bleeding
 **Rule.** Caused by hard hits; higher chance on thorax hits and with ammo flagged higher bleeding (HP ammo). Effect: −`heavyBleedHp` HP per turn in that zone until treated. Treated by tourniquet (arm or leg only), hemostatic dressing (any zone) or medkit. A zone has at most one bleeding condition; heavy replaces light.
-**Values.** `heavyBleedHp` — 4, `heavyBleedChance` per zone — not set (design: Open) → data/tactical-rules.json; ammo `bleedModifier` → data/items.json
+**Values.** `heavyBleedHp` — 4 → data/tactical-rules.json; `zones.<zone>.heavyBleedChance` — not set (design: Open) → data/tactical-rules.json; ammo `bleedModifier` → data/items.json
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions
 
 ### [TAC-062] Fracture
 **Rule.** Caused by heavy hits or falls on arms and legs. Arm fracture: more aim spread and reload base cost × 1.5 (TAC-041). Leg fracture: base tile cost × 1.5 (TAC-029), stacking with a disabled leg (×2 × 1.5 = ×3), no sprinting. Treated by splint. A "wounded" arm or leg = a limb below `woundedThreshold` of its max HP and above 0 HP; at 0 HP it is "disabled" (TAC-059). Healing it to or above that share removes the wounded state. Fracture effects apply on their own, whether or not the limb is wounded or disabled.
-**Values.** `woundedThreshold` — 0.5 (draft) → data/tactical-rules.json; `armFractureReloadFactor` — 1.5 (draft, TAC-041); `fractureChance`, fracture damage threshold, arm-fracture spread modifier — not set (design: Open) → data/tactical-rules.json
+**Values.** `woundedThreshold` — 0.5 (draft) → data/tactical-rules.json; `armFractureReloadFactor` — 1.5 (draft, TAC-041); `fracture.chance`, `fracture.damageThreshold`, `fracture.armSpread` (arm-fracture spread modifier) — not set (design: Open) → data/tactical-rules.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions
 
 ### [TAC-063] Pain
 **Rule.** Caused by damage and by an applied tourniquet. Effect: fewer AP and more aim spread (TAC-026). Painkillers mask it for the item's duration (10 turns); when the mask expires, pain returns if its cause persists.
-**Values.** pain trigger thresholds — not set (design: Open) → data/tactical-rules.json; painkiller `durationTurns` — 10 → data/items.json
+**Values.** `painThresholds` (pain trigger thresholds) — not set (design: Open) → data/tactical-rules.json; painkiller `durationTurns` — 10 → data/items.json
 **Status.** open
 **Source.** design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Medical items
 
@@ -406,7 +412,7 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 **Source.** design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots
 
 ### [TAC-070] Pick up or loot
-**Rule.** A soldier on or adjacent to items, bodies or containers may move items into free slot capacity (weight and type limits per DAT) for `lootCost` AP per item taken. Opening a container or searching a body costs `openContainerCost` AP once per side: the first soldier of a side to open or search it pays, and from then on its contents stay visible to the whole side (and in that side's perception view); later soldiers of that side only pay `lootCost` per item taken. Items not in a slot at battle end stay on the map; only items carried off the map or into the vehicle's storage count as loot in the battle result.
+**Rule.** A soldier on or adjacent to items, bodies or containers may move items into free slot capacity (weight and type limits per DAT) for `lootCost` AP per item taken. Opening a container or searching a body costs `openContainerCost` AP once per side: the first soldier of a side to open or search it pays, and from then on its contents stay visible to the whole side (and in that side's perception view); later soldiers of that side only pay `lootCost` per item taken. Items not in a slot at battle end stay on the map; only items carried off the map or into the vehicle's storage count as loot in the battle result. A squad without a vehicle (`sides[].vehicle` null in the tactical map request) brings home only what its soldiers carry off the map.
 **Values.** `lootCost` — 2 per item (draft), `openContainerCost` — 3 (draft) → data/tactical-rules.json
 **Source.** design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots
 
@@ -482,3 +488,5 @@ proposed table `data/tactical-rules.json`. All randomness uses `shared/rng.js` w
 48. TAC-076: is a VIP "captured" when restrained (spec) or only once carried off the map? What is the tactical condition for "cargo saved" (cargo carried off the map, or the convoy's vehicles leaving)?
 49. TAC-043 / TAC-079: base landing scatter of a throw, which body zones a blast hits, and what counts as "solid cover" against a blast (full cover only, or half cover too)?
 50. TAC-013: the stall rule's "a soldier acts" — spec reads it as a side's controller activating a soldier during the automatic advance (so the player can interrupt it). Confirm.
+51. TAC-080: the tactical map generation stages (terrain layout, roads, prefab placement, cover scatter, spawns and objective placement, playability checks) and their rules are not in the design; `data/mapgen/tactical.json` has slots for them but no TAC rule to check them against. Needs a design passage on tactical map generation.
+52. TAC-080 / TAC-038: the tactical map request may list `exits[]` (with conditions the strategic layer knows of, e.g. a boat or a paid crossing) and the generator places 2–4 exits from `data/mapgen/tactical.json`. Which wins: are the request's exits all the map's exits, does the generator add exits up to the count, or does it ignore them?

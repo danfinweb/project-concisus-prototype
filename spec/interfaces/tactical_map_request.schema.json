@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
-  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAI-009.",
-  "version": "0.4.0",
+  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAI-009, TAI-013, TAI-018.",
+  "version": "0.5.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -18,10 +18,11 @@
       "description": "Strategic clock at battle start; sets day or night (TAC-003)"
     },
     "region": {
-      "type": "object", "required": ["id", "terrain"],
+      "type": "object", "required": ["id", "terrain", "biome"],
       "properties": {
         "id": { "type": "string" },
-        "terrain": { "type": "string", "description": "Terrain of the encounter tile → biome for the tactical generator (STR-022)" },
+        "terrain": { "type": "string", "description": "Strategic terrain type of the encounter tile (STR-022, STR-095)" },
+        "biome": { "type": "string", "description": "Biome of that terrain in the strategic terrain table (STR-095); selects the tactical terrain and prefab tables (TAC-080)" },
         "road": { "type": ["string", "null"], "enum": ["asphalt", "dirt", null] },
         "urbanization": { "type": "number", "minimum": 0, "maximum": 1 },
         "weather": { "type": "string" },
@@ -49,28 +50,35 @@
     "hostility": { "type": "object", "description": "faction → faction → hostile (boolean) for the factions present" },
     "objectives": { "type": "array", "items": { "type": "object", "required": ["id", "type"], "properties": {
       "id": { "type": "string" }, "missionId": { "type": "string" },
-      "type": { "type": "string", "description": "e.g. capture VIP, escort cargo, hold position, scavenge" },
+      "type": { "enum": ["killVip", "captureVip", "destroyTarget", "saveCargo"], "description": "Only objectives met on the tactical map (TAC-076); strategic objectives (delivery, hand-over, holding a place, deadline) are never sent" },
       "targets": { "type": "array", "items": { "type": "string" } } } } },
     "battleGoal": {
       "type": "object",
-      "description": "Per AI side (faction id → goal): the battle goal and acceptable-loss threshold from the strategic layer (TAI-004, TAI-009). The unit of acceptableLoss is open (TAI open question 9).",
-      "additionalProperties": { "type": "object", "required": ["goal"], "properties": {
-        "goal": { "type": "string" },
-        "targets": { "type": "array", "items": { "type": "string" } },
-        "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the side's soldiers out of action (dead, disabled, fled); reached = retreat (TAI-009)" } } }
+      "description": "Per AI side (faction id → goal): the battle goal and acceptable-loss threshold from the strategic layer (TAI-004, TAI-009). A unit's own battleGoal overrides it (TAI-018).",
+      "additionalProperties": { "$ref": "#/$defs/battleGoal" }
     },
-    "exits": { "type": "array", "items": { "type": "object", "properties": {
+    "exits": { "type": "array", "description": "Exits with their conditions (TAC-038, TAC-080); id is reported back as battle_result soldiers[].exitId", "items": { "type": "object", "required": ["id"], "properties": {
+      "id": { "type": "string" },
       "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] }, "params": { "type": "object" } } } },
     "vip": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "rank": { "enum": ["major", "colonel", "general", "leader"] } } }
   },
   "$defs": {
+    "battleGoal": {
+      "type": "object", "required": ["goal"],
+      "properties": {
+        "goal": { "type": "string" },
+        "targets": { "type": "array", "items": { "type": "string" } },
+        "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the side's soldiers out of action (dead, disabled, fled); reached = retreat (TAI-009)" }
+      }
+    },
     "unit": {
       "type": "object", "required": ["id"],
       "properties": {
         "id": { "type": "string", "description": "Roster ID (player) or generated ID (AI)" },
         "presetId": { "type": "string", "x-ref": "presets" },
-        "rank": { "type": "integer", "minimum": 0, "description": "Sets the AI squad leader (TAI-013)" },
+        "rank": { "type": "integer", "minimum": 0, "description": "Higher = senior; the highest-ranked living soldier leads the AI squad (TAI-013)" },
         "controller": { "enum": ["player", "ai"], "description": "Per-unit override, e.g. an escorted VIP (TAI-018)" },
+        "battleGoal": { "$ref": "#/$defs/battleGoal", "description": "Per-unit goal for an AI-controlled unit, e.g. an allied VIP on the player side; overrides the side's battleGoal entry (TAI-018)" },
         "attributes": { "type": "object" },
         "nerve": { "type": "number" },
         "zoneHp": { "type": "object" },

@@ -3,7 +3,7 @@
   "$id": "data/mapgen-strategic.schema.json",
   "title": "Strategic map generation rules",
   "description": "Rules per stage of the strategic generation pipeline (spec STR-082..STR-091).",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -18,6 +18,7 @@
     "towns": { "type": "object", "description": "STR-087" },
     "roads": { "type": "object", "description": "STR-088" },
     "warState": { "type": "object", "description": "STR-089" },
+    "krugMarkets": { "type": "object", "description": "STR-089: which town and city tiles in the contested belt get the krugMarket flag (count, spacing; not set)" },
     "start": { "type": "object", "description": "STR-090" },
     "validate": { "type": "object", "description": "STR-091" }
   },

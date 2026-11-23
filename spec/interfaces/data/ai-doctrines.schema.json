@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/ai-doctrines.schema.json",
   "title": "AI doctrines",
-  "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, TAI-007..TAI-016).",
-  "version": "0.2.0",
+  "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, SAI-014..SAI-016, TAI-007..TAI-016). The faction → doctrine link is factions.doctrine (SAI-010); a doctrine does not list its factions.",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -11,7 +11,18 @@
     "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
       "layer": { "enum": ["strategic", "tactical"], "description": "SAI-010 / TAI-015" },
-      "factions": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "SAI-010" },
+      "personality": {
+        "type": "object", "description": "SAI-010 (strategic doctrines): faction character as consideration inputs (not set)",
+        "properties": {
+          "aggression": { "type": "number" },
+          "riskTolerance": { "type": "number" },
+          "contractUse": { "type": "number", "description": "SAI-014: how readily it posts contracts" },
+          "hostility": { "type": "object", "description": "faction ID → hostility weight", "additionalProperties": { "type": "number" } }
+        },
+        "additionalProperties": false
+      },
+      "commitmentBonus": { "type": "object", "description": "SAI-008: bonus term for objectives the faction already pursues, as {weight, curve {type, points}} (not set)" },
+      "gainTerms": { "type": "object", "description": "SAI-008: ownGain terms rated against the faction's ultimate goal: term name → {weight, curve {type, points}} (not set)" },
       "considerations": { "type": "object", "description": "SAI-006 / TAI-007: name → {weight, curve {type, points}}" },
       "wGoal": { "type": "number", "description": "TAI-009" },
       "wFit": { "type": "number", "description": "TAI-010" },

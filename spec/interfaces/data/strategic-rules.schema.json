@@ -2,43 +2,150 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/strategic-rules.schema.json",
   "title": "Strategic rules",
-  "description": "Global strategic constants (spec STR).",
-  "version": "0.3.0",
+  "description": "Global strategic constants (spec STR, GEN-013). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules.",
+  "version": "0.4.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
-    "capitalHoldDays": { "type": "integer", "description": "STR-007, draft 7" },
+    "capitalHoldDays": { "type": "integer", "minimum": 1, "description": "STR-007, draft 7" },
+    "coup": {
+      "type": "object", "description": "GEN-013: player coup requirements (not set)",
+      "properties": {
+        "keyRegions": { "type": "integer", "minimum": 0, "description": "GEN-013 coupKeyRegions" },
+        "minSoldiers": { "type": "integer", "minimum": 0, "description": "GEN-013 coupMinSoldiers" }
+      },
+      "additionalProperties": false
+    },
     "krugEscortPrice": { "type": "object", "description": "STR-094, not set" },
-    "krugEscortHireHours": { "type": "integer", "description": "STR-094, not set" },
-    "roadVisibility": { "type": "object", "description": "STR-006, asphalt / dirt visibility class" },
-    "startHour": { "type": "integer", "description": "STR-001, hour of Day 1, not set" },
+    "krugEscortHireHours": { "type": "integer", "minimum": 0, "description": "STR-094, not set" },
+    "startHour": { "type": "integer", "minimum": 0, "maximum": 23, "description": "STR-001, hour of Day 1, not set" },
     "factionTickOrder": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "STR-003, order in which factions act each hour" },
-    "historyDays": { "type": "integer", "description": "STR-068, design 7" },
-    "moveHours": { "type": "object", "description": "STR-006/STR-032: per terrain {vehicle, foot} hours (destination tile), plus one road entry (asphalt = dirt)" },
-    "terrainVisibility": { "type": "object", "description": "STR-008, per terrain" },
-    "offroadReduction": { "type": "object", "description": "STR-032, per off-road rating {steppe, woods}" },
-    "fuelPerRegion": { "type": "integer", "description": "STR-032" },
-    "heliMoveHours": { "type": "integer", "description": "STR-034, design 1" },
-    "pilotTechnicalMin": { "type": "integer", "description": "STR-034, design 50" },
-    "reconRange": { "type": "object", "description": "STR-008: squad, fob, intel ranges in regions" },
-    "noiseRange": { "type": "object", "description": "STR-008: per noise class, regions" },
+    "historyDays": { "type": "integer", "minimum": 1, "description": "STR-068, design 7" },
+    "roadMoveHours": {
+      "type": "object", "description": "STR-006: hours per tile along a road (asphalt = dirt)",
+      "properties": {
+        "vehicle": { "type": "integer", "minimum": 1, "description": "design 1" },
+        "foot": { "type": "integer", "minimum": 1, "description": "design 2" }
+      },
+      "additionalProperties": false
+    },
+    "onFootHours": {
+      "type": "object", "description": "STR-006/STR-031: hours per tile on foot off-road. `default` for every passable terrain, plus an override per strategic-terrain ID (design: default 2, mountain 3)",
+      "properties": { "default": { "type": "integer", "minimum": 1 } },
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "roadVisibility": {
+      "type": "object", "description": "STR-006: visibility class per road kind",
+      "properties": {
+        "asphalt": { "enum": ["far", "medium", "open", "low"], "description": "design far" },
+        "dirt": { "enum": ["far", "medium", "open", "low"], "description": "design medium" }
+      },
+      "additionalProperties": false
+    },
+    "offroadReduction": {
+      "type": "object", "description": "STR-032: per off-road rating, hours taken off strategic-terrain moveHours, per strategic-terrain ID (design: steppe and woods)",
+      "properties": {
+        "poor": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "good": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "veryGood": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+      },
+      "additionalProperties": false
+    },
+    "fuelPerRegion": { "type": "integer", "minimum": 0, "description": "STR-032, design implies 1" },
+    "heliMoveHours": { "type": "integer", "minimum": 1, "description": "STR-034, design 1 (single value for every helicopter)" },
+    "pilotTechnicalMin": { "type": "integer", "minimum": 0, "maximum": 100, "description": "STR-034, design 50 (single value for every helicopter)" },
+    "reconRange": {
+      "type": "object", "description": "STR-008: ranges in regions",
+      "properties": {
+        "squad": { "type": "integer", "minimum": 0 },
+        "fob": { "type": "integer", "minimum": 0 },
+        "intel": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "noiseRange": {
+      "type": "object", "description": "STR-008: notice range in regions per vehicle noise class",
+      "properties": {
+        "low": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "veryHigh": { "type": "integer", "minimum": 0 },
+        "extreme": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
     "loyaltyMin": { "type": "integer", "description": "STR-009, design -100" },
     "loyaltyMax": { "type": "integer", "description": "STR-009, design 100" },
-    "loyaltyStart": { "type": "integer", "description": "STR-009" },
-    "battleHours": { "type": "integer", "description": "STR-023, design 1" },
-    "scoutHours": { "type": "integer", "description": "STR-036, design 3 (placeholder)" },
-    "actionHours": { "type": "object", "description": "STR-028..STR-043: launch, land, enterPoi, station, acceptContract, handOver, handIn, hospital, repair, refuel, buyFob, buyIntel, evade, krugPass (not set)" },
-    "evadeChance": { "type": "object", "description": "STR-024: base, reconWeight, terrain modifiers" },
-    "krugPassPrice": { "type": "integer", "description": "STR-025, not set" },
-    "autoResolve": { "type": "object", "description": "STR-026: strength and gear weights, terrain modifiers" },
-    "vip": { "type": "object", "description": "STR-045..STR-049: guard per rank, shock radius, morale loss per quality, intel hours (72), intel prices and standing gates" },
-    "relationMin": { "type": "integer", "description": "STR-051, design -100" },
+    "loyaltyStart": { "type": "integer", "description": "STR-009, not set" },
+    "supplyDeficitEffect": { "type": "object", "description": "STR-014: how a supply deficit lowers squad supplies and reinforcement rate, not set" },
+    "scoutHours": { "type": "integer", "minimum": 0, "description": "STR-036, design 3 (placeholder)" },
+    "scoutSuccess": { "type": "object", "description": "STR-036: scout success chance inputs, not set" },
+    "actionHours": {
+      "type": "object", "description": "STR-015, STR-024, STR-025, STR-028, STR-035, STR-038, STR-040..STR-042, STR-048: duration in hours per action (not set)",
+      "properties": {
+        "launch": { "type": "integer", "minimum": 0, "description": "STR-028" },
+        "land": { "type": "integer", "minimum": 0, "description": "STR-035" },
+        "enterPoi": { "type": "integer", "minimum": 0, "description": "STR-038" },
+        "station": { "type": "integer", "minimum": 0, "description": "STR-015" },
+        "acceptContract": { "type": "integer", "minimum": 0, "description": "STR-040" },
+        "handOver": { "type": "integer", "minimum": 0, "description": "STR-040" },
+        "handIn": { "type": "integer", "minimum": 0, "description": "STR-040" },
+        "hospital": { "type": "integer", "minimum": 0, "description": "STR-041" },
+        "repair": { "type": "integer", "minimum": 0, "description": "STR-041" },
+        "refuel": { "type": "integer", "minimum": 0, "description": "STR-041" },
+        "buyFob": { "type": "integer", "minimum": 0, "description": "STR-042" },
+        "buyIntel": { "type": "integer", "minimum": 0, "description": "STR-048" },
+        "evade": { "type": "integer", "minimum": 0, "description": "STR-024" },
+        "krugPass": { "type": "integer", "minimum": 0, "description": "STR-025" }
+      },
+      "additionalProperties": false
+    },
+    "evadeChance": { "type": "object", "description": "STR-024: base, reconWeight, modifier per visibility class (not set)" },
+    "krugPassPrice": { "type": "integer", "minimum": 0, "description": "STR-025, not set" },
+    "autoResolve": { "type": "object", "description": "STR-026: strength and gear weights, terrain modifiers (not set)" },
+    "vip": {
+      "type": "object", "description": "STR-045..STR-048",
+      "properties": {
+        "guard": { "type": "object", "description": "STR-046: rank → {squadsMin, squadsMax, rankMix}", "additionalProperties": { "type": "object", "properties": { "squadsMin": { "type": "integer", "minimum": 0 }, "squadsMax": { "type": "integer", "minimum": 0 }, "rankMix": { "type": "object" } }, "additionalProperties": false } },
+        "shockRadius": { "type": "object", "description": "STR-047: rank → region distance, or \"all\" (design: major 0, colonel 3, general all)", "additionalProperties": { "type": ["integer", "string"] } },
+        "moraleLoss": { "type": "object", "description": "STR-047: soldier rank → morale loss (design: elite 40, veteran 25, regular 10, recruit 5)", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "intelHours": { "type": "integer", "minimum": 1, "description": "STR-048, design 72" },
+        "intelGoods": { "type": "object", "description": "STR-048: VIP rank → barter goods value (design: major 1500, colonel 4000, general 10000, leader 25000)", "additionalProperties": { "type": "number", "minimum": 0 } },
+        "intelPrice": { "type": "object", "description": "STR-048: VIP rank → USD (design: major 2000, colonel 5000, general 12000, leader 30000)", "additionalProperties": { "type": "number", "minimum": 0 } },
+        "intelStanding": { "type": "object", "description": "STR-048: VIP rank → minimum reputation with the seller (design: 20, leader 50)", "additionalProperties": { "type": "integer" } }
+      },
+      "additionalProperties": false
+    },
+    "scatterShares": {
+      "type": "object", "description": "STR-049: shares of a dissolved faction's squads (not set)",
+      "properties": {
+        "resistance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "krug": { "type": "number", "minimum": 0, "maximum": 1 },
+        "removed": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "relationMin": { "type": "integer", "description": "STR-051 (owner; GEN-007, SAI-003 point here), design -100" },
     "relationMax": { "type": "integer", "description": "STR-051, design 100" },
     "hostileAt": { "type": "integer", "description": "STR-051, design -50" },
     "alliedAt": { "type": "integer", "description": "STR-051, design 50" },
-    "crisis": { "type": "object", "description": "STR-069: thresholds for the ten crisis signs" },
-    "measureSignsMin": { "type": "integer", "description": "STR-070" },
-    "nuclearSignsMin": { "type": "integer", "description": "STR-080, design 5" }
+    "crisis": {
+      "type": "object", "description": "STR-069: thresholds for the ten crisis signs",
+      "properties": {
+        "littleTerritory": { "type": "number", "minimum": 0, "maximum": 1, "description": "design 0.30" },
+        "areaLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "design 0.15" },
+        "troopLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "design 0.30" },
+        "resistanceGroups": { "type": "integer", "minimum": 0, "description": "design 2" },
+        "capitalThreatRange": { "type": "integer", "minimum": 0, "description": "design 2" },
+        "keyPlants": { "type": "number", "minimum": 0, "maximum": 1, "description": "design 0.5" },
+        "isolationFactions": { "type": "integer", "minimum": 0, "description": "design 3" },
+        "isolationRelation": { "type": "integer", "description": "design -50" },
+        "playerDefeats": { "type": "integer", "minimum": 0, "description": "design 3" }
+      },
+      "additionalProperties": false
+    },
+    "measureSignsMin": { "type": "integer", "minimum": 0, "description": "STR-070, design 3" },
+    "nuclearSignsMin": { "type": "integer", "minimum": 0, "description": "STR-070/STR-080, design 5" }
   },
   "additionalProperties": false
 }

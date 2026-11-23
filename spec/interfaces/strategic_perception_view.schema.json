@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_perception_view.schema.json",
   "title": "Strategic perception view",
-  "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-020, STR-021, STR-092, SAI-002, SAI-003, SAI-005, SAI-015.",
-  "version": "0.4.0",
+  "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-009, STR-017, STR-020, STR-021, STR-070, STR-092, SAI-002, SAI-003, SAI-005, SAI-015.",
+  "version": "0.5.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/strategic-ai"],
   "type": "object",
@@ -12,26 +12,32 @@
     "faction": { "type": "string", "x-ref": "factions" },
     "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
     "doctrine": { "type": "string", "x-ref": "ai/doctrines" },
-    "ownRegions": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "poi": { "type": "string" }, "output": { "type": "object" }, "loyalty": { "type": "number" } } } },
+    "ownRegions": { "type": "array", "items": { "type": "object", "properties": {
+      "id": { "type": "string" }, "poi": { "type": "string" }, "krugMarket": { "type": "boolean" }, "output": { "type": "object" },
+      "loyalty": { "type": "object", "description": "Settlement tiles only: faction → −100..100 (STR-009)", "additionalProperties": { "type": "integer", "minimum": -100, "maximum": 100 } } } } },
     "ownSquads": { "type": "array", "items": { "type": "object", "required": ["id", "region"], "properties": {
       "id": { "type": "string" }, "region": { "type": "string" }, "goal": { "type": "string" }, "target": { "type": "string" },
-      "strength": { "type": "number" }, "supplies": { "type": "number" }, "fuel": { "type": "number" }, "morale": { "type": "number" }, "inTransit": { "type": "boolean" } } } },
+      "strength": { "type": "number" }, "supplies": { "type": "number" }, "fuel": { "type": "number" }, "morale": { "type": "number" },
+      "vehicle": { "type": ["string", "null"], "x-ref": "vehicles", "description": "null = on foot (STR-017)" },
+      "transit": { "type": ["object", "null"], "description": "STR-017: the move in progress, null when not moving", "properties": { "toRegion": { "type": "string" }, "hoursLeft": { "type": "integer", "minimum": 1 } } } } } },
     "knownRegions": { "type": "array", "items": { "type": "object", "required": ["id"], "properties": {
-      "id": { "type": "string" }, "x": { "type": "integer" }, "y": { "type": "integer" }, "terrain": { "type": "string" },
-      "road": { "type": ["string", "null"], "enum": ["asphalt", "dirt", null] }, "poi": { "type": "string" }, "controller": { "type": ["string", "null"] },
-      "loyalty": { "type": "object", "description": "Settlement tiles only: faction → −100..100 (STR-009)" },
+      "id": { "type": "string" }, "x": { "type": "integer" }, "y": { "type": "integer" }, "terrain": { "type": "string", "x-ref": "strategic-terrain" },
+      "road": { "type": ["string", "null"], "enum": ["asphalt", "dirt", null] }, "poi": { "type": "string" },
+      "krugMarket": { "type": "boolean", "description": "STR-005/STR-010: town or city tile with a Krug market" },
+      "controller": { "type": ["string", "null"] },
+      "loyalty": { "type": "object", "description": "Settlement tiles only: faction → −100..100 (STR-009)", "additionalProperties": { "type": "integer", "minimum": -100, "maximum": 100 } },
       "flags": { "type": "array" }, "observed": { "type": "object", "description": "Day and hour this information is from" } } } },
     "knownSquads": { "type": "array", "description": "Noticed foreign squads, the player's included", "items": { "type": "object", "properties": {
       "faction": { "type": "string" }, "region": { "type": "string" }, "estimatedStrength": { "type": "number" }, "seen": { "type": "object" }, "knownGoal": { "type": "string" } } } },
     "capital": { "type": "object", "description": "STR-007", "properties": { "tile": { "type": "string" }, "holder": { "type": ["string", "null"] }, "occupant": { "type": ["string", "null"] }, "contestedSince": { "type": ["object", "null"] } } },
     "vips": { "type": "array", "items": { "type": "object" }, "description": "Own VIPs and known enemy VIPs with intel expiry" },
-    "relations": { "type": "object", "description": "faction → -100..100" },
+    "relations": { "type": "object", "description": "faction → relation; range and thresholds: STR-051" },
     "reputationWithPlayer": { "type": "object", "properties": { "value": { "type": "number" }, "standing": { "enum": ["hostile", "unfriendly", "neutral", "friendly", "trusted"] } } },
     "funds": { "type": "number", "description": "This faction's own money (STR-092); other factions' funds are never visible" },
     "contracts": { "type": "array", "items": { "type": "object" }, "description": "Contracts this faction posted, with status" },
-    "contractOffers": { "type": "array", "items": { "type": "object" }, "description": "Other factions' open contract offers this faction may evaluate (SAI-015)" },
+    "contractOffers": { "type": "array", "items": { "type": "object" }, "description": "Other factions' open contract offers this faction may evaluate (SAI-015), each with its id" },
     "events": { "type": "array", "items": { "type": "object" }, "description": "Active events and measures that affect it" },
     "crisisSigns": { "type": "array", "items": { "type": "string" } },
-    "availableMeasures": { "type": "array", "items": { "type": "string", "x-ref": "events" } }
+    "availableMeasures": { "type": "array", "items": { "type": "string", "x-ref": "events" }, "description": "Measures it may pick now with pickMeasure (STR-070)" }
   }
 }

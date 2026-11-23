@@ -11,18 +11,21 @@ rules in TAC.
 ## Soldiers & progression
 
 ### [MGT-001] Soldier record
-**Rule.** Each soldier in `roster` stores: `id`; `service_number` (unique per campaign, assigned at
-generation, never changes); `callsign` (current displayed callsign); `callsign_source` (`generated` |
-`earned` | `player`); `callsign_prestige` (0 for generated, 1–5 for earned); the eight attributes
+**Rule.** Each soldier in `roster` stores: `id`; `serviceNumber` (unique per campaign, assigned at
+generation, never changes); `callsign` (current displayed callsign); `callsignSource` (`generated` |
+`earned` | `player`); `callsignPrestige` (0 for generated, 1–5 for earned); the eight attributes
 (MGT-021); `nerve` (MGT-031); `wounds` (per body zone, structure per TAC Medical system); `salary`;
-`status` (`active` | `mia` | `captured` | `dead`); `service_record` (MGT-006); `kit_marks` (cosmetic
+`status` (`active` | `mia` | `captured` | `dead`); `serviceRecord` (MGT-006); `kitMarks` (cosmetic
 patches and colours). No name, portrait, voice, backstory or personality is generated or stored. Derived
-values (MGT-026…MGT-030) are never stored.
+values (MGT-026…MGT-030) are never stored. A `battle_result` soldier status `leftMap` (left through an
+exit) is stored as `active`; `battle_result` `mia`, `captured` and `dead` are provisional, and the final
+`mia` / `captured` / `dead` status of a soldier who does not reach an FOB is set only by a
+`soldierFate` management request (MGT-011).
 **Source.** design/design.md › Management › Soldiers & progression
 
 ### [MGT-002] Hiring pools
 **Rule.** Soldiers are hired from hiring pools of four kinds: `agency`, `local`, `defector`,
-`freed_prisoner`. Each pool offers generated candidates in price tiers. Hiring happens at an FOB (MGT-066);
+`freedPrisoner`. Each pool offers generated candidates in price tiers. Hiring happens at an FOB (MGT-066);
 local recruits also come from Krug standing (GEN-010) and civilian loyalty (GEN-006). Every FOB always
 offers at least one affordable candidate, so a replacement is always available. Hiring takes no game time
 (STR time rules).
@@ -40,24 +43,25 @@ its tier's price range. The function is not designed.
 
 ### [MGT-004] Player-chosen callsign and kit marks
 **Rule.** The player cannot rename a soldier but may give one a nickname/callsign. It replaces the current
-callsign, sets `callsign_source = player`, and is never replaced afterwards (by deeds or anything else).
-The service number is unchanged. The player may also set `kit_marks` (cosmetic only).
+callsign, sets `callsignSource = player`, and is never replaced afterwards (by deeds or anything else).
+The service number is unchanged. The player may also set `kitMarks` (cosmetic only).
 **Source.** design/design.md › Management › Soldiers & progression
 
 ### [MGT-005] Salaries and renewals
 **Rule.** Each soldier has a salary paid from `economy` at a fixed interval and a contract term that must
 be renewed. No soldier has personal opinions; renewal is not refused for personal reasons.
 The salary formula is shared with the AI factions' salaries (STR-092).
-**Values.** salary formula and pay interval — not set (design: Open) → data/economy-rules.json (shared with
-STR-092); salary per tier, term length, consequence of non-payment — not set (design: not stated) →
+**Values.** `salaryFormula` and `payIntervalHours` — not set (design: Open) →
+data/economy-rules.json (shared with STR-092; the only pay interval); salary per tier (`tiers[].salary`),
+`contractTermHours`, `nonPayment` (consequence of non-payment) — not set (design: not stated) →
 data/recruitment.json
 **Status.** open
 **Source.** design/design.md › Management › Soldiers & progression › Contracts & morale; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-006] Service record logging
-**Rule.** The game appends entries to a soldier's `service_record` automatically, each stamped with game
+**Rule.** The game appends entries to a soldier's `serviceRecord` automatically, each stamped with game
 time (day + hour, STR clock). Entry kinds: `deployment` (op joined, op returned), `kill`, `rescue`,
-`wound`, `near_miss`, `loot_carried_out` (weight and value), `comrade_lost`, plus deed entries (MGT-018).
+`wound`, `nearMiss`, `lootCarriedOut` (weight and value), `comradeLost`, plus deed entries (MGT-018).
 Entries come from battle results and op results. Entries are never removed.
 **Source.** design/design.md › Management › Soldiers & progression › Service record
 
@@ -68,13 +72,13 @@ views of `roster`.
 **Source.** design/design.md › Management › Soldiers & progression › Service record
 
 ### [MGT-008] Squad morale persistence
-**Rule.** Morale is a squad-wide value, starting at `morale_start` for a new squad, kept between fights in
+**Rule.** Morale is a squad-wide value, starting at `moraleStart` for a new squad, kept between fights in
 `roster`. Only casualties move it (allies killed or wounded lower it, enemies killed or wounded raise it);
 the in-fight changes and the low-morale disobedience rule are TAC. After a battle, Management stores the
-final morale from the battle result. The low-morale flight rule (below `morale_flee_below` an activated
+final morale from the battle result. The low-morale flight rule (below `moraleFleeBelow` an activated
 soldier may disobey and flee toward the nearest exit, TAC) is optional, left out of the first build
 iterations; morale persistence itself is not.
-**Values.** `morale_start` — 80; `morale_flee_below` — 20 (used by TAC, optional rule) → data/management-rules.json
+**Values.** `moraleStart` — 80; `moraleFleeBelow` — 20 (used by TAC, optional rule) → data/management-rules.json
 **Status.** optional (flight rule only)
 **Source.** design/design.md › Management › Soldiers & progression › Contracts & morale
 
@@ -92,8 +96,10 @@ Recovery after an op).
 
 ### [MGT-011] Death, MIA and capture
 **Rule.** Death is permanent: `status = dead`, the soldier leaves the active roster and moves to the
-memorial (MGT-012). A soldier who does not reach an FOB at op end (GEN-002) gets `status` `mia`,
-`captured` or `dead` as reported by the strategic/tactical result. Gear on a dead or missing soldier stays
+memorial (MGT-012). A soldier who leaves the tactical map (`battle_result` status `leftMap`) stays
+`active`. A soldier who does not reach an FOB at op end (GEN-002) gets `status` `mia`, `captured` or
+`dead` from the `soldierFate` management request (field `fate`), which makes the final call; the
+`battle_result` status alone never sets it. Gear on a dead or missing soldier stays
 on the operation map and is lost to the PMC unless recovered during the op (or by insurance, MGT-036).
 **Source.** design/design.md › Management › Soldiers & progression › Death; › Gear, loot & return
 
@@ -106,15 +112,15 @@ memorial wall, a read-only list kept for the campaign.
 
 ### [MGT-013] Generation callsign: row and column
 **Rule.** At generation, find the soldier's highest attribute value `v`. Candidates = all attributes with
-value ≥ `v − callsign_tie_margin`; pick one uniformly (seeded RNG). If `v < callsign_min`, use MGT-014.
+value ≥ `v − tieMargin`; pick one uniformly (seeded RNG). If `v < minValue`, use MGT-014.
 Otherwise the picked attribute selects the row and its value selects the column band: 40–59, 60–79,
 80–100. Draw one callsign uniformly from that cell (seeded), excluding unavailable ones (MGT-015).
-**Values.** `callsign_tie_margin` — 5; `callsign_min` — 40; bands 40–59 / 60–79 / 80–100; callsign lists
+**Values.** `tieMargin` — 5; `minValue` — 40; bands 40–59 / 60–79 / 80–100; callsign lists
 per attribute and band → data/callsigns.json
 **Source.** design/callsigns.md › Generation callsigns
 
 ### [MGT-014] Generic callsigns
-**Rule.** If no attribute is ≥ `callsign_min`, draw from the Generic list (seeded), excluding unavailable
+**Rule.** If no attribute is ≥ `minValue`, draw from the Generic list (seeded), excluding unavailable
 ones (MGT-015).
 **Values.** Generic list (Kid, Pup, Sparrow, Bones, Private) → data/callsigns.json
 **Source.** design/callsigns.md › Generation callsigns
@@ -154,9 +160,9 @@ open.
 **Source.** design/design.md › Management › Deeds and callsigns
 
 ### [MGT-019] Earned callsign replacement
-**Rule.** On a new deed with prestige `p`: if `callsign_source = player`, no change. Else if
-`callsign_source = generated` or `p > callsign_prestige`, draw a callsign from the deed's list per
-MGT-015, set `callsign_source = earned`, `callsign_prestige = p`. Equal or lower prestige keeps the current
+**Rule.** On a new deed with prestige `p`: if `callsignSource = player`, no change. Else if
+`callsignSource = generated` or `p > callsignPrestige`, draw a callsign from the deed's list per
+MGT-015, set `callsignSource = earned`, `callsignPrestige = p`. Equal or lower prestige keeps the current
 callsign.
 **Status.** optional
 **Source.** design/design.md › Management › Soldiers & progression › Earned marks; › Deeds and callsigns
@@ -173,7 +179,7 @@ available again for living soldiers (MGT-015 counts living soldiers only).
 **Rule.** Every soldier has eight integer attributes, each 1–100. Physical: `strength`, `endurance`,
 `agility`, `perception`. Skills: `marksmanship`, `recon`, `medical`, `technical`. All other soldier values
 are derived from these (plus `nerve`).
-**Values.** `attribute_min` — 1; `attribute_max` — 100 → data/management-rules.json
+**Values.** `attributeMin` — 1; `attributeMax` — 100 → data/management-rules.json
 **Source.** design/design.md › Management › Soldier attributes
 
 ### [MGT-022] Attribute generation
@@ -186,12 +192,12 @@ data/recruitment.json
 
 ### [MGT-023] Skill growth by use
 **Rule.** Skills gain experience from use and rise with diminishing returns: fast below
-`skill_fast_below`, slow above `skill_slow_above`, medium between. Gaining uses: marksmanship — hitting
+`skillGrowth.fastBelow`, slow above `skillGrowth.slowAbove`, medium between. Gaining uses: marksmanship — hitting
 targets, reloading under fire; recon — moving unseen, scouting; medical — treating wounds; technical —
 repairing, modding, using explosives. Uses are reported in battle results (TAC) and op results (STR).
-Capped at `attribute_max`.
-**Values.** `skill_fast_below` — 50; `skill_slow_above` — 80; xp per use, xp per point per band — not set
-(design: not stated) → data/management-rules.json
+Capped at `attributeMax`.
+**Values.** `skillGrowth.fastBelow` — 50; `skillGrowth.slowAbove` — 80; `skillGrowth.xpPerUse`,
+`skillGrowth.xpPerPoint` (per band) — not set (design: not stated) → data/management-rules.json
 **Status.** open
 **Source.** design/design.md › Management › Soldier attributes › Rules
 
@@ -268,9 +274,9 @@ is rejected. Container limits and item weights are ITM.
 
 ### [MGT-033] Carried weight effect
 **Rule.** Total weight a soldier carries affects AP and stamina (relative to carry capacity, MGT-029).
-Formula not designed; applied in TAC.
-**Values.** weight → AP/stamina penalty — not set (design: not stated) → data/management-rules.json
-**Status.** open
+The penalty is owned by the Tactical Layer (→ see TAC-027, `encumbranceApPenalty`,
+`heavyEncumbranceApPenalty`, `heavyEncumbranceThreshold` in data/tactical-rules.json); Management holds no
+value for it and supplies only carry capacity (MGT-029).
 **Source.** design/design.md › Management › Gear, loot & return
 
 ### [MGT-034] Weapon modding
@@ -284,7 +290,7 @@ not stated.
 ### [MGT-035] Loot carried out
 **Rule.** Loot categories: weapons, armour, intel documents, valuables, medical supplies, quest items
 (ITM). Items carried by soldiers who reach an FOB at op end are moved to that FOB's stash and logged as
-`loot_carried_out` (MGT-006). Rarity by location is mapgen (STR/TAC).
+`lootCarriedOut` (MGT-006). Rarity by location is mapgen (STR/TAC).
 **Source.** design/design.md › Management › Gear, loot & return
 
 ### [MGT-036] Insurance
@@ -302,22 +308,24 @@ applying takes items from the FOB stash, missing items are reported and left emp
 ### [MGT-038] Scav loadout and rebuild floor
 **Rule.** A cheap "scav" loadout is always purchasable at every FOB, and the contract board always offers
 at least one low-risk contract, so a PMC that lost its gear can rebuild.
-**Values.** scav loadout contents and price, low-risk contract definition — not set (design: not stated) →
-data/presets.json, data/management-rules.json
+**Values.** `scavLoadout.items` (contents), `scavLoadout.priceUsd`, `lowRiskContract` (definition) — not
+set (design: not stated) → data/management-rules.json (the only owner of the scav loadout; data/presets.json
+holds no scav price)
 **Status.** open
 **Source.** design/design.md › Management › Gear, loot & return › Design risk
 
 ### [MGT-039] Faction traders
 **Rule.** Each employer faction has traders whose available stock is gated by the player's standing with
 that faction (MGT-055): Hostile — no trade; Unfriendly — basic stock at higher prices
-(`unfriendly_price_markup`); Neutral — basic; Friendly — military gear; Trusted — armoured vehicles,
+(`unfriendlyPriceMarkup`); Neutral — basic; Friendly — military gear; Trusted — armoured vehicles,
 helicopters, best stock. Trading takes no game time.
-**Values.** stock lists per faction and standing → data/traders.json; `unfriendly_price_markup` — not set
+**Values.** stock lists per faction and standing → data/traders.json; `unfriendlyPriceMarkup` — not set
 (design: Open) → data/management-rules.json
 **Source.** design/design.md › Management › Gear, loot & return › Traders; › Reputation › Standing
 
 ### [MGT-040] Krug market prices
-**Rule.** Krug markets have prices that fluctuate over time and are public: every price is visible to the
+**Rule.** Krug markets (a `krugMarket` flag on a town or city tile, STR; not a point of interest of
+their own) have prices that fluctuate over time and are public: every price is visible to the
 player without intel. Stock improves with Krug standing (GEN-010).
 **Values.** fluctuation rule and interval — not set (design: not stated) → data/traders.json
 **Status.** open
@@ -329,30 +337,56 @@ player without intel. Stock improves with Krug standing (GEN-010).
 **Rule.** Management does not invent contracts. A contract offer is received from the strategic layer /
 strategic AI when a faction has a goal it cannot cover with its own squads or wants deniable; from a
 faction with intel on a rival's goal (counter-contract against that goal, so both sides of one job may be
-on the board); or from world events and desperate measures (STR). Management stores offers in `contracts`.
+on the board); or from world events and desperate measures (STR). Strategic hands each offer to
+Management as a `contractOffer` management request carrying the offer object (STR-044); Management stores
+it in `contracts` with status `offered`.
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from
 
 ### [MGT-042] Contract structure
-**Rule.** A contract has: `id`, `employer` (faction ID), `goal` (source faction goal), one or more
-`missions`, per mission targets and locations, `deadline` (game time, whole hours), `pay` (MGT-046),
-`advance`, `reputation_gain`, `target_faction`, `intel_level` (MGT-049), `deniable` (bool), `posted_at`
-(board location). The player signs a contract to accept it.
+**Rule.** A contract in `contracts` is the received offer (`management_requests` `contractOffer`, the
+same fields as `strategic_commands` `contractOffer`) plus the values Management derives and the status:
+
+| Field | From | Meaning |
+| --- | --- | --- |
+| `id` | offer | Contract ID; `acceptContract`, `missionOutcome`, `contractEnded` and `contractPayment` name it as `contractId` |
+| `employer` | offer | Faction ID |
+| `sourceGoal` | offer | Source faction goal (MGT-043) |
+| `missions` | offer | One or more `{ missionId (mission type, data/missions.json), targets, location }` |
+| `deadline` | offer | Game time `{ day, hour }` (whole hours) |
+| `payInputs` | offer | Distance, danger, urgency (MGT-046) |
+| `targetFaction` | offer | Faction the contract acts against, or null |
+| `reputationGain` | offer | Reputation with the employer on success (MGT-056) |
+| `intelLevel` | offer | MGT-049 |
+| `deniable` | offer | MGT-050 |
+| `reputationGate` | offer | `{ better, sensitive }` flags (MGT-055) |
+| `boardLocation` | offer | Where it is posted (MGT-051) |
+| `counterContractOf` | offer | Contract ID it counters, or null (MGT-041) |
+| `pay` | MGT | Sum of mission pays (MGT-046) |
+| `advance` | MGT | MGT-047 |
+| `status` | MGT | `offered`, `signed`, `ended` |
+| `endReason` | MGT | When `ended`: `completed`, `deadline`, `employerDefault`, `factionDissolved` (from `contractEnded`) |
+
+The player signs a contract to accept it (`acceptContract`, status `signed`). Management publishes the
+contracts with their status in `management_view` (MGT-072).
 **Source.** design/design.md › Management › Contracts and missions › Contract terms
 
 ### [MGT-043] Goal to mission mapping
-**Rule.** A faction goal generates missions only from its allowed set:
+**Rule.** A faction goal generates missions only from its allowed set. Goal names are the STR-018 goal
+types (`strategic_commands` `goal`); `intelNeeds` is not a squad goal but the `sourceGoal` of an offer
+posted from intel by any faction. Mission types are record IDs of data/missions.json (lowercase, as the
+record-ID pattern requires).
 
-| Goal | Mission types |
+| Goal (`sourceGoal`) | Mission types |
 | --- | --- |
-| supply_run | retrieve_deliver, escort_shipment |
-| attack_poi | capture_territory, assassinate_vip (defending commander) |
-| defend_poi | defend_territory, escort_shipment, capture_territory (retake) |
-| escort | escort_vip, escort_shipment |
-| hunt | capture_vip, assassinate_vip |
-| trade_route (Krug) | retrieve_deliver, escort_shipment |
-| intel_needs (any) | retrieve_deliver (documents, captured equipment) |
+| `supplyRun` | retrieve_deliver, escort_shipment |
+| `attackPoi` | capture_territory, assassinate_vip (defending commander) |
+| `holdPoi` | defend_territory, escort_shipment, capture_territory (retake) |
+| `escort` | escort_vip, escort_shipment |
+| `hunt` | capture_vip, assassinate_vip |
+| `tradeRoute` (Krug) | retrieve_deliver, escort_shipment |
+| `intelNeeds` (any faction) | retrieve_deliver (documents, captured equipment) |
 
-**Values.** mapping → data/missions.json
+**Values.** mapping → data/missions.json (`goals` per mission type)
 **Source.** design/design.md › Management › Contracts and missions
 
 ### [MGT-044] Mission outcome conditions
@@ -395,7 +429,7 @@ not stated)
 **Source.** design/design.md › Management › Contracts and missions › Pay bands
 
 ### [MGT-047] Advance and remainder
-**Rule.** On signing, `advance = round(pay × advance_fraction)` is due. The rest, `pay − advance`, is paid
+**Rule.** On signing, `advance = round(pay × advanceFraction)` is due. The rest, `pay − advance`, is paid
 per mission: each mission pays its share when its goal is met (MGT-044). Spec: a mission's share is the
 rest split in proportion to mission pay, `share = round((pay − advance) × missionPay / pay)`, with the
 rounding difference on the contract's last mission paid (see Open questions). The money comes from the
@@ -403,13 +437,14 @@ employer's funds, which Strategic owns: MGT names the payment due in its result 
 `employer`, `amountUsd`), Strategic deducts it from the employer's funds and, at the next strategic hour,
 sends a `contractPayment` request and a news-feed line; only then is the amount credited to `economy`,
 wherever the squad is (STR-093). A payment due that the employer cannot cover fails the contract at once;
-the player keeps the advance (MGT-048).
-**Values.** `advance_fraction` — 0.25 (draft) → data/management-rules.json
+the player keeps the advance (MGT-048). Strategic reads the signed contracts and their status for STR-093
+from `management_view` (MGT-072).
+**Values.** `advanceFraction` — 0.25 (draft) → data/management-rules.json
 **Source.** design/design.md › Management › Contracts and missions › Contract terms; › Overview › Core loop; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-048] Contract failure
 **Rule.**
-- **Failed mission:** loses only its own share (MGT-047) and its reputation (`rep_mission_failed`,
+- **Failed mission:** loses only its own share (MGT-047) and its reputation (`repActs.missionFailed`,
   MGT-056); the contract goes on, and its other missions can still be met and paid.
 - **Failed contract** (the deadline passed with missions still open): no further pay; reputation loss
   with the employer (MGT-056); the advance becomes a debt to the employer that the player must pay back,
@@ -420,7 +455,7 @@ the player keeps the advance (MGT-048).
 **Source.** design/design.md › Management › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-049] Intel level
-**Rule.** Each contract has `intel_level` ∈ {`exact` (exact location), `last_known` (last known position),
+**Rule.** Each contract has `intelLevel` ∈ {`exact` (exact location), `lastKnown` (last known position),
 `rumour` (rumours only)}, which decides what target location data the contract reveals to the player.
 **Source.** design/design.md › Management › Contracts and missions › Contract terms
 
@@ -436,11 +471,11 @@ data/factions.json
 ### [MGT-051] Contract board and filtering
 **Rule.** Contract offers are shown on boards at FOBs, in cities, and (Krug work only) at Krug markets.
 An employer at standing Hostile shows no offers. At Unfriendly it shows fewer offers: only a share
-`unfriendly_contract_share` of its basic offers (selection seeded). Neutral or better shows all basic
+`unfriendlyContractShare` of its basic offers (selection seeded). Neutral or better shows all basic
 offers; contracts marked sensitive require Trusted; better contracts require Friendly (MGT-055). Krug
 work at Krug markets includes escort work for the Krug's own convoys (STR-094). An offer taken by a rival
 PMC leaves the board unless both race for it (MGT-052).
-**Values.** `unfriendly_contract_share` — not set (design: Open) → data/management-rules.json
+**Values.** `unfriendlyContractShare` — not set (design: Open) → data/management-rules.json
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › Reputation
 
 ### [MGT-052] Rival PMC competition
@@ -462,14 +497,18 @@ starting at 0. Every change is clamped to the range. Reputation never drifts; it
 only: how the player handles contracts (MGT-056) and what the player does to the faction (MGT-057…MGT-059),
 applied by MGT-060. An act changes reputation only with the faction it directly affects; there is no
 spill-over to that faction's allies or enemies (MGT-061…MGT-063 removed). Reputation is also read as an
-input by world events, desperate measures and faction goals (STR).
-**Values.** `rep_min` — −100; `rep_max` — 100; `rep_start` — 0 → data/management-rules.json
+input by world events, desperate measures and faction goals (STR); Strategic reads it, with the derived
+standing (MGT-054), from `management_view` (MGT-072), never from the `reputation` slice directly.
+**Values.** `repMin` — −100; `repMax` — 100; `repStart` — 0 → data/management-rules.json
 **Source.** design/design.md › Management › Reputation (draft)
 
 ### [MGT-054] Standing levels
 **Rule.** Standing is derived from reputation `r`: `hostile` if r ≤ −50; `unfriendly` if −49 ≤ r ≤ −20;
-`neutral` if −19 ≤ r ≤ 19; `friendly` if 20 ≤ r ≤ 49; `trusted` if r ≥ 50. Never stored.
-**Values.** thresholds −50, −20, 20, 50 → data/management-rules.json
+`neutral` if −19 ≤ r ≤ 19; `friendly` if 20 ≤ r ≤ 49; `trusted` if r ≥ 50. Never stored; published per
+faction in `management_view` (MGT-072). These thresholds are the only low-reputation thresholds; SAI-013
+uses the derived standing.
+**Values.** `standingThresholds.hostile` −50 (r ≤), `standingThresholds.unfriendly` −20 (r ≤),
+`standingThresholds.friendly` 20 (r ≥), `standingThresholds.trusted` 50 (r ≥) → data/management-rules.json
 **Source.** design/design.md › Management › Reputation › Standing
 
 ### [MGT-055] Standing effects
@@ -482,24 +521,27 @@ input by world events, desperate measures and faction goals (STR).
 - `friendly`: adds military gear and better contracts.
 - `trusted`: adds armoured vehicles, helicopters, best stock and sensitive contracts.
 Used by MGT-039 (traders) and MGT-051 (contract board). Which contracts count as "better" and
-"sensitive" is a contract flag set by the offering faction.
+"sensitive" is set by the offering faction as the offer's `reputationGate` flags `{ better, sensitive }`
+(booleans; `better` needs Friendly, `sensitive` needs Trusted; neither set = basic).
 **Source.** design/design.md › Management › Reputation › Standing
 
 ### [MGT-056] Contract reputation acts
-**Rule.** Changes with the employer: mission completed → +`rep_mission_success` chosen by the mission's
-pay band (higher band, higher gain); mission failed → `rep_mission_failed`; contract broken (cargo kept or
-sold, VIP handed to someone else, employer betrayed) → `rep_contract_broken`. On success, the target faction
+**Rule.** Changes with the employer: mission completed → the offer's `reputationGain`, which the offering
+side sets within `repActs.missionSuccess` (`min`…`max`) by the mission's pay band (higher band, higher
+gain); mission failed → `repActs.missionFailed`; contract broken (cargo kept or sold, VIP handed to someone
+else, employer betrayed) → `repActs.contractBroken`. On success, the target faction (`targetFaction`)
 loses reputation per the hostile act committed (MGT-058) only if it learns who did it (MGT-064).
-**Values.** `rep_mission_success` — +5 to +15 (by pay band; mapping not set); `rep_mission_failed` — −5;
-`rep_contract_broken` — −30 → data/management-rules.json
+**Values.** `repActs.missionSuccess.min` — +5, `repActs.missionSuccess.max` — +15 (by pay band; mapping not
+set); `repActs.missionFailed` — −5; `repActs.contractBroken` — −30 → data/management-rules.json
 **Source.** design/design.md › Management › Reputation › What changes reputation; › Contract terms
 
 ### [MGT-057] Friendly acts
 **Rule.** Changes with the faction helped: join a fight on its side without a contract +5; rescue its
 soldiers or VIP, or return its MIA/captured soldiers +10; sell it supplies it needs (fuel, ammunition,
 medical) +1 to +3 per sale; Krug: keep a deal +5.
-**Values.** `rep_join_fight` — +5; `rep_rescue` — +10; `rep_sell_supplies` — +1…+3 (selection rule not
-set); `rep_krug_keep_deal` — +5 → data/management-rules.json
+**Values.** `repActs.joinFight` — +5; `repActs.rescue` — +10; `repActs.sellSupplies.min` — +1,
+`repActs.sellSupplies.max` — +3 (selection rule not set); `repActs.krugKeepDeal` — +5 →
+data/management-rules.json
 **Source.** design/design.md › Management › Reputation › What changes reputation
 
 ### [MGT-058] Hostile acts
@@ -507,22 +549,25 @@ set); `rep_krug_keep_deal` — +5 → data/management-rules.json
 −30; kill its soldiers −2 each, total per fight capped at −20; destroy or steal its cargo −10; capture one
 of its VIPs −20; assassinate one of its VIPs −30; take one of its regions −15; Krug: break a deal or fight
 in a Krug market −50 (see also GEN-009).
-**Values.** `rep_attack_nonhostile` — −30; `rep_kill_soldier` — −2; `rep_kill_cap_per_fight` — −20;
-`rep_cargo` — −10; `rep_capture_vip` — −20; `rep_assassinate_vip` — −30; `rep_take_region` — −15;
-`rep_krug_break` — −50 → data/management-rules.json
+**Values.** `repActs.attackNonHostile` — −30; `repActs.killSoldier` — −2; `repActs.killCapPerFight` — −20;
+`repActs.cargo` — −10; `repActs.captureVip` — −20; `repActs.assassinateVip` — −30; `repActs.takeRegion` — −15;
+`repActs.krugBreak` — −50 → data/management-rules.json
 **Source.** design/design.md › Management › Reputation › What changes reputation
 
 ### [MGT-059] War crimes
-**Rule.** Killing civilians or prisoners changes reputation by `rep_war_crime` with every faction, and
+**Rule.** Killing civilians or prisoners changes reputation by `repActs.warCrime` with every faction, and
 civilian loyalty in that region collapses (applied by STR). Attribution (MGT-064) applies.
-**Values.** `rep_war_crime` — −20 → data/management-rules.json
+**Values.** `repActs.warCrime` — −20 → data/management-rules.json
 **Source.** design/design.md › Management › Reputation › What changes reputation
 
 ### [MGT-060] Act application order
 **Rule.** For each attributed act (MGT-064): apply its change (MGT-056…MGT-059) to the faction it directly
 affects, then clamp. No other faction's reputation changes from that act (no spill-over). The only act
 that directly affects several factions is a war crime (MGT-059, every faction). Acts apply in the order
-they are reported.
+they are reported. A `reputationAct` management request names the act by its `repActs` key (`joinFight`,
+`rescue`, `sellSupplies`, `krugKeepDeal`, `contractBroken`, `attackNonHostile`, `killSoldier`, `cargo`,
+`captureVip`, `assassinateVip`, `takeRegion`, `krugBreak`, `warCrime`); mission success and failure arrive as
+`missionOutcome` instead.
 **Source.** design/design.md › Management › Reputation (draft) (structure implied; ordering is a spec decision)
 
 ### [MGT-061] Spill-over to hostile and allied factions (removed)
@@ -558,15 +603,18 @@ research.
 **Rule.** Every op starts and ends at an FOB (GEN-001). Each FOB offers a stash, rest with slow healing
 (TAC recovery), hiring (MGT-002) and a contract board (MGT-051). The player owns one FOB at campaign start;
 more are bought in small and large cities or taken over (STR). Operational range per FOB is STR.
-**Values.** FOB purchase price per city size — not set (design: not stated) → data/management-rules.json
+**Values.** `fobPrices` (purchase price per city size) — not set (design: not stated) →
+data/management-rules.json
 **Status.** open
 **Source.** design/design.md › Management › Base & meta progression
 
 ### [MGT-067] Paid field services
 **Rule.** Services bought with money in the field: hospital treatment in cities, repairs at mechanical
 plants, fuel at gas stations and oil plants. Each debits `economy` and applies its effect (healing TAC,
-repair ITM condition, fuel STR).
-**Values.** service prices — not set (design: not stated) → data/management-rules.json
+repair ITM condition, fuel STR). A weapon repair raises the instance `condition` (DAT-014) by a rate
+scaled by the repairing soldier's Technical.
+**Values.** `servicePrices` — not set (design: not stated); `weaponRepair` (condition restored per repair,
+Technical scaling) — not set (design: Open, DAT-014) → data/management-rules.json
 **Status.** open
 **Source.** design/design.md › Management › Base & meta progression
 
@@ -576,7 +624,9 @@ is STR) delivers output to the nearest player FOB stash: oil plant → fuel; mec
 and vehicle repairs; chemical plant → medical supplies; arms plant → weapons and ammunition; mineral plant
 → medium income to `economy` plus a boost to the output of every other plant the PMC holds; hidden-city
 complex (optional) → prototype items. An unguarded plant falls back to the region's controller (STR) and
-stops delivering.
+stops delivering. Strategic sends each delivery as a `plantOutput` management request with `plantId`,
+`fobId` (the receiving FOB, STR-015) and the `items` and/or `amountUsd`; at each daily check it also sends
+`dailyRollover` with `day` (STR-004).
 **Values.** output amounts per plant type, mineral boost size (design: TBD) → data/poi.json (`dailyOutput`, `mineralModifier`; shared with STR-011, STR-015)
 **Status.** open
 **Source.** design/design.md › Management › Base & meta progression
@@ -593,15 +643,34 @@ amount, origin (e.g. unreturned advance, MGT-048; Krug deal). Paying a debt's fu
 (Krug: entry in Karsin's book, GEN-008). Every credit and debit is logged with game time. Whether the
 balance may go negative is not stated. The PMC's running costs and income use the same shared formulas as
 the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is credited only on a
-`contractPayment` request from Strategic (MGT-047, STR-093). AI factions' money is not in `economy`.
+`contractPayment` request from Strategic (MGT-047, STR-093). AI factions' money is not in `economy`. The
+balance is published as `funds` in `management_view` (MGT-072).
 **Values.** shared economy formulas — not set (design: Open) → data/economy-rules.json
 **Source.** design/design.md › Management › Contracts and missions › Contract terms; › Factions & campaign › Leaders; › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [MGT-071] Campaign score
 **Rule.** At campaign end (GEN-012) a score is computed from money, reputation and surviving soldiers.
-**Values.** weights / formula — not set (design: not stated) → data/management-rules.json
+**Values.** `scoreWeights` — not set (design: not stated) → data/management-rules.json
 **Status.** open
 **Source.** design/design.md › Management › Base & meta progression
+
+## Interfaces
+
+### [MGT-072] Management view
+**Rule.** After applying each batch of management requests (and on load), Management produces
+`management_view` (`spec/interfaces/management_view.schema.json`), the only way other modules read
+Management-owned slices; consumer: modules/strategic. It holds, at game time `{ day, hour }`:
+- `reputation`: per non-player faction ID, `{ value, standing }` — `value` from MGT-053, `standing` derived
+  by MGT-054 (`hostile` … `trusted`). Strategic feeds it into `strategic_perception_view`
+  `reputationWithPlayer`, world events, desperate measures and goals; SAI-013 uses `standing`.
+- `contracts`: every contract that is `offered` or `signed`, plus those `ended` since the previous view,
+  with `id`, `employer`, `targetFaction`, `status`, `endReason`, `deadline`, `pay`, `advance`,
+  `missions[]` (`missionId`, `location`, `outcome` `open` | `success` | `failure`). Strategic uses the
+  signed ones for STR-093 payments and deadlines.
+- `funds`: `{ balanceUsd, debtsUsd }` — the PMC's money balance (`economy`, MGT-070) and the sum of its
+  open debts.
+No other part of `roster`, `unlocks` or `economy` is published.
+**Source.** design/design.md › Management › Reputation (draft); › Contracts and missions › Contract terms; › Strategic Layer › Squads and simulation (Faction funds (draft)) (structure is a spec decision)
 
 ## Open questions
 
@@ -621,7 +690,8 @@ the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is cre
    values unset.
 8. **Resolved (design eb072a2):** the Tactical Layer owns the zone HP formula and its rounding (TAC-057);
    MGT-026…MGT-030 only name the attributes. MGT-028: rounding of zone HP not stated.
-9. MGT-029, MGT-033: carry capacity formula (design: Open) and weight penalty to AP/stamina unset.
+9. **Partly resolved (cleanup 2026-11-23):** the weight penalty is owned by TAC-027 (MGT-033 points to it;
+   `management-rules.weightPenalty` removed). MGT-029: carry capacity formula (design: Open) unset.
 10. MGT-034: is modding restricted to FOBs and does it require Technical?
 11. MGT-036, MGT-038: insurance terms; scav loadout contents; definition of "low-risk contract".
 12. MGT-040: Krug price fluctuation rule.
@@ -650,10 +720,12 @@ the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is cre
     consequences.
 24. MGT-070: can the balance go negative; interest or penalties on debts.
 25. MGT-071: score formula.
-26. MGT-011: who decides between MIA, captured and dead for soldiers left behind (STR or TAC), and can MIA
+26. **Partly resolved (cleanup 2026-11-23):** the `soldierFate` management request (field `fate`) makes the
+   final call; `battle_result` `leftMap` maps to `active` (MGT-001, MGT-011). Still open: can MIA soldiers
+   return later? MGT-011: who decides between MIA, captured and dead for soldiers left behind (STR or TAC), and can MIA
     soldiers return later (implied by the "Revenant" deed)?
 27. MGT-039, MGT-051: "fewer contracts and higher prices" at Unfriendly has no numbers; spec models them as
-    `unfriendly_contract_share` and `unfriendly_price_markup`. Confirm the model (share of offers vs. only
+    `unfriendlyContractShare` and `unfriendlyPriceMarkup`. Confirm the model (share of offers vs. only
     some contract types) and whether Unfriendly traders sell only basic stock.
 28. **Resolved (design eb072a2):** the contract fails at once and the player keeps the advance (MGT-048,
     STR-093). MGT-047, STR-093: what happens when the employer's funds cannot cover a payment due (late payment,
@@ -674,3 +746,24 @@ the AI factions' funds (`data/economy-rules.json`, STR-092); contract pay is cre
 34. MGT-052: when a rival PMC takes an offer on the player's board, which offers leave the board and which
     become a race? How does Management learn of it?
 35. MGT-052, STR-094: price of a Krug escort and where the player hires it.
+36. **Resolved (cleanup 2026-11-23):** camelCase is canonical; every Values line, record field and goal name
+    now uses the schema names (`moraleStart`, `advanceFraction`, `repActs.*`, `tieMargin`, `minValue`,
+    `serviceNumber`, `supplyRun`, …). Mission type IDs stay lowercase record IDs of data/missions.json.
+37. **Resolved (cleanup 2026-11-23):** one owner per value — pay interval `economy-rules.payIntervalHours`
+    (`recruitment.salaryIntervalHours` removed); scav loadout `management-rules.scavLoadout`
+    (`presets.priceUsd` removed); weight penalty TAC-027; low-reputation threshold = MGT-054
+    `standingThresholds`. New fields: `recruitment.nonPayment` (MGT-005), `management-rules.lowRiskContract`
+    (MGT-038), `management-rules.weaponRepair` (DAT-014, MGT-067).
+38. **Resolved (cleanup 2026-11-23):** contracts are the `contractOffer` fields (`id`, `sourceGoal`,
+    `intelLevel`, `boardLocation`, `targetFaction`, `reputationGain`, `reputationGate { better, sensitive }`)
+    plus the derived `pay`, `advance`, `status` (MGT-042); Strategic hands offers over as a
+    `contractOffer` management request, and Management publishes reputation, contracts and funds in
+    `management_view` (MGT-072).
+39. MGT-042, MGT-056: the offer carries one `reputationGain`, but MGT-056 picks the gain per mission by its
+    pay band. Is `reputationGain` per contract (split over missions) or per mission completed (spec
+    assumption)?
+40. MGT-042, MGT-044: an offer's `missions[].missionId` is the mission type (x-ref missions), so two missions
+    of the same type in one contract cannot be told apart in `missionOutcome`. A per-mission key inside the
+    offer is needed (strategic_commands `contractOffer`).
+41. MGT-043: `intelNeeds` is a `sourceGoal` but no STR-018 squad goal. Confirm that intel-driven offers carry
+    `sourceGoal: intelNeeds` without a squad goal behind them.

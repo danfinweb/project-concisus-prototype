@@ -18,6 +18,7 @@
   "traders": "traders.schema.json",
   "loot": "loot.schema.json",
   "presentation": "presentation.schema.json",
+  "strategic-terrain": "strategic-terrain.schema.json",
   "mapgen/strategic": "mapgen-strategic.schema.json",
   "mapgen/tactical": "mapgen-tactical.schema.json",
   "ai/doctrines": "ai-doctrines.schema.json"

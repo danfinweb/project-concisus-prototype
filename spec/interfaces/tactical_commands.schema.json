@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_commands.schema.json",
   "title": "Tactical commands",
-  "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-074.",
-  "version": "0.3.0",
+  "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. There is no takeCover command: taking cover is move / changeStance, or setReaction with reaction takeCover (TAI-005). Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-074.",
+  "version": "0.3.1",
   "x-producer": "modules/tactical-ai",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -21,20 +21,20 @@
         "mode": { "enum": ["carry", "drag"], "description": "liftBody (TAC-074)" },
         "magazine": { "type": "string", "description": "reload: magazine item instance" },
         "shells": { "type": "integer", "minimum": 1, "description": "reload, tube-fed: shells to load (partial reload)" },
-        "unit": { "type": "string" },
+        "unit": { "type": "string", "description": "activate: unit to activate; useItem: treated soldier (self or adjacent); restrainVip: the VIP" },
         "path": { "type": "array", "items": { "type": "object" } },
         "stance": { "enum": ["upright", "crouched", "prone"] },
         "sprint": { "type": "boolean" },
         "facing": { "type": "number" },
-        "target": { "type": "string" },
-        "tile": { "type": "object" },
+        "target": { "type": "string", "description": "shoot: target unit ID; search, pickUp, cutLock, placeCharge, pickUpBackpack, liftBody: object or body ID" },
+        "tile": { "type": "object", "description": "shoot at a tile, throwGrenade target, vault or climb point" },
         "fireMode": { "anyOf": [{ "type": "integer", "minimum": 1 }, { "const": "auto" }] },
         "aimSteps": { "type": "integer", "minimum": 0 },
         "reaction": { "enum": ["fire", "takeCover", "hold"] },
-        "item": { "type": "string" },
-        "sourceSlot": { "type": "string" },
-        "zone": { "type": "string" },
-        "exit": { "type": "string" }
+        "item": { "type": "string", "description": "throwGrenade, useItem, pickUp, placeCharge: item instance" },
+        "sourceSlot": { "type": "string", "description": "Equipment slot the item or magazine comes from (backpack surcharge, TAC-068)" },
+        "zone": { "type": "string", "description": "useItem: body zone treated" },
+        "exit": { "type": "string", "description": "leaveMap: exit id from the tactical map request / map (TAC-038)" }
       }
     }
   }

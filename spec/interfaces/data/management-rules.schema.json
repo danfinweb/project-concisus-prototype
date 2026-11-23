@@ -2,30 +2,80 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/management-rules.schema.json",
   "title": "Management rules",
-  "description": "Global management constants (spec MGT).",
-  "version": "0.4.0",
+  "description": "Global management constants (spec MGT). The weight to AP/stamina penalty is TAC-027 (tactical-rules); the pay interval is economy-rules.payIntervalHours.",
+  "version": "0.5.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
+  "$defs": {
+    "intRange": { "type": "object", "properties": { "min": { "type": "integer" }, "max": { "type": "integer" } }, "additionalProperties": false }
+  },
   "properties": {
     "moraleStart": { "type": "integer", "description": "MGT-008, design 80" },
     "moraleFleeBelow": { "type": "integer", "description": "MGT-008 (optional), design 20" },
     "attributeMin": { "type": "integer", "description": "MGT-021, design 1" },
     "attributeMax": { "type": "integer", "description": "MGT-021, design 100" },
-    "skillGrowth": { "type": "object", "description": "MGT-023: fast below 50, slow above 80, xp per use and per point" },
+    "skillGrowth": {
+      "type": "object", "description": "MGT-023",
+      "properties": {
+        "fastBelow": { "type": "integer", "minimum": 1, "maximum": 100, "description": "design 50" },
+        "slowAbove": { "type": "integer", "minimum": 1, "maximum": 100, "description": "design 80" },
+        "xpPerUse": { "type": "object", "description": "use kind to xp, not set" },
+        "xpPerPoint": { "type": "object", "description": "band (fast, medium, slow) to xp per attribute point, not set" }
+      },
+      "additionalProperties": false
+    },
     "physicalChanges": { "type": "array", "description": "MGT-024" },
     "skillDrift": { "type": "object", "description": "MGT-025 (optional)" },
     "perks": { "type": "array", "description": "MGT-009: {id, attribute, threshold}" },
     "carryCapacity": { "type": "object", "description": "MGT-029, formula parameters" },
-    "weightPenalty": { "type": "object", "description": "MGT-033, formula parameters" },
     "nerve": { "type": "object", "description": "MGT-031" },
     "insurance": { "type": "object", "description": "MGT-036: premium, recovery chance" },
-    "scavLoadout": { "type": "object", "description": "MGT-038" },
+    "scavLoadout": {
+      "type": "object", "description": "MGT-038: the always-purchasable scav loadout (only owner of its contents and price)",
+      "properties": {
+        "items": { "type": "array", "items": { "type": "object", "required": ["item"], "properties": { "item": { "type": "string", "x-ref": "items" }, "count": { "type": "integer", "minimum": 1 } }, "additionalProperties": false } },
+        "priceUsd": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "lowRiskContract": { "type": "object", "description": "MGT-038: definition of the always-offered low-risk contract, not set" },
+    "weaponRepair": { "type": "object", "description": "DAT-014, MGT-067: condition restored per repair and its Technical scaling, not set" },
     "advanceFraction": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-047, design 0.25" },
-    "repMin": { "type": "integer", "description": "MGT-053" },
-    "repMax": { "type": "integer", "description": "MGT-053" },
-    "repStart": { "type": "integer", "description": "MGT-053" },
-    "standingThresholds": { "type": "object", "description": "MGT-054: hostile -50, unfriendly -20, friendly 20, trusted 50" },
-    "repActs": { "type": "object", "description": "MGT-056..MGT-059: reputation change per act (directly affected faction only, MGT-060)" },
+    "repMin": { "type": "integer", "description": "MGT-053, design -100" },
+    "repMax": { "type": "integer", "description": "MGT-053, design 100" },
+    "repStart": { "type": "integer", "description": "MGT-053, design 0" },
+    "standingThresholds": {
+      "type": "object", "description": "MGT-054: hostile if r <= hostile, unfriendly if r <= unfriendly, friendly if r >= friendly, trusted if r >= trusted, else neutral; the only low-reputation thresholds (SAI-013 uses the derived standing)",
+      "properties": {
+        "hostile": { "type": "integer", "description": "design -50" },
+        "unfriendly": { "type": "integer", "description": "design -20" },
+        "friendly": { "type": "integer", "description": "design 20" },
+        "trusted": { "type": "integer", "description": "design 50" }
+      },
+      "additionalProperties": false
+    },
+    "repActs": {
+      "type": "object", "description": "MGT-056..MGT-059: reputation change per act (directly affected faction only, MGT-060); keys are the management_requests reputationAct names",
+      "properties": {
+        "missionSuccess": { "$ref": "#/$defs/intRange", "description": "MGT-056, design +5..+15 by pay band" },
+        "missionFailed": { "type": "integer", "description": "MGT-056, design -5" },
+        "contractBroken": { "type": "integer", "description": "MGT-056, design -30" },
+        "joinFight": { "type": "integer", "description": "MGT-057, design +5" },
+        "rescue": { "type": "integer", "description": "MGT-057, design +10" },
+        "sellSupplies": { "$ref": "#/$defs/intRange", "description": "MGT-057, design +1..+3" },
+        "krugKeepDeal": { "type": "integer", "description": "MGT-057, design +5" },
+        "attackNonHostile": { "type": "integer", "description": "MGT-058, design -30" },
+        "killSoldier": { "type": "integer", "description": "MGT-058, design -2" },
+        "killCapPerFight": { "type": "integer", "description": "MGT-058, design -20" },
+        "cargo": { "type": "integer", "description": "MGT-058, design -10" },
+        "captureVip": { "type": "integer", "description": "MGT-058, design -20" },
+        "assassinateVip": { "type": "integer", "description": "MGT-058, design -30" },
+        "takeRegion": { "type": "integer", "description": "MGT-058, design -15" },
+        "krugBreak": { "type": "integer", "description": "MGT-058, design -50" },
+        "warCrime": { "type": "integer", "description": "MGT-059, design -20" }
+      },
+      "additionalProperties": false
+    },
     "rivalOfferRule": { "type": "object", "description": "MGT-051/052, leave-or-race rule for offers a rival takes, not set" },
     "unfriendlyContractShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-051, share of basic offers shown at Unfriendly, not set" },
     "unfriendlyPriceMarkup": { "type": "number", "description": "MGT-039, price factor at Unfriendly, not set" },

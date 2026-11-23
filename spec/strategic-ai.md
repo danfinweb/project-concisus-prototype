@@ -37,16 +37,20 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `faction` | ID of the deciding faction |
 | `time` | Current day and hour |
 | `doctrine` | Doctrine ID to use (SAI-010) |
-| `ownRegions` | Regions and points of interest it controls, with output and civilian loyalty |
-| `ownSquads` | Its squads: ID, region, current goal and target, strength, supplies, fuel, morale |
-| `knownRegions` | Every region it has seen: terrain, point of interest, controller, loyalty — current if in recon range, else last known state with the time observed |
-| `knownSquads` | Foreign squads it knows of (including the player's): faction, region, estimated strength, time seen, known goal if intel reveals it |
-| `relations` | Its relation to every other faction (−100…100, GEN-007) |
-| `reputationWithPlayer` | Its reputation value toward the player and resulting standing (MGT) |
+| `ownRegions` | Regions and points of interest it controls: `id`, `poi`, `krugMarket`, `output`, and on settlement tiles `loyalty` as one value per faction (faction → −100…100, STR-009) |
+| `ownSquads` | Its squads: `id`, `region`, `goal`, `target`, `strength`, `supplies`, `fuel`, `morale`, `vehicle` (null = on foot), `transit` (the move in progress `{ toRegion, hoursLeft }` or null, STR-017) |
+| `knownRegions` | Every region it has seen: `terrain`, `road`, `poi`, `krugMarket`, `controller`, `loyalty` (per faction), `flags` — current if in recon range, else last known state with the time `observed` |
+| `knownSquads` | Foreign squads it knows of (including the player's): `faction`, `region`, `estimatedStrength`, time `seen`, `knownGoal` if intel reveals it |
+| `capital` | The capital tile, its `holder`, `occupant` and `contestedSince` (STR-007) |
+| `vips` | Its own VIPs and the enemy VIPs it holds intel on, with intel expiry (STR-045, STR-048) |
+| `relations` | Its relation to every other faction (range and thresholds → see STR-051) |
+| `reputationWithPlayer` | Its reputation `value` toward the player and the derived `standing` (MGT-054) |
 | `funds` | Its own money (STR-092); other factions' funds are never in the view |
 | `contracts` | Contracts it has posted, with status (open, accepted, done, failed) |
-| `contractOffers` | Open contract offers of other factions it could take (SAI-015) |
-| `events` | World events and crisis signs it is aware of (STR) |
+| `contractOffers` | Open contract offers of other factions it could take, each with its `id` (SAI-015) |
+| `events` | World events and measures it is aware of that affect it (STR) |
+| `crisisSigns` | Its true crisis signs from the last daily check (STR-069) |
+| `availableMeasures` | Desperate measures it may start now (STR-070, SAI-016) |
 
 **Source.** design/design.md › AI › Strategic AI › Controller hand-off; › Faction AI tiers; › Strategic Layer › Map (Fog of war); › Squads and simulation (Faction funds (draft))
 
@@ -56,15 +60,23 @@ map (schema: `spec/interfaces/strategic_commands.schema.json`):
 
 | Command | Fields | Resolved by |
 | --- | --- | --- |
-| `setGoal` | `squad` (own squad ID), `goal` (STR goal type: patrol, supplyRun, attackPoi, holdPoi, escort, tradeRoute, hunt), `target` (region, POI, squad or the player) | STR |
-| `moveSquad` | `squad`, `toRegion` (adjacent region) | STR |
-| `offerContract` | the contract terms of MGT: goal reference, missions, targets and locations, deadline (hours), pay, intel level, deniable flag | STR validates, then MGT |
-| `acceptContract` | `contract` (ID of an offer in `contractOffers`), `squads` assigned | STR (SAI-015) |
+| `setGoal` | `squad` (own squad ID), `goal` (STR-018: `patrol`, `supplyRun`, `attackPoi`, `holdPoi`, `escort`, `tradeRoute`, `hunt`), `target` (region, POI, squad or the player) | STR-018 |
+| `moveSquad` | `squad`, `toRegion` (adjacent tile) | STR-031, STR-032, STR-034 |
+| `hold` | `squad` — it stays on its tile and holds it this hour | STR-020 |
+| `scout` | `squad` — it scouts its tile | STR-036 |
+| `attack` | `squad`, `target` (a foreign squad or POI on the squad's tile) — it starts a fight there | STR-022, STR-026 (STR-023 if the player is involved) |
+| `offerContract` | `contract`: the offer object — `id`, `employer`, `targetFaction`, `sourceGoal`, `missions` (`key`, `missionId`, `targets`, `location`), `deadline` as a `{ day, hour }` timestamp, `payInputs` (MGT-046), `reputationGain`, `intelLevel` (`exact`, `lastKnown`, `rumour`), `deniable`, `reputationGate` (`{ better, sensitive }`, MGT-055), `boardLocation`, `counterContractOf` | STR-044 validates, then MGT |
+| `acceptContract` | `contractId` (the `id` of an offer in `contractOffers`), `squads` assigned | STR-093 (SAI-015) |
+| `hireEscort` | `escortFor` (its own shipment, a convoy squad) — pays the Krug to escort it | STR-094 |
+| `pickMeasure` | `measure` (one of `availableMeasures`) | STR-070 (SAI-016) |
+| `recruit` | `target` (a held tile whose POI yields recruits) — raises a new squad | STR-096 |
 | `pass` | — | STR |
 
 The Strategic Layer validates every command; an illegal command (unknown or foreign squad, impassable or
-non-adjacent region, contract by a faction that may not post it) is rejected and not resolved. Contract
-offers are forwarded to Management.
+non-adjacent region, contract by a faction that may not post it, a measure not in `availableMeasures`, a
+`recruit` or `offerContract` the faction cannot pay for under `hardLimit`) is rejected and not resolved.
+Valid contract offers are forwarded to Management as a `contractOffer` management request (STR-044).
+Trade and buying gear are not commands: AI squads are supplied by the rules of STR-014 and STR-092.
 **Source.** design/design.md › AI › Strategic AI › Controller hand-off; › Faction AI tiers; › AI (intro)
 
 ### [SAI-005] No hidden information, no illegal actions
@@ -106,23 +118,26 @@ player. `ownGain` is rated against the faction's ultimate goal:
 | resistance groups (STR-067) | drive the controller out of their area |
 
 How each goal turns into gain terms is doctrine data.
-**Values.** term inputs, curves, weights, commitment bonus, gain terms per ultimate goal — not set (design: all behaviour values unset) → data/ai/doctrines.json.
+**Values.** term inputs, curves and weights (`considerations`), `commitmentBonus`, `gainTerms` (ownGain terms per ultimate goal) — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Faction behaviour; › Strategic Layer › Squads and simulation
 
 ### [SAI-009] Tier 3 — operational planner
 **Rule.** The operational planner turns the strategist's objectives into commands: assigns own squads to
-objectives (`setGoal`) and moves them (`moveSquad`), or emits `offerContract` (SAI-014) when its own
-squads can't reach the objective or are worth more elsewhere.
+objectives (`setGoal`) and gives each squad its action for the hour (`moveSquad`, `hold`, `scout`,
+`attack`), raises a squad (`recruit`, STR-096) or hires a Krug escort for a shipment (`hireEscort`,
+STR-094), or emits `offerContract` (SAI-014) when its own squads can't reach the objective or are worth more
+elsewhere.
 **Values.** assignment scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Controller hand-off; › Management › Contracts and missions › Where contracts come from
 
 ### [SAI-010] Doctrines
 **Rule.** `data/ai/doctrines.json` holds one record per doctrine with `layer: "strategic"`; each faction
-references one doctrine (via `data/factions.json` or the doctrine's `factions` list). A doctrine sets the
-weights and curves of SAI-006 to SAI-009 and SAI-015, and the faction's personality: `aggression`,
-`riskTolerance`, `contractUse` and `hostility` per other faction. Faction character from the design (Varyag
-hunts player ops and competes for contracts; the Krug is neutral) is expressed through doctrine data, not
-code.
+references one doctrine through `factions.doctrine` in data/factions.json (the only link; a doctrine does
+not list its factions). A doctrine sets the weights and curves of SAI-006 to SAI-009, SAI-015 and
+SAI-016 (`considerations`, `commitmentBonus`, `gainTerms`), and the faction's personality:
+`personality.aggression`, `personality.riskTolerance`, `personality.contractUse` and
+`personality.hostility` (faction → weight). Faction character from the design (Varyag hunts player ops and
+competes for contracts; the Krug is neutral) is expressed through doctrine data, not code.
 **Values.** all doctrine values — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/design.md › AI (Data); › AI › Strategic AI › Faction AI tiers; › Factions & campaign › Factions
 
@@ -142,23 +157,27 @@ goals on the strategic map and in tactical engagements alike unless SAI-013 make
 
 ### [SAI-013] Hostility toward the player
 **Rule.** A faction is hostile toward the player only while at least one holds:
-1. its reputation with the player is low (spec: standing Hostile, reputation ≤ −50, MGT standing table);
+1. its reputation with the player is low: the view's derived `reputationWithPlayer.standing` is `hostile`
+   (thresholds: the standing table of MGT-054 in data/management-rules.json);
 2. it has a mission targeting the player (a hunt, a counter-attack on an FOB);
 3. it and the player pursue the same objective at the same time.
 Otherwise it is non-hostile. The AI may only target the player (goal `hunt`/`attackPoi` against a player
 FOB, `moveSquad` to engage) while hostile. Attacking a non-hostile faction is the player's choice and costs
 reputation (MGT).
-**Values.** `lowReputationThreshold` — design "low" (spec: −50) → data/factions.json.
+**Values.** standing thresholds → see MGT-054 (data/management-rules.json); no threshold of its own.
 **Source.** design/design.md › AI › Strategic AI › Faction behaviour; › Management › Reputation › Standing
 
 ### [SAI-014] Contract offers
 **Rule.** A faction posts a contract (`offerContract`) for an objective its own squads can't reach, or
 whose squads are worth more elsewhere (SAI-009), or that it wants deniable. With intel on a rival's goal it
-may post a counter-contract against it. How readily it does so is the doctrine's `contractUse` (SAI-010).
+may post a counter-contract against it (`counterContractOf`). How readily it does so is the doctrine's
+`personality.contractUse` (SAI-010).
 The pay is a cost to its funds (STR-092, STR-093). Funds are a hard limit by default: a faction cannot
-offer a contract or raise a squad it cannot pay for, and STR rejects such a command, so the AI should not
-emit it; in the test mode `fundsMode = scoreTerm` funds only weigh in the score (STR-092). Offers carry the
-MGT contract terms; Management validates pay, filters by reputation and shows them.
+offer a contract or raise a squad (`recruit`, STR-096) it cannot pay for, and STR rejects such a command,
+so the AI should not emit it; in the test mode `fundsMode = scoreTerm` funds only weigh in the score
+(STR-092). Raising a squad is scored like any other candidate action of the planner (SAI-009): its gain is
+the objectives the new squad can cover. Offers carry the offer fields of SAI-004 (MGT contract terms);
+Management validates pay, filters by reputation and shows them.
 **Values.** offer scoring, deniability thresholds — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › AI › Strategic AI › Faction AI tiers; › Controller hand-off
 
@@ -176,22 +195,37 @@ one of its shipments (a Krug squad travels with the convoy; price not set).
 **Status.** open
 **Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Management › Contracts and missions › Where contracts come from
 
+### [SAI-016] Desperate measure choice
+**Rule.** When the view's `availableMeasures` is not empty (STR-070: ≥ `measureSignsMin` true crisis signs,
+no measure of its own running, the shared event cap not reached), the strategist may pick one measure: it
+scores each available measure as a candidate objective (SAI-006, SAI-008), using the overlap of the
+measure's typical signs with the view's `crisisSigns`, and returns at most one `pickMeasure { measure }`
+per hour, or none when no measure scores above its current objectives. STR validates the choice against
+STR-070 and starts the measure. The nuclear strike (STR-080) is picked the same way when STR lists it.
+**Values.** measure scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
+**Source.** design/design.md › Strategic Layer › World events (Desperate measures); design/world-events.md › Desperate measures; design/design.md › AI › Strategic AI › Faction AI tiers
+
 ## Open questions
 
 1. **Resolved (design 8972470):** the controller is called for every hour that passes, once per faction,
    returning one command set (SAI-002). SAI-002 — Design says factions get a view "after each player action", STR says one faction action per
    elapsed hour. Spec: STR decides the count; confirm whether SAI is called once per hour or once per player
    action with several actions returned.
-2. SAI-003 — Exact view fields depend on STR (squad strength model, fog of war, intel). To be finalised with
+2. **Resolved (cleanup 2026-11-23):** SAI-003 now lists every field of `strategic_perception_view` 0.5.0
+   (capital, VIPs, crisis signs, available measures; loyalty per faction; `transit`, `vehicle`); the squad
+   strength model stays an STR detail. SAI-003 — Exact view fields depend on STR (squad strength model, fog of war, intel). To be finalised with
    the STR spec and the interface schema.
 3. **Resolved (design 8972470):** the utility-AI structure is now in the GDD (AI; Faction AI tiers); the
    strategist score is the sum own gain + damage to rivals − cost − risk + commitment bonus; curve types stay
    data. SAI-006–SAI-009 — The workflow doc's utility-AI structure is not in `design/`; consideration lists,
    curve types and the combination rule (weighted sum or product) need confirmation.
-4. SAI-013 — "Reputation is low" is not quantified; spec uses Hostile (≤ −50). The MGT standing table
+4. SAI-013 — "Reputation is low" now reads the view's derived standing `hostile` (MGT-054 thresholds, cleanup
+   2026-11-23); still open: the MGT standing table
    also makes Unfriendly factions hostile when competing for the same objective, while condition 3 applies at
    any standing. Which rule holds?
-5. SAI-004 — Do desperate measures, world-event responses, recruiting, trading or buying gear go through
+5. **Resolved (cleanup 2026-11-23, schema `strategic_commands`):** desperate measures go through
+   `pickMeasure` (SAI-016), raising squads through `recruit` (STR-096), Krug escorts through `hireEscort`;
+   trading and buying gear are not AI commands (SAI-004). SAI-004 — Do desperate measures, world-event responses, recruiting, trading or buying gear go through
    SAI commands, or does STR resolve them by rule?
 6. SAI-001 — Aegis "learns the player's habits and adapts over time" (GEN leader effect) and hunts need
    memory across calls, but the AI owns no state. Where does that memory live (world slice, passed in the
@@ -216,5 +250,5 @@ one of its shipments (a Krug squad travels with the convoy; price not set).
     `ssv`, `vdk`, `varyag`, `aegis`, `krug`. Do resistance groups (and a rogue PMC with no patron) get
     their own controller call and doctrine? What is a rogue PMC's ultimate goal once it has no patron to
     keep standing?
-13. SAI-004, SAI-015 — how does a faction ask the Krug to escort one of its shipments (a new command, e.g.
+13. SAI-004, SAI-015 — the command is `hireEscort { escortFor }` (cleanup 2026-11-23); still open: how does a faction ask the Krug to escort one of its shipments (a new command, e.g.
     `hireEscort`), and how is the Krug's side of it decided (always accept, or scored by the Krug AI)?

@@ -2,19 +2,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/mapgen-tactical.schema.json",
   "title": "Tactical map generation rules",
-  "description": "Rules per stage of the tactical generation pipeline (spec TAC; stages from the workflow: terrain, roads, prefab placement, cover scatter, spawns and objectives, validate).",
-  "version": "0.2.0",
+  "description": "Rules for generating a tactical map from the tactical map request (spec TAC-080, TAC-038). Biome → terrain and prefab tables come from STR-095; exit count and exits are specced; the stage slots (terrain, roads, prefab placement, cover scatter, spawns and objectives, validate) come from the workflow and have no design rules yet (TAC open question 51).",
+  "version": "0.3.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
-    "pipeline": { "type": "object", "description": "stage order and attempts" },
-    "terrain": { "type": "object", "description": "terrain stage rules" },
-    "roads": { "type": "object", "description": "roads stage rules" },
-    "prefabs": { "type": "object", "description": "prefab placement tables per biome" },
-    "cover": { "type": "object", "description": "cover scatter rules" },
-    "spawns": { "type": "object", "description": "spawns and objectives" },
-    "exits": { "type": "array", "description": "TAC-038: {count, condition: fuel | boatAtTurn | paidCrossing}" },
-    "validate": { "type": "object", "description": "playability checks" }
+    "pipeline": { "type": "object", "description": "stage order and attempts (not designed)" },
+    "terrain": { "type": "object", "description": "terrain stage rules (not designed)" },
+    "roads": { "type": "object", "description": "roads stage rules (not designed)" },
+    "prefabs": { "type": "object", "description": "prefab placement rules; the prefab table per biome is named by STR-095 (not designed)" },
+    "cover": { "type": "object", "description": "cover scatter rules (not designed)" },
+    "spawns": { "type": "object", "description": "spawns and objectives (not designed)" },
+    "exitCount": { "type": "object", "description": "TAC-080, design 2–4 exits per map", "properties": {
+      "min": { "type": "integer", "minimum": 1 }, "max": { "type": "integer", "minimum": 1 } } },
+    "exits": { "type": "array", "description": "TAC-038 / TAC-080: exit templates; id is reported back as battle_result soldiers[].exitId", "items": {
+      "type": "object", "required": ["id", "condition"], "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-zA-Z0-9_-]*$" },
+        "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] },
+        "params": { "type": "object", "description": "condition parameters, e.g. boat turn, crossing price" } } } },
+    "validate": { "type": "object", "description": "playability checks (not designed)" }
   },
   "additionalProperties": false
 }

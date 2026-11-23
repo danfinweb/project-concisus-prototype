@@ -2,10 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_commands.schema.json",
   "title": "Strategic commands",
-  "description": "One command set a faction controller returns for every hour that passes: the same commands a player issues. They resolve together with the player's actions (STR-003). The strategic layer validates and resolves them; contract offers go on to Management. Spec: STR-003, STR-020, STR-021, STR-044, SAI-004, SAI-011, SAI-014, SAI-015.",
-  "version": "0.4.0",
+  "description": "One command set a faction controller returns for every hour that passes: the same commands a player issues. They resolve together with the player's actions (STR-003). The strategic layer validates and resolves them; a valid offerContract reaches Management as a management_requests contractOffer request (STR-044), not through this interface. Spec: STR-003, STR-020, STR-021, STR-044, STR-070, STR-094, STR-096, SAI-004, SAI-011, SAI-014..SAI-016.",
+  "version": "0.5.0",
   "x-producer": "modules/strategic-ai",
-  "x-consumers": ["modules/strategic", "modules/management"],
+  "x-consumers": ["modules/strategic"],
   "type": "object",
   "required": ["faction", "commands"],
   "properties": {
@@ -18,28 +18,35 @@
       "type": "object", "required": ["type"],
       "properties": {
         "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "acceptContract", "hireEscort", "pickMeasure", "recruit", "pass"] },
-        "squad": { "type": "string" },
+        "squad": { "type": "string", "description": "setGoal, moveSquad, hold, scout, attack: an own squad" },
         "squads": { "type": "array", "items": { "type": "string" }, "description": "acceptContract: squads assigned to the accepted contract (SAI-015)" },
-        "contractId": { "type": "string", "description": "acceptContract: the offer taken" },
-        "goal": { "enum": ["patrol", "supplyRun", "attackPoi", "holdPoi", "escort", "tradeRoute", "hunt"] },
-        "target": { "type": "string" },
-        "toRegion": { "type": "string", "description": "An adjacent tile (STR-005)" },
-        "escortFor": { "type": "string", "description": "hireEscort: the shipment a Krug squad escorts (STR-094)" },
-        "measure": { "type": "string", "x-ref": "events" },
-        "contract": { "$ref": "#/$defs/contractOffer" }
+        "contractId": { "type": "string", "description": "acceptContract: the id of the offer taken (an entry of the view's contractOffers)" },
+        "goal": { "enum": ["patrol", "supplyRun", "attackPoi", "holdPoi", "escort", "tradeRoute", "hunt"], "description": "setGoal (STR-018)" },
+        "target": { "type": "string", "description": "setGoal: region, POI, squad or the player; attack: a foreign squad or POI on the squad's tile; recruit: the held tile where the squad is raised (STR-096)" },
+        "toRegion": { "type": "string", "description": "moveSquad: an adjacent tile (STR-005)" },
+        "escortFor": { "type": "string", "description": "hireEscort: the own shipment (convoy squad) a Krug squad escorts (STR-094)" },
+        "measure": { "type": "string", "x-ref": "events", "description": "pickMeasure: one of the view's availableMeasures (STR-070)" },
+        "contract": { "$ref": "#/$defs/contractOffer", "description": "offerContract: the offer" }
       }
     },
     "contractOffer": {
-      "type": "object", "required": ["employer", "missions"],
+      "type": "object", "required": ["id", "employer", "missions"],
       "properties": {
+        "id": { "type": "string", "description": "Offer ID, unique per campaign; acceptContract.contractId and MGT refer to it" },
         "employer": { "type": "string", "x-ref": "factions" },
-        "sourceGoal": { "type": "string" },
-        "missions": { "type": "array", "items": { "type": "object", "properties": { "missionId": { "type": "string", "x-ref": "missions" }, "targets": { "type": "array" }, "location": { "type": "string" } } } },
-        "deadline": { "type": "object", "properties": { "day": { "type": "integer" }, "hour": { "type": "integer" } } },
+        "targetFaction": { "type": ["string", "null"], "x-ref": "factions", "description": "The faction the missions act against, if any (reputation acts, MGT-056)" },
+        "sourceGoal": { "type": "string", "description": "The STR-018 goal the offer serves" },
+        "missions": { "type": "array", "items": { "type": "object", "required": ["key", "missionId"], "properties": { "key": { "type": "string", "description": "Per-mission key, unique within the offer (two missions of one type are told apart by it)" }, "missionId": { "type": "string", "x-ref": "missions", "description": "Mission type" }, "targets": { "type": "array" }, "location": { "type": "string" } } } },
+        "deadline": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
         "payInputs": { "type": "object", "description": "Distance, danger, urgency (MGT-046)" },
-        "intelLevel": { "type": "string" },
+        "reputationGain": { "type": "integer", "description": "Reputation with the employer on success (MGT-056)" },
+        "intelLevel": { "enum": ["exact", "lastKnown", "rumour"], "description": "MGT-049" },
         "deniable": { "type": "boolean" },
-        "reputationGate": { "type": "string" },
+        "reputationGate": {
+          "type": "object", "description": "MGT-055 contract flags set by the offering faction: better = Friendly or better only, sensitive = Trusted only",
+          "properties": { "better": { "type": "boolean" }, "sensitive": { "type": "boolean" } },
+          "additionalProperties": false
+        },
         "boardLocation": { "type": "string" },
         "counterContractOf": { "type": ["string", "null"] }
       }

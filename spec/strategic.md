@@ -66,7 +66,8 @@ leaves the squad on its origin tile.
 ### [STR-004] Daily checks at 00:00
 **Rule.** When a tick lands on hour 0, run once, in this order: (1) crisis-sign check and desperate
 measures for every faction (STR-069, STR-070); (2) world event check (STR-050); (3) daily plant output
-to FOBs (STR-015); (4) notify MGT that the barter refresh is due (`dailyRollover { day }`). Each check
+to FOBs (STR-015); (4) notify MGT that the barter refresh is due (a `dailyRollover` management request
+with its `day`). Each check
 uses the state after the tick's movement and fights.
 **Source.** design/design.md › Strategic Layer (Time); design/strategic-actions.md › Trade; design/design.md › Management › Base & meta progression
 
@@ -77,11 +78,13 @@ uses the state after the tick's movement and fights.
 file means one tile. The grid shape is `mapShape`: `square` (default, consistent with the tactical layer)
 or `hex` (a switchable option for testing). Adjacency follows from the shape (hex: 6 neighbours; square:
 neighbour rule see Open questions); region distance is counted in adjacency steps. Every faction moves its
-squads tile by tile. Each tile holds: `x`, `y`; `terrain` (exactly one base terrain, STR-006); `poi` (none
-or one point of interest, STR-010); `controller` (faction id or `none`); `road` (none, or a road lying on
-top of the terrain: kind `asphalt` or `dirt`, the adjacent tiles it continues to, and on a water tile a
-`bridge` or `ford` flag); `loyalty` (only on settlement tiles, STR-009); and flags (`hazard`,
-`contaminated`, `ruined`, `mined`, `martialLaw`, `ceasefire`, each with an expiry time or `permanent`).
+squads tile by tile. Each tile holds: `x`, `y`; `terrain` (exactly one base terrain, an ID of
+data/strategic-terrain.json, STR-006, STR-095); `poi` (none or one point of interest, STR-010);
+`controller` (faction id or `none`); `road` (none, or a road lying on top of the terrain: kind `asphalt` or
+`dirt`, the adjacent tiles it continues to, and on a water tile a `bridge` or `ford` flag); `loyalty`
+(only on settlement tiles, STR-009); `krugMarket` (boolean, only on a town or city tile: the tile holds a
+Krug market, STR-010, STR-012); and flags (`hazard`, `contaminated`, `ruined`, `mined`, `martialLaw`,
+`ceasefire`, each with an expiry time or `permanent`).
 **Values.** `mapShape` — design `square`, `hex` as test option → data/mapgen/strategic.json.
 **Source.** design/design.md › Strategic Layer › Map (draft)
 
@@ -100,11 +103,40 @@ A road between the two tiles (the origin's road continues to the destination, ST
 destination's terrain: the move uses the road row, whatever the base terrain. Asphalt and dirt roads have
 the same speed. A vehicle enters a mountain tile only along a road. Water is crossed only along a road
 whose water tile is flagged `bridge` or `ford` (amphibious vehicles: DAT). Helicopters: STR-034. Off-road
-rating modifies steppe and woods (STR-032). Terrain also has a visibility class (`far`, `medium`, `open`,
-`low`) used by detection (STR-008) and evasion (STR-024); roads have their own (asphalt `far`, dirt
-`medium`; which applies on a road tile: see Open questions).
-**Values.** `moveHours[terrain][mode]` and `moveHours.road[mode]` — design values in the table → data/strategic-rules.json.
-**Source.** design/design.md › Strategic Layer › Map (draft) › Terrain types; design/strategic-actions.md › Movement and operations
+rating modifies steppe and woods (STR-032). On foot a squad takes 2 hours per tile, 3 in mountains (STR-031).
+Terrain also has a visibility class (`far`, `medium`, `open`, `low`) used by detection (STR-008) and
+evasion (STR-024); roads have their own (asphalt `far`, dirt `medium`; which applies on a road tile: see
+Open questions).
+**Values.** per terrain: vehicle hours `moveHours` (null = road only or impassable), `passable`,
+`offRoadRated`, `visibility` → data/strategic-terrain.json (STR-095); road hours `roadMoveHours.vehicle` 1,
+`roadMoveHours.foot` 2; on-foot hours `onFootHours.default` 2, `onFootHours.mountain` 3; road visibility
+`roadVisibility.asphalt` `far`, `roadVisibility.dirt` `medium` → data/strategic-rules.json.
+**Source.** design/design.md › Strategic Layer › Map (draft) › Terrain types; › Vehicles (draft); design/strategic-actions.md › Movement and operations
+
+### [STR-095] Strategic terrain table
+**Rule.** `data/strategic-terrain.json` holds one record per strategic terrain type (design: steppe, woods,
+mountain, water), keyed by ID; every tile's `terrain` (STR-005) is one of these IDs. Roads are not
+records: they lie on top of a terrain (STR-006, strategic-rules `roadMoveHours`, `roadVisibility`). Each
+record:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `id`, `name` | string | ID (equals key) and display name |
+| `passable` | boolean | false = no squad enters off-road (water) |
+| `moveHours` | integer ≥ 1 or null | Ground-vehicle hours off-road (STR-032); null = road only (mountain) or impassable (water) |
+| `offRoadRated` | boolean | The vehicle off-road rating lowers `moveHours` here (STR-032) |
+| `visibility` | `far`, `medium`, `open`, `low` or null | Detection and evasion class (STR-008, STR-024) |
+| `biome` | string | Biome of battles on a tile of this terrain |
+| `tacticalTerrainTable` | string | The tactical terrain table the biome selects |
+| `prefabTable` | string | The prefab table the biome selects |
+
+On-foot hours are `onFootHours` in strategic-rules (STR-031). For a tactical engagement (STR-023)
+Strategic copies the encounter tile's `terrain` and its record's `biome` into
+`tactical_map_request.region` (`terrain`, `biome`); the tactical generator selects its terrain and prefab
+tables from the biome (TAC).
+**Values.** design: steppe vehicle 2, woods 3, mountain road only, water impassable; visibility steppe
+`open`, woods `low`, mountain `low`, water `null` (design: none); biome and table names — not set (design: Open) → data/strategic-terrain.json.
+**Source.** design/design.md › Strategic Layer › Map (draft) (strategic terrain table); › Map (draft) › Terrain types
 
 ### [STR-007] Capital control
 **Rule.** Exactly one tile is the capital. World state holds its `holder` (the faction with the
@@ -114,7 +146,7 @@ the tile (STR-014, any faction may take it), `holder` becomes `none` and the cap
 While contested, the faction controlling the tile (if any) is its occupant; `contestedSince` is the time
 the current occupant took it, reset whenever control changes. An occupant that keeps control for
 `capitalHoldDays` becomes the holder, with the capital's effects, and the capital is no longer contested.
-If that faction is the player, the `player_coup` ending is reached (GEN-015); a rival PMC (or any other
+If that faction is the player, the `playerCoup` ending is reached (GEN-015); a rival PMC (or any other
 faction) just becomes the holder, and the campaign goes on (GEN-012). A capital that loses its holder may
 trigger a rogue PMC rushing it (GEN-017).
 **Values.** `capitalHoldDays` — 7 (draft) → data/strategic-rules.json.
@@ -128,7 +160,7 @@ taken when it was last visible, with its timestamp). A squad in a non-visible re
 **noticed** by a faction if its region distance to that faction's squad or POI ≤ the squad vehicle's
 noise range (DAT `noise`). The player view and every AI perception view (STR-021) are built with the
 same rule.
-**Values.** `reconRange` (squad, FOB, intel source) — not set (design: Open) → data/strategic-rules.json; `noiseRange[noiseClass]` in regions — not set (design: Open) → data/strategic-rules.json.
+**Values.** `reconRange.squad`, `reconRange.fob`, `reconRange.intel` — not set (design: Open) → data/strategic-rules.json; `noiseRange[noiseClass]` in regions — not set (design: Open) → data/strategic-rules.json; terrain `visibility` → data/strategic-terrain.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Map (draft) (Fog of war); › Strategic Layer (Intel); › Vehicles (Noise)
 
@@ -155,15 +187,21 @@ crimes via MGT, off-screen fights) and is clamped to range.
 | Plant — oil | fuel, high income; refuel point incl. helicopters |
 | Plant — arms | weapons, ammunition |
 | Plant — minerals | medium income; output modifier on other plants (STR-011) |
-| Town | local recruits, small Krug market, rest |
+| Town | local recruits, rest |
 | Small city | trader, hospital, FOB site |
 | Large city | several traders, hospitals, contract hub, vehicle sales |
 | Gas station | fuel, small loot, Krug contacts |
 
-The `services` list of each type (trade, hire, contracts, hospital, repairs, refuel, vehicleTrade,
-fobPurchase, krugMarket) decides which location-bound actions (STR-039…STR-043) are allowed there. A
+The `services` list of each type (`trade`, `hire`, `contracts`, `hospital`, `repairs`, `refuel`,
+`vehicleTrade`, `fobPurchase`) decides which location-bound actions (STR-039…STR-043) are allowed there. A
 `ruined` POI offers no services and no output.
-**Source.** design/design.md › Strategic Layer › Map (draft) › Points of interest
+
+**Krug markets** are not a POI type: a Krug market is the `krugMarket` flag on a town or city tile
+(STR-005), allowed only on tiles whose POI type has `krugMarketAllowed`. A flagged tile adds the Krug
+market's services (Krug trade and barter, local recruits, Krug work and hand-ins, vehicle sales through the
+Krug; STR-039, STR-040, MGT) to those of its POI, and is a no-fire zone (STR-012). Placement: STR-089.
+**Values.** `services`, `krugMarketAllowed` per POI type → data/poi.json.
+**Source.** design/design.md › Strategic Layer › Map (draft) › Points of interest; › Map (draft) (Krug markets)
 
 ### [STR-011] Mineral plant modifier
 **Rule.** For a faction holding ≥ 1 mineral plant, each other plant it holds has its output multiplied
@@ -173,7 +211,7 @@ by `1 + mineralModifier × heldMineralPlants`.
 **Source.** design/design.md › Strategic Layer › Map (draft) › Points of interest; › Management › Base & meta progression
 
 ### [STR-012] Krug markets as no-fire zones
-**Rule.** A region with a Krug market is a no-fire zone: encounters there never turn hostile by
+**Rule.** A tile flagged `krugMarket` (STR-010) is a no-fire zone: encounters there never turn hostile by
 faction rules. If any squad starts a fight there, the Krug network turns hostile to that squad's
 faction (relation and, for the player, reputation per MGT). Krug markets are neutral meeting points.
 **Source.** design/design.md › Factions & campaign › The Krug (refer to GEN for the Code)
@@ -194,18 +232,19 @@ engagement or off-screen fight for it, defection (STR-061, to the pressing facti
 dissolution (STR-049 → `none`); for the capital, holding it is STR-007. Holding a POI yields income, supplies and recruits to its controller per hour or
 per day (amounts in data/poi.json); losing POIs weakens the faction's squads over time (supply
 deficit reduces squad supplies and reinforcement rate).
-**Values.** per-type `income`, `supplyOutput`, `recruitOutput` — not set (design: Open) → data/poi.json; `supplyDeficitEffect` — not set (design: Open) → data/strategic-rules.json.
+**Values.** per-type `income`, `supplyOutput`, `recruitOutput` — not set (design: Open) → data/poi.json; `supplyDeficitEffect` (object) — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Control)
 
 ### [STR-015] Stationed squad and plant output
 **Rule.** Action "Station a squad at a plant": allowed for a player squad in a region whose plant the
 PMC has taken. While at least one PMC squad is stationed there, the PMC holds the plant; at each daily
-check the plant's output (STR-010, modified by STR-011) is sent to MGT as `plantOutput { plantId, fobId,
-items/money }`, where `fobId` is the PMC FOB with the lowest region distance (tie: lowest id). When no
-PMC squad remains stationed, control returns to the region's controller before the next daily check.
-Time to station: not set.
-**Values.** `stationHours` — not set (design: Open) → data/strategic-rules.json; per-type daily output → data/poi.json.
+check the plant's output (STR-010, modified by STR-011) is sent to MGT as a `plantOutput` management
+request with `location` = the receiving FOB, `items` and/or `amountUsd`, `plantId` and `fobId`; the
+receiving FOB is the PMC FOB with the lowest region distance (tie: lowest id). When no PMC squad remains
+stationed, control returns to the region's controller before the next daily check. Time to station: not
+set.
+**Values.** `actionHours.station` — not set (design: Open) → data/strategic-rules.json; per-type `dailyOutput` → data/poi.json.
 **Status.** open
 **Source.** design/strategic-actions.md › Movement and operations; design/design.md › Management › Base & meta progression
 
@@ -220,11 +259,14 @@ as a tactical defence engagement (STR-023).
 ## Squads and simulation
 
 ### [STR-017] Squads
-**Rule.** A squad is `{ id, faction, regionId, vehicleId | onFoot, soldiers[], supplies, fuel, morale,
-goal, transit }`. For the player, a squad is its vehicle: soldiers ≤ vehicle seats, and supplies plus
-loot ≤ vehicle storage (DAT). Non-player squads use the same rules: they move by STR-006, burn fuel,
-use supplies and fight. Soldier records live in MGT for the player and in the world state for AI
-squads (strength, gear tier, rank mix).
+**Rule.** A squad is `{ id, faction, regionId, vehicleId, soldiers[], supplies, fuel, morale, goal,
+transit }`. A squad has at most one vehicle; `vehicleId = null` means it travels on foot. With a vehicle:
+soldiers ≤ vehicle seats, and supplies plus loot ≤ vehicle storage (DAT-024, DAT-025). On foot: it moves
+by `onFootHours` (STR-006, STR-031), uses no fuel, and carries only what its soldiers carry (carry weight:
+MGT-033, TAC-027). `transit` is the move in progress, `{ toRegion, hoursLeft }`, or `null` when the squad
+is not moving (the perception view uses the same name, STR-021). Non-player squads use the same rules: they
+move by STR-006, burn fuel, use supplies and fight. Soldier records live in MGT for the player and in the
+world state for AI squads (strength, gear tier, rank mix).
 **Source.** design/design.md › Strategic Layer › Squads and simulation (draft); › Vehicles (draft)
 
 ### [STR-018] Squad goals
@@ -255,11 +297,27 @@ actions of one hour resolve together (STR-003, step 2).
 ### [STR-021] Faction controller hand-off
 **Rule.** Strategic decides when a faction acts; `strategic-ai` decides what. For every hour that passes
 (each tick, STR-003), every non-player faction receives a `strategic_perception_view` (its fog-of-war
-view, STR-008, including its own funds, STR-092) and returns `strategic_commands` (set goal, move squad,
-offer contract). Strategic validates each command against the same rules as player actions
-(passability, fuel, durations, funds limit, STR-092) and drops invalid ones with a logged reason; valid ones
-resolve together with the player's actions (STR-003). The controller never changes the world state
-directly. Contract offers go to MGT.
+view, STR-008, including its own funds, STR-092) and returns `strategic_commands`. Commands and how
+Strategic resolves each:
+
+| Command | Resolves as |
+| --- | --- |
+| `setGoal` | sets the squad's goal (STR-018) |
+| `moveSquad` | a move to an adjacent tile (STR-031, STR-032, STR-034) |
+| `hold` | the squad holds its tile this hour (STR-020) |
+| `scout` | scouting its tile (STR-036) |
+| `attack` | a fight with a foreign squad or POI on its tile: encounter rules (STR-022, STR-026; STR-023 if the player is involved) |
+| `offerContract` | a contract posting (STR-044) |
+| `acceptContract` | a rival PMC takes another faction's offer (STR-093, SAI-015) |
+| `hireEscort` | a paid Krug escort for one of its shipments (STR-094) |
+| `pickMeasure` | starts a desperate measure from its available ones (STR-070) |
+| `recruit` | raises a new squad (STR-096) |
+| `pass` | nothing |
+
+Strategic validates each command against the same rules as player actions (passability, fuel, durations,
+funds limit, STR-092) and drops invalid ones with a logged reason; valid ones resolve together with the
+player's actions (STR-003). The controller never changes the world state directly. Contract offers go to
+MGT (STR-044).
 **Source.** design/design.md › AI (intro); › AI › Strategic AI (Controller hand-off); › Strategic Layer › Squads and simulation (Faction funds)
 
 ### [STR-022] Encounter detection
@@ -268,31 +326,33 @@ each pair is checked against the faction behaviour rules (SAI: low reputation, t
 objective; relations ≤ hostile threshold, STR-051). A moving squad counts as on its origin tile until the
 move's last hour, then on the destination tile (STR-020). Krug market tiles never turn hostile (STR-012).
 If neither side is hostile, nothing happens. If hostile and the player is involved → STR-023; otherwise →
-STR-026. The encounter tile's terrain sets the tactical map (STR-023).
+STR-026. The encounter tile's terrain sets the tactical map through its biome (STR-023, STR-095).
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Encounters); › AI › Strategic AI
 
 ### [STR-023] Tactical engagement
 **Rule.** A hostile encounter involving a player squad (or a player op objective that requires a
 fight) becomes a tactical engagement. Strategic sends a `tactical_map_request` and waits for the
-`battle_result`; the request carries the encounter tile's terrain, which sets the tactical map. The
-engagement always takes exactly 1 hour of strategic time, however long it runs.
+`battle_result`; the request carries the encounter tile's terrain and its `biome` (STR-095) in
+`tactical_map_request.region`, which select the tactical map's terrain and prefab tables. The engagement
+takes a fixed amount of strategic time however long it runs: TAC-003 `battleDurationHours` (design 1 hour)
+owns the value, and the result reports it as `battle_result.gameTimeHours`.
 The result updates squads, control, loyalty and MIA/captured/dead soldiers (sent to MGT). Only
 player-attributed fights count for crisis sign 10 (STR-069).
-**Values.** `battleHours` — design 1 → data/strategic-rules.json.
+**Values.** battle duration → see TAC-003 (`battleDurationHours`, data/tactical-rules.json).
 **Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Encounters); design/strategic-actions.md › Movement and operations
 
 ### [STR-024] Evade an encounter
 **Rule.** When a hostile encounter involves a player squad, the player may try to evade instead of
 fighting. Success chance = f(squad's best Recon, region terrain visibility class); on success the squad
 leaves without a fight, on failure the engagement starts. Formula and time cost not set.
-**Values.** `evadeChance` formula inputs — not set (design: Open) → data/strategic-rules.json; `evadeHours` — not set (design: Open) → data/strategic-rules.json.
+**Values.** `evadeChance` formula inputs — not set (design: Open) → data/strategic-rules.json; `actionHours.evade` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Encounters); design/strategic-actions.md › Movement and operations
 
 ### [STR-025] Pay your way through (Krug)
 **Rule.** When the hostile encounter is with a Krug squad, the player may pay money instead of
 fighting; payment ends the encounter. Money is debited through MGT. Price and time not set.
-**Values.** `krugPassPrice`, `krugPassHours` — not set (design: Open) → data/strategic-rules.json.
+**Values.** `krugPassPrice`, `actionHours.krugPass` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Squads and simulation (Encounters); design/strategic-actions.md › Movement and operations
 
@@ -316,7 +376,7 @@ live in one shared rules table, `data/economy-rules.json`, which MGT also uses f
 (MGT-005, MGT-070). A faction whose income cannot cover its costs meets crisis sign 5, Low liquidity
 (STR-069). Each faction's own funds appear in its perception view (STR-021); other factions' funds do not.
 Funds never go below zero. `fundsMode` decides how they limit a faction:
-- `hardLimit` (default): Strategic rejects an `offerContract` or a command raising a squad that the
+- `hardLimit` (default): Strategic rejects an `offerContract` or a `recruit` (raising a squad, STR-096) that the
   faction cannot pay for from its current funds (STR-021).
 - `scoreTerm` (switchable option for testing): such commands are not rejected for funds; funds only weigh
   in the AI's scoring (SAI-014).
@@ -350,10 +410,22 @@ to the contractor's, under the same rule.
   convoy and joins its encounters on the convoy's side). The price is paid into the Krug's funds
   (STR-092); for the player it is debited through MGT. The escort ends when the convoy arrives or is
   destroyed or captured.
-Where and how the escort is hired, the price and the time it takes are not set.
+An AI faction hires one with `hireEscort { escortFor }` (STR-021); the player through a Krug market (MGT). The price and the time it takes are not set.
 **Values.** `krugEscortPrice`, `krugEscortHireHours` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Management › Contracts and missions › Where contracts come from
+
+### [STR-096] Raising a squad
+**Rule.** An AI faction raises a new squad with the command `recruit { target }` (STR-021): `target` is a
+tile the faction controls whose POI yields recruits (`recruitOutput`, STR-014). The new squad appears on
+that tile at the end of the tick, with soldiers drawn from the recruits the faction's POIs have produced.
+Under `fundsMode = hardLimit` Strategic rejects a `recruit` the faction cannot pay for (STR-092); the
+squad's upkeep and salaries are then booked as faction costs (data/economy-rules.json). Events and measures
+that spawn squads (STR-056, STR-067, STR-071, STR-072, STR-073) do so by rule, not through `recruit`.
+Squad size, gear tier and the cost of raising a squad are not set.
+**Values.** squad size, gear tier, raise cost — not set (design: Open) → data/economy-rules.json / data/poi.json.
+**Status.** open
+**Source.** design/design.md › Strategic Layer › Squads and simulation (Control; Faction funds (draft)); › Strategic Layer (Escalation)
 
 ## Operations and strategic actions
 
@@ -372,11 +444,11 @@ not return are reported to MGT as MIA, captured or dead.
 **Source.** design/design.md › Overview › Core loop; › Management › Gear, loot & return
 
 ### [STR-028] Launch an op
-**Rule.** At an FOB, the player commits a squad, its loadout and a vehicle (or on foot); they are
-locked to the op until it ends. Duration not set.
-**Values.** `launchHours` — not set (design: Open) → data/strategic-rules.json.
+**Rule.** At an FOB, the player commits a squad, its loadout and at most one vehicle (none: the squad goes
+on foot, STR-017); they are locked to the op until it ends. Duration not set.
+**Values.** `actionHours.launch` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
-**Source.** design/strategic-actions.md › Movement and operations
+**Source.** design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft)
 
 ### [STR-029] Return to an FOB
 **Rule.** Arrival of an op squad in a PMC FOB region ends the op (STR-027); no extra time. Squad
@@ -384,41 +456,47 @@ storage and soldiers are handed to MGT (`opReturn`).
 **Source.** design/strategic-actions.md › Movement and operations
 
 ### [STR-030] Lost vehicle
-**Rule.** A vehicle left behind on a failed op stays on the map as an object in its region with state
-`abandoned`; later it may be destroyed, captured by a faction, or recovered by a player squad entering
-the region. Rules for which happens: not set.
+**Rule.** A vehicle left behind on a failed op (`battle_result.vehicle.state = leftBehind`) stays on the
+map as an object in its region with state `leftBehind`; later it may be destroyed, captured by a faction,
+or recovered by a player squad entering the region. Rules for which happens: not set.
 **Status.** open
 **Source.** design/design.md › Vehicles (draft) (Loss)
 
 ### [STR-031] Move one region on foot
-**Rule.** A squad without a vehicle moves to an adjacent passable region in `moveHours[terrain].foot`
-hours (STR-006). No fuel cost.
-**Source.** design/strategic-actions.md › Movement and operations
+**Rule.** A squad without a vehicle (STR-017) moves to an adjacent tile whose terrain is `passable`
+(STR-095) in `onFootHours[terrain]` hours, falling back to `onFootHours.default` (design: 2 hours per tile,
+3 in mountains), or `roadMoveHours.foot` along a road (STR-006). Water only along a road on a bridge/ford
+tile. No fuel cost. It carries only what its soldiers carry.
+**Values.** `onFootHours.default` 2, `onFootHours.mountain` 3, `roadMoveHours.foot` 2 → data/strategic-rules.json.
+**Source.** design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft); › Strategic Layer › Map (draft) › Terrain types
 
 ### [STR-032] Move one region by ground vehicle
-**Rule.** Move to an adjacent tile in `moveHours[terrain].vehicle` hours of the destination tile, or
-`moveHours.road.vehicle` along a road (STR-006). Mountains only along a road; water only along a road on
-a bridge/ford tile (or amphibious vehicle, DAT). Off-road rating
-(`poor`, `good`, `veryGood`, DAT) lowers the hours in steppe and woods: `hours = max(1,
-moveHours − offroadReduction[rating][terrain])`. Fuel: each region moved costs `1` fuel unit; a full
-tank holds `fuelRange` units (DAT). A move is rejected if fuel < 1.
-**Values.** `offroadReduction[rating][terrain]` — not set (design: Open) → data/strategic-rules.json; fuel per region — design implies 1 (fuel range in regions) → data/strategic-rules.json.
+**Rule.** Move to an adjacent tile in the destination terrain's `moveHours` (STR-095), or
+`roadMoveHours.vehicle` along a road (STR-006). A terrain with `moveHours = null` is entered only along a
+road (mountain) or not at all (water: only along a road on a bridge/ford tile, or by an `amphibious`
+vehicle, DAT-026). Off-road rating (`offRoad`: `poor`, `good`, `veryGood`, DAT-024) lowers the hours on
+terrains flagged `offRoadRated` (design: steppe and woods): `hours = max(1, moveHours −
+offroadReduction[rating][terrain])`. `offRoad = ignoresTerrain` is the helicopter rating and moves by
+STR-034. Fuel: each region moved costs `fuelPerRegion` fuel units; a full tank holds `fuelRangeRegions`
+units (DAT-024). A move is rejected if fuel < `fuelPerRegion`.
+**Values.** `offroadReduction[rating][terrain]` — not set (design: Open); `fuelPerRegion` — design implies 1 (fuel range in regions) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft)
 
-### [STR-033] Vehicle visibility at checkpoints
-**Rule.** A vehicle's `profile` (`civilian`/`military`, DAT) is passed into encounter checks on roads
-with checkpoints: civilian vehicles draw less attention. Effect size not set.
-**Values.** `civilianProfileModifier` — not set (design: Open) → data/strategic-rules.json.
-**Status.** open
+### [STR-033] Vehicle profile
+**Rule.** A vehicle's `profile` is `civilian` or `military` (DAT-024). Since design 44887c7 the profile has
+no rule effect: the checkpoint-attention effect is gone with checkpoints. Strategic stores and shows it
+only.
 **Source.** design/design.md › Vehicles (draft) (Profile)
 
 ### [STR-034] Fly one region by helicopter
-**Rule.** A helicopter moves to any adjacent region in 1 hour, any terrain incl. water and mountains,
-costing 1 fuel unit. Requires a pilot seat filled by a soldier with Technical ≥ `pilotTechnicalMin` or
-a hired pilot (MGT); the pilot counts against seats. Every faction with a squad or POI within the
-helicopter's noise range notices it (STR-008); military POIs in range may fire on it (effect not set).
-A downed helicopter becomes a crash site and its crew starts an emergency op on foot (STR-027).
+**Rule.** A helicopter moves to any adjacent region in `heliMoveHours`, any terrain incl. water and
+mountains, costing `fuelPerRegion` fuel. Requires a pilot seat filled by a soldier with Technical ≥
+`pilotTechnicalMin` or a hired pilot (MGT); the pilot counts against seats. Both values are single values
+for every helicopter, owned here (DAT-028 points to them; vehicle records carry no copy). Every faction with
+a squad or POI within the helicopter's noise range notices it (STR-008); military POIs in range may fire
+on it (effect not set). A downed helicopter becomes a crash site and its crew starts an emergency op on
+foot (STR-027).
 **Values.** `heliMoveHours` — design 1; `pilotTechnicalMin` — design 50 → data/strategic-rules.json; military POI fire effect — not set (design: Open).
 **Status.** open
 **Source.** design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) › Helicopters
@@ -426,7 +504,7 @@ A downed helicopter becomes a crash site and its crew starts an emergency op on 
 ### [STR-035] Land a helicopter
 **Rule.** Allowed in any region except water terrain; the only way into hidden cities (STR-013).
 Duration not set.
-**Values.** `landHours` — not set (design: Open) → data/strategic-rules.json.
+**Values.** `actionHours.land` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) › Helicopters
 
@@ -434,7 +512,7 @@ Duration not set.
 **Rule.** Takes `scoutHours` in the squad's current region. On success it makes the region visible to
 the player and reveals squads, op areas and loot hints there; if a VIP is in the region, it yields VIP
 intel (STR-048). Success chance not set.
-**Values.** `scoutHours` — design placeholder 3 → data/strategic-rules.json; `scoutSuccess` — not set (design: Open).
+**Values.** `scoutHours` — design placeholder 3; `scoutSuccess` (chance inputs) — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer (Time); design/strategic-actions.md › Movement and operations
 
@@ -450,7 +528,7 @@ questions).
 ### [STR-038] Enter a point of interest
 **Rule.** A squad in a region with a POI may enter it; entering is required before using its services
 (STR-039…STR-043). Duration not set.
-**Values.** `enterPoiHours` — not set (design: Open) → data/strategic-rules.json.
+**Values.** `actionHours.enterPoi` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-actions.md › Movement and operations
 
@@ -470,15 +548,15 @@ Strategic checks only that the squad (or FOB) is at a location whose POI type of
 - Hand in faction or operation items: at a POI held by that faction, or at a Krug market.
 Strategic supplies location and time; MGT resolves the contract, money and reputation. Durations not
 set.
-**Values.** `acceptContractHours`, `handOverHours`, `handInHours` — not set (design: Open) → data/strategic-rules.json.
+**Values.** `actionHours.acceptContract`, `actionHours.handOver`, `actionHours.handIn` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions
 
 ### [STR-041] Paid services
 **Rule.** Hospital treatment (small and large cities), vehicle repairs (mechanical plants), refuel (gas
 stations, oil plants; helicopters only at PMC FOBs and oil plants). Price is MGT; refuel fills the
-vehicle's fuel to `fuelRange`. Durations not set.
-**Values.** `hospitalHours`, `repairHours`, `refuelHours` — not set (design: Open) → data/strategic-rules.json.
+vehicle's fuel to `fuelRangeRegions` (DAT-024). Durations not set.
+**Values.** `actionHours.hospital`, `actionHours.repair`, `actionHours.refuel` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions; design/design.md › Vehicles (draft) › Helicopters
 
@@ -486,7 +564,7 @@ vehicle's fuel to `fuelRange`. Durations not set.
 **Rule.** Buy a new FOB at a small or large city POI (price via MGT), or take over an FOB site by force
 through an op (control of the site region passes to the PMC on a won engagement). On success a new FOB
 entity is created (STR-016). Duration and price not set.
-**Values.** `buyFobHours` — not set (design: Open) → data/strategic-rules.json; FOB price — MGT.
+**Values.** `actionHours.buyFob` — not set (design: Open) → data/strategic-rules.json; FOB price — MGT.
 **Status.** open
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions; design/design.md › Management › Base & meta progression
 
@@ -494,14 +572,20 @@ entity is created (STR-016). Duration and price not set.
 **Rule.** Pay compensation (to the faction hurt in an Operation dispute, STR-058) and pay off a bounty
 (to the faction that set it, STR-064). Money and reputation through MGT; ends the related event's
 effect toward the player. Location, price and duration not set.
-**Values.** `compensationPrice`, `bountyPayoffPrice`, durations — not set (design: Open) → data/events.json.
+**Values.** `params.compensationPrice`, `params.bountyPayoffPrice`, durations — not set (design: Open) → data/events.json (records of STR-058 and STR-064).
 **Status.** open
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions
 
 ### [STR-044] Contract postings from goals
-**Rule.** When a faction command offers a contract (STR-021), or an event/measure creates one, strategic
-sends MGT a `contractOffer` with the source goal, missions, location(s), employer, deadline as a
-timestamp, and the reputation gate when the design names one (e.g. "Friendly or better", "Trusted").
+**Rule.** When a faction command offers a contract (`offerContract`, STR-021), or an event/measure creates
+one, Strategic validates it (STR-092 funds limit) and hands the offer to MGT as a `management_requests`
+request of type `contractOffer` carrying the offer object: `id` (unique offer ID), `employer`,
+`targetFaction` (the faction the missions act against, or null), `sourceGoal` (STR-018), `missions`
+(`key` unique within the offer, mission type `missionId`, `targets`, `location` each), `deadline` as a `{ day, hour }` timestamp, `payInputs` (MGT-046),
+`reputationGain`, `intelLevel` (`exact`, `lastKnown`, `rumour`; MGT-049), `deniable`, `boardLocation`, `counterContractOf`, and `reputationGate` —
+the MGT-055 flags `{ better, sensitive }` the offering faction sets when the design names a gate
+("Friendly or better" → `better`, "Trusted" → `sensitive`). The field set is that of
+`strategic_commands.contractOffer`; MGT does not read `strategic_commands` itself.
 **Source.** design/design.md › Management › Contracts and missions; › AI › Strategic AI
 
 ## VIPs
@@ -523,14 +607,14 @@ position is hidden unless the viewer holds valid intel (STR-048) or sees its reg
 | General | 2 | with Elites |
 | Leader | 3 | Elites |
 
-**Values.** `vipGuard[rank] = { squadsMin, squadsMax, rankMix }` — design values above, "mostly"/"with" shares not set → data/strategic-rules.json.
+**Values.** `vip.guard[rank] = { squadsMin, squadsMax, rankMix }` — design values above, "mostly"/"with" shares not set → data/strategic-rules.json.
 **Source.** design/design.md › Strategic Layer › VIPs
 
 ### [STR-047] VIP death morale shock
 **Rule.** When a non-leader VIP dies, every squad of its faction within radius `R(rank)` of the VIP's
 region loses morale by the squad's rank: Major R = 0 (same region), Colonel R = 3, General R = ∞ (all
 squads of the faction). Loss: Elite −40, Veteran −25, Regular −10, Recruit −5.
-**Values.** `vipShockRadius` — major 0, colonel 3, general all; `vipMoraleLoss` — elite 40, veteran 25, regular 10, recruit 5 → data/strategic-rules.json.
+**Values.** `vip.shockRadius` — major 0, colonel 3, general `all`; `vip.moraleLoss` — elite 40, veteran 25, regular 10, recruit 5 → data/strategic-rules.json.
 **Source.** design/design.md › Strategic Layer › VIPs
 
 ### [STR-048] VIP intel
@@ -542,7 +626,7 @@ acquisition; after that it is stale (last known state only). Sources:
   goods value.
 - Buy from a faction hostile to the VIP's side, if the player's standing with the seller ≥ 20 (leader:
   ≥ 50); price by rank. Money and standing via MGT. Time not set.
-**Values.** `vipIntelHours` — design 72; `vipIntelGoods` — major 1500, colonel 4000, general 10000, leader 25000; `vipIntelPrice` — major 2000, colonel 5000, general 12000, leader 30000; `vipIntelStanding` — 20, leader 50 → data/strategic-rules.json; `buyIntelHours` — not set (design: Open).
+**Values.** `vip.intelHours` — design 72; `vip.intelGoods` — major 1500, colonel 4000, general 10000, leader 25000; `vip.intelPrice` — major 2000, colonel 5000, general 12000, leader 30000; `vip.intelStanding` — 20, leader 50 → data/strategic-rules.json; `actionHours.buyIntel` — not set (design: Open) → data/strategic-rules.json.
 **Source.** design/design.md › Strategic Layer › VIPs; design/strategic-actions.md › Trade, services, contracts and factions
 
 ### [STR-049] Faction leader death
@@ -550,7 +634,7 @@ acquisition; after that it is stale (last known state only). Sources:
 a resistance group, STR-067, Krug recruits, or is removed — split not set), all its POIs and regions
 get `controller = none` (a capital it held becomes contested, STR-007), its contracts end (sent to MGT), and a PMC it
 backed loses its patron (GEN). The faction takes no further actions.
-**Values.** `scatterShares` (resistance / Krug / removed) — not set (design: Open) → data/strategic-rules.json.
+**Values.** `scatterShares.resistance`, `scatterShares.krug`, `scatterShares.removed` — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › VIPs
 
@@ -573,7 +657,7 @@ Relations decide who attacks whom (hostile ≤ −50, allied ≥ 50, as used by 
 and measures shift them; they are clamped to range. Reputation with the player is a separate value (MGT)
 and is not changed by relations: since design 8972470 there is no reputation spill-over to a faction's
 allies or enemies (MGT-053).
-**Values.** `relationMin` −100, `relationMax` 100, `hostileAt` −50, `alliedAt` 50 → data/strategic-rules.json; start values — not set (design: Open) → data/factions.json.
+**Values.** `relationMin` −100, `relationMax` 100, `hostileAt` −50, `alliedAt` 50 → data/strategic-rules.json (this section owns them; GEN-007 and SAI-003 point here); start values `startRelations` — not set (design: Open) → data/factions.json.
 **Source.** design/design.md › Strategic Layer › World events; › Management › Reputation (draft)
 
 ### [STR-052] Warning signs
@@ -597,7 +681,8 @@ entry (STR-081) is appended to the intel log as `{ time, type, text, eventId? }`
 **Source.** design/design.md › Strategic Layer › World events (News feed)
 
 ### [STR-055] Event: PMC joint assault
-**Rule.** Trigger: a high-value POI (oil or arms plant, Krug hub) is weakly held and both Varyag and
+**Rule.** Trigger: a high-value POI (oil or arms plant, or a Krug hub: a tile flagged `krugMarket`,
+STR-010) is weakly held and both Varyag and
 Aegis have no active attack/hunt goals. Effect: both attack it together with their strongest squads.
 Ends when the assault ends. Afterwards Varyag↔Aegis relation drops by `jointAssaultRelationDrop`.
 Hooks: contracts to defend or to join; Varyag and Aegis invite the player only if Friendly or better
@@ -637,18 +722,21 @@ blame, or exploit. A dispute can attribute an otherwise unwitnessed act (MGT att
 
 ### [STR-059] Event: Front offensive
 **Rule.** Trigger: SSV or VDK has a strength advantage ≥ `offensiveAdvantage` along part of the front.
-Effect: its squads concentrate on that front sector and push; POIs change hands faster. Duration
+Effect: its squads concentrate on that front sector and push; POIs change hands faster. **Front tiles** are
+tiles held by SSV or VDK adjacent to a tile held by the other; a **front sector** is the front tiles within
+region distance `params.sectorRadius` of one front tile (spec definition, see Open questions). Duration
 `offensiveDays` (5–10). Hooks: many contracts on both sides; higher encounter risk on roads near the
 front.
-**Values.** `offensiveDays` — design 5–10; `offensiveAdvantage` — not set (design: Open) → data/events.json.
+**Values.** `offensiveDays` — design 5–10; `offensiveAdvantage`, `params.sectorRadius` — not set (design: Open) → data/events.json.
 **Status.** open
 **Source.** design/world-events.md › Events
 
 ### [STR-060] Event: Local ceasefire
-**Rule.** Trigger: heavy losses on both SSV and VDK in one area. Effect: regions of that area get the
+**Rule.** Trigger: heavy losses on both SSV and VDK in one area — the tiles within region distance
+`params.areaRadius` of a tile where they fought (spec definition, see Open questions). Effect: regions of that area get the
 `ceasefire` flag; SSV–VDK encounters there never turn hostile. Duration `ceasefireDays`. A player who
 breaks it (fights there) loses heavy reputation with both (MGT).
-**Values.** `ceasefireDays` — design 7; loss threshold, area size, reputation loss — not set (design: Open) → data/events.json.
+**Values.** `ceasefireDays` — design 7; loss threshold, `params.areaRadius`, reputation loss — not set (design: Open) → data/events.json.
 **Status.** open
 **Source.** design/world-events.md › Events
 
@@ -734,12 +822,12 @@ the list of player-attributed fights it lost in the last 7 days. This feeds STR-
 8. Isolation: ≥ 3 factions with relation ≤ −50 toward it.
 9. Its PMC has gone rogue: Varyag (SSV) or Aegis (VDK) is rogue.
 10. Repeated defeats by the player: ≥ 3 player-attributed lost fights in the last 7 days.
-**Values.** `littleTerritory` 0.30, `areaLoss` 0.15, `troopLoss` 0.30, `resistanceGroups` 2, `capitalThreatRange` 2, `keyPlants` 0.5, `isolationFactions` 3, `isolationRelation` −50, `playerDefeats` 3 → data/strategic-rules.json.
+**Values.** `crisis.littleTerritory` 0.30, `crisis.areaLoss` 0.15, `crisis.troopLoss` 0.30, `crisis.resistanceGroups` 2, `crisis.capitalThreatRange` 2, `crisis.keyPlants` 0.5, `crisis.isolationFactions` 3, `crisis.isolationRelation` −50, `crisis.playerDefeats` 3 → data/strategic-rules.json.
 **Source.** design/world-events.md › Desperate measures (Crisis signs); › Reputation in the event system; design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft))
 
 ### [STR-070] Measure selection
 **Rule.** After the sign check: if a faction has ≥ 3 true signs and no measure running, it may pick one
-measure available to it whose typical signs overlap its true signs (choice: SAI). At most one measure
+measure available to it whose typical signs overlap its true signs (choice: SAI-016, returned as `pickMeasure`; the view lists the candidates as `availableMeasures`). At most one measure
 per faction runs at a time, and a measure starts only while the shared cap on events and measures
 (STR-050) is not reached. If ≥ 5 signs and Capital threatened is among them, the nuclear strike
 (STR-080) becomes available. Measures are data/events.json records with `kind: "measure"`.
@@ -793,9 +881,10 @@ map are optional (later build).
 **Source.** design/world-events.md › Desperate measures (Measures)
 
 ### [STR-077] Measure: Martial law
-**Rule.** SSV, VDK; signs: resistance, capital threatened. All its held cities get `martialLaw`:
-checkpoints (encounter checks on entry), curfews, restricted trade (MGT), civilians searched.
-**Values.** movement/trade restriction — not set (design: Open) → data/events.json.
+**Rule.** SSV, VDK; signs: resistance, capital threatened. All its held cities get `martialLaw`: curfews,
+restricted trade (MGT price/stock modifier), civilians searched. Hooks: harder movement and trade;
+smuggling contracts with the Krug. (Checkpoints are no longer part of the design, 44887c7.)
+**Values.** curfew, movement and trade restriction, search effect — not set (design: Open) → data/events.json `params`.
 **Status.** open
 **Source.** design/world-events.md › Desperate measures (Measures)
 
@@ -892,8 +981,8 @@ get no road.
 ### [STR-089] Stage: war state
 **Rule.** Draw a front line splitting the map into SSV and VDK territory; the capital goes to one side
 (random). Varyag starts behind SSV lines, Aegis behind VDK lines; the Krug in the contested belt along
-the front.
-**Values.** front split ratio, belt width — not set (design: Open) → data/mapgen/strategic.json `warState`.
+the front. Krug markets: town and city tiles in that belt get the `krugMarket` flag (STR-010).
+**Values.** front split ratio, belt width — not set (design: Open) → data/mapgen/strategic.json `warState`; Krug market count and spacing — not set (design: Open) → data/mapgen/strategic.json `krugMarkets`.
 **Status.** open
 **Source.** design/design.md › Strategic Layer › Map generation (draft) (7)
 
@@ -1018,5 +1107,16 @@ road, each with a non-water landable neighbour.
     booked when funds still never go below zero?
 39. STR-093: when an employer's default fails the contract, does the player lose reputation, and is the
     advance kept free of debt (MGT-048)? What if the advance itself cannot be paid at signing?
-40. STR-094: where and when is a Krug escort hired, at what price, and how does an AI faction ask for one
-    (a strategic command)?
+40. STR-094 (the command part is answered by `strategic_commands`: an AI faction uses `hireEscort`, STR-021):
+    where and when is a Krug escort hired, at what price, and is the Krug's side of it scored by the
+    Krug AI or always accepted?
+41. STR-033: the vehicle profile (civilian or military) has no stated effect since checkpoints were
+    removed (design 44887c7). Does it still matter anywhere (encounter checks, detection, faction
+    reactions), or is it display only?
+42. STR-059, STR-060: the spec defines a "front sector" as the front tiles within `params.sectorRadius` of
+    one front tile and an "area" as the tiles within `params.areaRadius` of a fight. Confirm, or give the
+    design's meaning of "part of the front" and "one area".
+43. STR-096: how is a squad raised — where (any held POI with recruits, only cities, FOB-like bases), how
+    large, with which gear tier, and at what cost? Does recruiting take time?
+44. STR-031: does carrying "only what its soldiers carry" leave a squad on foot any supplies store
+    (ammunition, medical) beyond the soldiers' own gear, and how does an on-foot squad bring loot home?

@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
+Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 
 ## IDs
 
-387 IDs (first split 2026-11-22, updated from design eb072a2). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+392 IDs (first split 2026-11-22, updated from design f82ec75). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -72,13 +72,15 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 | [STR-092] | Faction funds (open) | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); design/design.md (module table: `world` includes funds) |
 | [STR-093] | Contract payment between modules | modules/strategic | design/design.md › Strategic Layer › Squads and simulation (Faction funds (draft)); › Overview › Core loop; › Management › Contracts and missions › Contract terms |
 | [STR-094] | Krug escorts (open) | modules/strategic | design/design.md › Management › Contracts and missions › Where contracts come from |
+| [STR-095] | Strategic terrain table | modules/strategic | design/design.md › Strategic Layer › Map |
+| [STR-096] | Raising a squad (open) | modules/strategic | design/design.md › Strategic Layer; › AI › Strategic AI |
 | [STR-027] | Operation lifecycle | modules/strategic | design/design.md › Overview › Core loop; › Management › Gear, loot & return |
 | [STR-028] | Launch an op (open) | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-029] | Return to an FOB | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-030] | Lost vehicle (open) | modules/strategic | design/design.md › Vehicles (draft) (Loss) |
 | [STR-031] | Move one region on foot | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-032] | Move one region by ground vehicle (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) |
-| [STR-033] | Vehicle visibility at checkpoints (open) | modules/strategic | design/design.md › Vehicles (draft) (Profile) |
+| [STR-033] | Vehicle profile (open) | modules/strategic | design/design.md › Vehicles (draft) (Profile) |
 | [STR-034] | Fly one region by helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) › Helicopters |
 | [STR-035] | Land a helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/design.md › Vehicles (draft) › Helicopters |
 | [STR-036] | Scout (open) | modules/strategic | design/design.md › Strategic Layer (Time); design/strategic-actions.md › Movement and operations |
@@ -185,6 +187,7 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 | [TAC-042] | Swap weapon 1 and 2 | modules/tactical | design/tactical-actions.md › Weapons (Swap between weapon 1 and 2); design/design.md › Data definitions › Soldier equipment slots |
 | [TAC-043] | Throw a grenade (open) | modules/tactical | design/tactical-actions.md › Weapons (Throw a grenade); design/item-list.md › Grenades; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes |
 | [TAC-079] | Grenade effects (open) | modules/tactical | design/item-list.md › Grenades |
+| [TAC-080] | Tactical map from the encounter tile (open) | modules/tactical | design/design.md › Strategic Layer › Map; › Tactical Layer |
 | [TAC-044] | Total spread (open) | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Weapon profile |
 | [TAC-045] | Simulated shot trace | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Calibre profile |
 | [TAC-046] | Hit chance and shot preview | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Tactical Layer (Readability) |
@@ -287,6 +290,7 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 | [MGT-069] | FOB raids (open) | modules/management | design/design.md › Management › Base & meta progression |
 | [MGT-070] | Economy ledger | modules/management | design/design.md › Management › Contracts and missions › Contract terms; › Factions & campaign › Leaders; › Strategic Layer › Squads and simulation (Faction funds (draft)) |
 | [MGT-071] | Campaign score (open) | modules/management | design/design.md › Management › Base & meta progression |
+| [MGT-072] | Management view | modules/management | design/design.md › Management |
 | [SAI-001] | Controller role | modules/strategic-ai | design/design.md › AI; › AI › Strategic AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [SAI-002] | Invocation | modules/strategic-ai | design/design.md › AI › Strategic AI › Controller hand-off; › Strategic Layer (Time) |
 | [SAI-003] | Strategic perception view | modules/strategic-ai | design/design.md › AI › Strategic AI › Controller hand-off; › Faction AI tiers; › Strategic Layer › Map (Fog of war); › Squads and simulation (Faction funds (draft)) |
@@ -302,6 +306,7 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 | [SAI-013] | Hostility toward the player | modules/strategic-ai | design/design.md › AI › Strategic AI › Faction behaviour; › Management › Reputation › Standing |
 | [SAI-014] | Contract offers | modules/strategic-ai | design/design.md › Management › Contracts and missions › Where contracts come from; › AI › Strategic AI › Faction AI tiers; › Controller hand-off |
 | [SAI-015] | Contract offer evaluation (open) | modules/strategic-ai | design/design.md › AI › Strategic AI › Faction AI tiers; › Management › Contracts and missions › Where contracts come from |
+| [SAI-016] | Desperate measure choice | modules/strategic-ai | design/world-events.md › Desperate measures; design/design.md › AI › Strategic AI |
 | [TAI-001] | Controller role | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [TAI-002] | Invocation | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off; › Tactical Layer › Turn structure › Reactions |
 | [TAI-003] | Pluggable controller | modules/tactical-ai | design/design.md › AI › Tactical AI (last paragraph); design/design.md › Tactical Layer › Turn structure (neutral side); design/design.md › Management › Contracts and missions (Escort a VIP) |
@@ -314,7 +319,7 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 | [TAI-010] | Action fit | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › Data definitions › Weapon profile (Weapon type → AI role) |
 | [TAI-011] | Coordination | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
 | [TAI-012] | Squad blackboard | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; CLAUDE.md › State ownership |
-| [TAI-013] | Squad leader plan (open (rank tie-break, rank source for AI soldiers)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles) |
+| [TAI-013] | Squad leader plan (open (rank tie-break)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles) |
 | [TAI-014] | Squad roles (open (how reinforcements arrive is not designed)) | modules/tactical-ai | design/design.md › AI › Tactical AI; › Tactical Layer (Enemy AI) |
 | [TAI-015] | Doctrines | modules/tactical-ai | design/design.md › AI (Data); CLAUDE.md (data/ai) |
 | [TAI-016] | Decision log | modules/tactical-ai | design/design.md › AI (Logging); › Presentation & tech › Prototype tech stack (Debugging) |
@@ -345,7 +350,7 @@ Design baseline: eb072a2 (update, 2026-11-23; previous 69be026)
 | [DAT-022] | Ammo type defaults (Draft (falloff ranges marked placeholder)) | /data, tools | design/design.md › Data definitions › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition |
 | [DAT-023] | Per-shot inputs | /data, tools | design/design.md › Tactical Layer › Derived per shot (draft); › Data definitions › Calibre profile (draft) |
 | [DAT-024] | Vehicle profile (Draft (design: "Draft — not final")) | /data, tools | design/design.md › Data definitions › Vehicles (draft) › Vehicle parameters |
-| [DAT-025] | A squad on the map is its vehicle | /data, tools | design/design.md › Data definitions › Vehicles (draft) |
+| [DAT-025] | A squad has at most one vehicle | /data, tools | design/design.md › Data definitions › Vehicles (draft) |
 | [DAT-026] | Vehicle features (open) | /data, tools | design/design.md › Data definitions › Vehicles (draft) › Vehicles table |
 | [DAT-027] | Vehicle availability | /data, tools | design/design.md › Data definitions › Vehicles (draft) › Buying and selling, Start; › Management › Reputation › Standing |
 | [DAT-028] | Helicopter data | /data, tools | design/design.md › Data definitions › Vehicles (draft) › Helicopters (draft) |

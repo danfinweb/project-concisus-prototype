@@ -19,7 +19,7 @@ engine-independent so a switch does not touch game logic.
 **Rule.** A character model has between `charTrianglesMin` and `charTrianglesMax` triangles. Asset checks
 flag models outside the range.
 **Values.** `charTrianglesMin` — design 500; `charTrianglesMax` — design 2,000 (both "roughly") →
-data/presentation.json (proposed new table).
+data/presentation.json (listed in data/tables.json).
 **Source.** design/design.md › Presentation & tech › Art direction › Retro base
 
 ### [TEC-002] Texture size and filtering
@@ -37,7 +37,7 @@ pixels). HTML UI renders at native resolution on top.
 
 ### [TEC-004] Palette and dithering
 **Rule.** The upscaled image passes a limited-palette quantisation with ordered dithering.
-**Values.** palette size, dither matrix — not set (design: Open) → data/presentation.json.
+**Values.** `paletteSize`, `ditherMatrix` — not set (design: Open) → data/presentation.json.
 **Status.** open
 **Source.** design/design.md › Presentation & tech › Art direction › Retro base
 
@@ -45,7 +45,8 @@ pixels). HTML UI renders at native resolution on top.
 **Rule.** A settings toggle enables vertex jitter, affine texture warping and a short draw distance hidden
 by fog. Default off. The toggle never changes game rules (line of sight and spotting are computed by TAC,
 not from the rendered image).
-**Values.** draw distance, jitter strength — not set (design: Open) → data/presentation.json.
+**Values.** `psxQuirks.drawDistance`, `psxQuirks.jitterStrength` — not set (design: Open) →
+data/presentation.json.
 **Status.** optional
 **Source.** design/design.md › Presentation & tech › Art direction › Retro base
 
@@ -58,8 +59,8 @@ time of day (day or night battle).
 ### [TEC-007] Quality tiers
 **Rule.** Effects scale by quality tier. At least two tiers: `phone` (baked lighting, few shadow casters) and
 `desktop` (full effects). The tier is chosen at start (device detection) and can be changed in settings.
-**Values.** tier list, shadow caster count per tier, detection rule — not set (design: "few") →
-data/presentation.json.
+**Values.** `qualityTiers` (`{ id, bakedLighting, shadowCasters }` per tier), `tierDetection` — not set
+(design: "few") → data/presentation.json.
 **Source.** design/design.md › Presentation & tech › Art direction › Why it fits the browser
 
 ### [TEC-008] Rendering never drives rules
@@ -147,7 +148,7 @@ zoom; rotation via Q/E or an on-screen button (TAC camera).
 ### [TEC-022] Select and shot preview
 **Rule.** Tap (or click) selects. Tap-hold shows the shot preview (hit %, likely body zone, penetration,
 TAC); the mouse equivalent shows the same preview without hover dependency (TEC-024).
-**Values.** tap-hold duration — not set (design: Open) → data/presentation.json.
+**Values.** `tapHoldMs` — not set (design: Open) → data/presentation.json.
 **Source.** design/design.md › Presentation & tech › Browser and mobile constraints (Input)
 
 ### [TEC-023] Explicit confirm for moves and shots
@@ -163,7 +164,7 @@ has a non-hover trigger.
 
 ### [TEC-025] Phone layout
 **Rule.** Menus and inventory work in portrait on phones; inventory rows and tap targets are large on touch.
-**Values.** minimum tap target and row height — not set (design: "large") → data/presentation.json.
+**Values.** `minTapTargetPx`, `minRowHeightPx` — not set (design: "large") → data/presentation.json.
 **Source.** design/design.md › Presentation & tech › Browser and mobile constraints (UI)
 
 ## Performance and saves
@@ -210,3 +211,6 @@ state, so loading reproduces the same continuation.
 8. Design open questions outside spec scope: solo or team project and release window; optional co-op
    operations.
 9. TEC-019 — The vertical slice names 15 weapons; the item list has 18.
+10. **Resolved (cleanup 2026-11-23):** every TEC Values line names a `data/presentation.json` field
+    (`ditherMatrix`, `psxQuirks.drawDistance`, `psxQuirks.jitterStrength`, `tierDetection`, `minRowHeightPx`
+    added); presentation.json is an existing table (data/tables.json).

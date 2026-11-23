@@ -5,6 +5,22 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-23 | tactical_map_request | 0.5.0 | `region.biome` (STR-095/TAC-080); `exits[].id` required; objective types `killVip`, `captureVip`, `destroyTarget`, `saveCargo` (TAC-076); per-unit `battleGoal` override (TAI-018); stale acceptableLoss text removed | strategic, tactical, tactical-ai |
+| 2026-11-23 | tactical_perception_view | 0.4.0 | `squadMorale`; enemy `facing`/`level`; map tiles, exits, containers, bodies, smoke; structured `allowedActions` with shot previews; no query functions (TAI-001) | tactical, tactical-ai |
+| 2026-11-23 | tactical_commands | 0.3.1 | Field descriptions per command type; no `takeCover` command (TAI-005) | tactical, tactical-ai |
+| 2026-11-23 | battle_result | 0.3.1 | `exitId` documented as the map exit id (TAC-038/TAC-080) | tactical, strategic, management |
+| 2026-11-23 | strategic_commands | 0.5.0 | `contractOffer`: `id`, `targetFaction`, `reputationGain`, `reputationGate {better, sensitive}`, per-mission `key`, `intelLevel` enum, required deadline; consumer only modules/strategic | strategic, strategic-ai |
+| 2026-11-23 | strategic_perception_view | 0.5.0 | `ownSquads.transit` object replaces `inTransit`; `ownSquads.vehicle` (null = on foot); own-region loyalty per faction; `krugMarket` tile flag; terrain x-ref strategic-terrain | strategic, strategic-ai |
+| 2026-11-23 | management_requests | 0.4.0 | New `contractOffer` request (local copy of the offer); `fate`, `outcome`, `plantId`, `fobId`, `day`; `act` enum of repActs keys | strategic, management |
+| 2026-11-23 | management_view | 0.1.0 | New: Management → Strategic view of reputation (value, standing), contracts with status, funds (MGT-072) | management, strategic |
+| 2026-11-23 | data/strategic-terrain | 0.1.0 | New table: strategic terrain → move hours, visibility, biome, tactical terrain and prefab tables (STR-095) | tools, strategic, tactical |
+| 2026-11-23 | data/tactical-rules | 0.5.0 | `minDamageShare` removed (`falloffFloor`); encumbrance Strength reduction, grenade scatter, blast shares/cover, morale flight, mines, weapon wear/jam/spread fields; recoilControl → TAC-047 | tools, tactical |
+| 2026-11-23 | data/mapgen-tactical, terrain, prefabs | 0.3.0 | Exits with `id` and `exitCount`; terrain and prefab records list their `tables` (TAC-080) | tools, tactical |
+| 2026-11-23 | data/strategic-rules | 0.4.0 | `moveHours`, `terrainVisibility` → strategic-terrain; `battleHours` removed (TAC-003); `roadMoveHours`, `onFootHours`, `supplyDeficitEffect`, `scoutSuccess`, `scatterShares`, `coup`, heli values; explicit nested keys | tools, strategic |
+| 2026-11-23 | data/vehicles, poi, mapgen-strategic, factions, events | 0.3.0, 0.4.0, 0.4.0, 0.4.0, 0.4.0 | Vehicle heli constants removed, armourClass nullable; `krugMarketAllowed`, no krugMarket service; `krugMarkets` placement; `leaderEffect`, `standingUnlocks`; `params` names | tools, strategic, strategic-ai |
+| 2026-11-23 | data/ai-doctrines | 0.3.0 | `factions` dropped (`factions.doctrine` wins); `personality`, `commitmentBonus`, `gainTerms` | tools, strategic-ai |
+| 2026-11-23 | data/items | 0.5.0 | Weapon `feedType` required; medical and magazine require `weightKg`; mod `modifiers` keys per slot; `checkpointPass` effect removed | tools, tactical, management |
+| 2026-11-23 | data/management-rules, recruitment, presets, presentation | 0.5.0, 0.3.0, 0.3.0, 0.3.0 | `weightPenalty` removed; `lowRiskContract`, `weaponRepair`, `scavLoadout {items, priceUsd}`; `salaryIntervalHours` removed, `nonPayment`; presets `priceUsd` removed; presentation constants named | tools, management, game |
 | 2026-11-23 | tactical_map_request | 0.4.0 | Per-unit `rank` and `controller`; neutral role described; `acceptableLoss` as a 0–1 share; encounter tile terrain and `road` | strategic, tactical, tactical-ai |
 | 2026-11-23 | battle_result | 0.3.0 | Objectives carry `metTurn` (TAC-076) | tactical, strategic, management |
 | 2026-11-23 | tactical_perception_view | 0.3.0 | Unit `rank`, limb states, `overwatch`, `alerted`, `outOfAction`, `carrying`, `magazines`; enemy gear as the player sees it | tactical, tactical-ai |

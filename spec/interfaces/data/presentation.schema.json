@@ -3,7 +3,7 @@
   "$id": "data/presentation.schema.json",
   "title": "Presentation",
   "description": "Render and UX budgets (spec TEC).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -14,13 +14,23 @@
     "renderHeightMin": { "type": "integer", "description": "TEC-003, design 360" },
     "renderHeightMax": { "type": "integer", "description": "TEC-003, design 480" },
     "paletteSize": { "type": "integer", "description": "TEC-004, not set" },
-    "psxQuirks": { "type": "object", "description": "TEC-005 (optional)" },
+    "ditherMatrix": { "type": "array", "description": "TEC-004, ordered-dither matrix rows, not set" },
+    "psxQuirks": {
+      "type": "object", "description": "TEC-005 (optional)",
+      "properties": {
+        "drawDistance": { "type": "number", "exclusiveMinimum": 0, "description": "not set" },
+        "jitterStrength": { "type": "number", "minimum": 0, "description": "not set" }
+      },
+      "additionalProperties": false
+    },
     "qualityTiers": { "type": "array", "description": "TEC-007: {id phone|desktop, bakedLighting, shadowCasters}" },
+    "tierDetection": { "type": "object", "description": "TEC-007: device detection rule, not set" },
     "fpsPhone": { "type": "integer", "description": "TEC-026, design 30" },
     "fpsDesktop": { "type": "integer", "description": "TEC-026, design 60" },
     "firstLoadMaxMb": { "type": "integer", "description": "TEC-027, design 50" },
     "tapHoldMs": { "type": "integer", "description": "TEC-022, not set" },
-    "minTapTargetPx": { "type": "integer", "description": "TEC-025, not set" }
+    "minTapTargetPx": { "type": "integer", "description": "TEC-025, not set" },
+    "minRowHeightPx": { "type": "integer", "description": "TEC-025, not set" }
   },
   "additionalProperties": false
 }
