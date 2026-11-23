@@ -23,8 +23,8 @@ Nov 22, 2026 · @Dan
 | Move crouched | Walk cost +1 AP per tile | — | Draft |
 | Crawl prone | Walk cost +3 AP per tile | No sprinting, vaulting or climbing | Draft |
 | Sprint | Walk cost −1 AP per tile (never below 1 per tile) | Upright only; +1 stamina point on that activation; not possible prone, with a leg fracture or in a large rucksack | Draft |
-| Leg wound surcharge | +1 AP per tile per wounded leg | A leg counts as wounded below 50% of its HP; a leg fracture then multiplies the whole tile cost by 1.5 | Draft |
-| Change stance | Upright ↔ crouched 2 AP; crouched → prone 2 AP; prone → crouched 4 AP; prone → upright 6 AP | Getting up from prone costs the most | Draft |
+| Leg wounds | +1 AP per tile per wounded leg | A leg counts as wounded below 50% of its HP. A disabled leg (0 HP) doubles the whole tile cost instead, once however many legs are disabled. A leg fracture multiplies the whole tile cost by 1.5, also on top of a disabled leg (×2 × 1.5 = ×3) | Draft |
+| Change stance | Upright ↔ crouched 2 AP; crouched → prone 2 AP; prone → crouched 4 AP; prone → upright 6 AP; upright → prone 4 AP (through crouched, 2 + 2) | Getting up from prone costs the most | Draft |
 | Turn during an activation | 1 AP per 90° or part of it | Turning along a path while moving is free; the final facing is free | Draft |
 | Vault a window or low wall | 4 AP | Agility 70+: 3 AP; not possible prone | Draft |
 | Climb a ladder | 4 AP per level | Agility 70+: 3 AP per level; not possible prone or while carrying a squadmate | Draft |
@@ -34,10 +34,10 @@ Nov 22, 2026 · @Dan
 | Action | Cost | How it is calculated | Status |
 | --- | --- | --- | --- |
 | Fire (one shot action) | Default by weapon type: pistol 4, SMG 5, assault rifle 6, shotgun 6, battle rifle 7, DMR 7, LMG 8, bolt-action sniper rifle 9 AP | Burst (3 rounds) +2 AP; full auto (5 rounds) +4 AP; ergonomics 70+ −1 AP, 30 or below +1 AP. Each weapon can override its value in /data | Draft |
-| Aim longer | 2 AP per aim step, up to 3 steps | Each step lowers shooter spread by 15% (placeholder). Marksmanship 75+: 1 AP per step. +1 AP per step with a wounded aiming arm (below 50% HP) or pain | Draft |
-| Reload | Pistol 4, box magazine 5, stripper clip or bolt-action 6, belt-fed 10 AP; tube-fed shotgun 2 AP per shell | Marksmanship 70+ −1 AP; ergonomics 70+ −1 AP, 30 or below +1 AP; magazine from the backpack +4 AP; wounded arm +2 AP; arm fracture ×1.5 | Draft |
+| Aim longer | 2 AP per aim step, up to 3 steps | Each step multiplies shooter spread by 0.85 (placeholder; 3 steps ≈ −39%). Marksmanship 75+: 1 AP per step. +1 AP per step with pain | Draft |
+| Reload | Pistol 4, box magazine 5, stripper clip or bolt-action 6, belt-fed 10 AP; tube-fed shotgun 2 AP per shell | Marksmanship 70+ −1 AP; ergonomics 70+ −1 AP, 30 or below +1 AP; magazine from the backpack +4 AP; arm fracture ×1.5 | Draft |
 | Swap between weapon 1 and 2 | 3 AP | 2 AP when either weapon is a pistol; Agility 70+ −1 AP; weapon over 6 kg +2 AP | Draft |
-| Throw a grenade | 5 AP | From the vest or belt; from the backpack +4 AP; wounded throwing arm +1 AP; Strength sets throwing distance | Draft |
+| Throw a grenade | 5 AP | From the vest or belt; from the backpack +4 AP; Strength sets throwing distance. Wounded arm: landing scatter ×1.5; disabled arm (0 HP): scatter ×2; the worse arm counts | Draft |
 
 ## Medical
 
@@ -75,4 +75,4 @@ Draft: an item used from the backpack costs +4 AP (the backpack surcharge, the s
 - **Head hit:** chance to be stunned, losing 10 AP on the next activation (draft).
 - **Pain:** −4 AP until masked by painkillers (draft).
 - **Over-encumbered:** −5 AP over carry capacity, −10 AP over 125% of it (draft); Strength lowers the penalty for heavy kit.
-- Wounds do not reduce the AP pool; they raise the cost of the actions that use the wounded zone (see the tables above).
+- Wounds do not reduce the AP pool. Wounded or disabled legs raise movement cost; wounded or disabled arms widen the shooting cone and the grenade scatter instead of costing AP (see Body zones in the GDD).

@@ -250,7 +250,7 @@ Turn-based squad combat on destructible 3D maps, with JA2-style action points an
 - **Turn structure:** alternating soldier activations with stamina-limited reactions (see Turn structure below). Turn-based from the first moment on the map, including stealth: there is no real-time exploration phase.
 - **Action points (decided):** each soldier's AP per activation are derived from their stats, so a fast, skilled veteran does more per activation than a rookie. AP is spent on movement, stance, aiming, reloading, medical and gear actions; aiming longer raises accuracy.
   - Turn modifiers: over-encumbrance and suppression reduce the pool for that activation.
-  - Action costs also scale with stats and gear: Marksmanship and weapon ergonomics lower reload and aim costs, Agility speeds up weapon swaps, Strength lowers the penalty for heavy kit.
+  - Action costs also scale with stats and gear exactly as listed in Tactical actions, which is the single source for every cost and its modifiers; Strength lowers the penalty for heavy kit.
 - **Camera (decided):** isometric 3D camera with smooth zoom — zoomed out for planning across the map, zoomed in to read cover, stance and gear. Fixed default angle; walls and roofs cut away around selected soldiers and the cursor, and units behind cover show as outlines. Optional 90° rotation (Q/E on PC, a rotate button on mobile) with a snap-back-to-default button and a compass, so the game stays fully playable without ever rotating. Assets are built to read from all four sides. Mouse wheel on PC, pinch on mobile.
 - **Movement (decided):** grid-based on square tiles (about 1.5 m), 8 directions, diagonals cost more AP.
   - Each tile has a terrain cost (road, grass, mud, rubble, stairs); crouching adds to the cost, crawling while prone adds more. Soldiers are upright, crouched or prone (see Stance under Body zones); changing stance costs AP, getting up from prone the most.
@@ -266,7 +266,7 @@ Turn-based squad combat on destructible 3D maps, with JA2-style action points an
 
 ### Turn structure (draft)
 
-Combat alternates one soldier at a time between the two sides. There are no rounds: stamina alone decides how often a soldier can act and react.
+Combat alternates one soldier at a time between the sides. There are no rounds: stamina alone decides how often a soldier can act and react.
 
 **Turns and activation**
 
@@ -277,7 +277,7 @@ Combat alternates one soldier at a time between the two sides. There are no roun
 5. **Stall rule:** if both sides pass twice in a row, a side not in contact may leave the map or skip ahead until something changes.
 6. Effects with a duration (bleeding, smoke) are counted in turns. A soldier who is hit, or whose cover is hit, is **suppressed**: −5 AP, wider spread and no reactions, until one full turn passes without such hits.
 
-Never more than two sides on a tactical map: the player's side — which can include allied units under AI control, such as defenders, a convoy or an escorted VIP — and one opponent.
+A tactical map has the player's side — which can include allied units under AI control, such as defenders, a convoy or an escorted VIP — and one opponent. Units that are hostile to neither (a non-involved faction, civilians) form a third, neutral side controlled by the tactical AI; it turns hostile toward whoever attacks it. Open: when the neutral side activates in the turn order.
 
 **Stamina**
 
@@ -376,8 +376,8 @@ While aiming, the arm boxes swing forward and partly shield the thorax from the 
 | --- | --- | --- | --- | --- |
 | Head | 35 | Helmet | Chance to stun: the soldier loses AP on the next activation | Death |
 | Thorax | 85 | Body armour (plates front and back) | High bleeding chance | Death |
-| Left arm, right arm (each) | 60 | Usually none | More aim and reload AP, more shooter spread | No negative effects for now |
-| Left leg, right leg (each) | 70 | Usually none | Higher movement cost; maximum stamina −1 per wounded leg | No negative effects for now |
+| Left arm, right arm (each) | 60 | Usually none | Wounded (below 50% HP): shooting cone and grenade scatter ×1.5; the worse arm counts | Disabled: shooting cone and grenade scatter ×2 |
+| Left leg, right leg (each) | 70 | Usually none | Wounded (below 50% HP): +1 AP per tile per wounded leg; maximum stamina −1 per wounded leg | Disabled: movement cost ×2 (once, however many legs); a leg fracture ×1.5 stacks on top |
 
 - Endurance modifies the base HP of every zone: × (0.5 + 0.75 × Endurance / 100). Frail soldiers start well below the base values (Endurance 20 = ×0.65, Endurance 40 = ×0.8), Endurance 67 matches them (×1.0), and Endurance 100 reaches 25% above them (×1.25).
 - Bleeding drains HP from its zone every turn until treated (Medical).
@@ -395,7 +395,7 @@ While aiming, the arm boxes swing forward and partly shield the thorax from the 
 | Fracture | Heavy hits or falls on arms and legs | Arm: more aim spread and slower reloads. Leg: movement cost ×1.5, no sprinting | Splint |
 | Pain | Damage, tourniquets | Fewer AP and more aim spread until masked | Painkillers (temporary) |
 
-A zone at 0 HP stays as defined under Body zones (head or thorax: death; arm or leg: no negative effects for now).
+A zone at 0 HP stays as defined under Body zones (head or thorax: death; arm or leg: disabled). Damage that hits a disabled limb is split equally over all zones still above 0 HP, head and thorax included.
 
 **Using medical items**
 
@@ -445,9 +445,9 @@ Every soldier has eight attributes on a 1–100 scale. They form two groups: fou
 | --- | --- | --- | --- | --- |
 | 1 | Strength | Physical | Force: carry weight, heavy-kit penalty, recoil control, throwing distance | Barely (body profile) |
 | 2 | Endurance | Physical | Body: HP per zone, stamina pool, bleed resistance, recovery speed | Barely (body profile) |
-| 3 | Agility | Physical | Speed: AP, movement cost, vaulting and climbing, stance changes | Barely (body profile) |
+| 3 | Agility | Physical | Speed: AP, movement cost, vaulting and climbing, weapon swaps | Barely (body profile) |
 | 4 | Perception | Physical | Senses: sight range, spotting, hearing, noticing a moving enemy (reactions) | Barely (body profile) |
-| 5 | Marksmanship | Skill | Shooting: spread, aim time, reload and weapon swap cost, burst control | Hitting targets, reloading under fire |
+| 5 | Marksmanship | Skill | Shooting: spread, aim time, reload cost, burst control | Hitting targets, reloading under fire |
 | 6 | Recon | Skill | Moving unseen: noise, concealment, ambushes, evading and scouting on the strategic map | Moving unseen, scouting |
 | 7 | Medical | Skill | Field treatment, surgery, healing speed at the FOB | Treating wounds |
 | 8 | Technical | Skill | Repairs, weapon mods, explosives, locks, drones, vehicles and helicopters | Repairing, modding, using explosives |
@@ -471,7 +471,7 @@ Each derived value drives one thing and comes from at most two attributes: a mai
 | Carry capacity | Strength | Endurance | Formula open |
 | Shooter spread | Marksmanship | Perception (at range) | Feeds the hit model's spread cone |
 | Recoil control | Marksmanship | Strength | Lowers the spread each follow-up round adds |
-| Reload and weapon swap cost | Marksmanship | Agility | Together with weapon ergonomics |
+| Reload and weapon swap cost | Marksmanship | Agility | Reload: Marksmanship and weapon ergonomics; swap: Agility and weapon weight (see Tactical actions) |
 | Spotting and sight range | Perception | Recon | Night: a third of the day range without a flashlight |
 | Reaction chance | Perception (reactor) | Agility (mover) | 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90% (see Turn structure) |
 | Noise and concealment | Recon | Agility | How far away enemies notice the soldier |
@@ -664,7 +664,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 
 | Slot | Holds | Effect in play |
 | --- | --- | --- |
-| Weapon 1 | Any weapon type | Equipped weapon; switching between the two costs AP (Marksmanship, Agility and ergonomics) |
+| Weapon 1 | Any weapon type | Equipped weapon; switching between the two costs AP (Agility and weapon weight, see Tactical actions) |
 | Weapon 2 | Any weapon type | Second equipped weapon, e.g. a rifle and a pistol, or a rifle and a shotgun |
 | Helmet | Head protection | Armour class for the head zone; heavier helmets can narrow hearing (noise detection) |
 | Body armour | Plates or soft armour | Armour class for the thorax zone; durability wears with each hit |
@@ -688,7 +688,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 | Fire modes | List of rounds per trigger action, e.g. \[1, 3\] or \[1, auto\] | Semi-auto, burst and full-auto options (replaces a single Burst value) | Rounds and AP per shot action; recoil builds within a burst |
 | Magazine size | Rounds | Capacity of the standard magazine | Shots before reloading |
 | Barrel multiplier | Factor around 1.0 | Fixed per weapon by its barrel length, not changed by mods: short barrels below 1.0, long barrels above | Multiplies the calibre's damage |
-| Ergonomics | 1–100 | Handling and balance | AP cost to ready, aim and reload, together with Marksmanship |
+| Ergonomics | 1–100 | Handling and balance | AP cost to fire and reload (see Tactical actions) |
 | Base MoA | Minutes of angle | Mechanical accuracy on a game scale, not real minutes of angle: Base MoA 5 (an average assault rifle) spreads over a torso-plus-head target at 50 m (about 33 tiles), the thorax and head hitboxes together, 0.83 m from the bottom of the thorax to the top of the head. 1 point ≈ 17 cm of spread at 50 m, 33 cm at 100 m; the cone's width is where nearly all shots land | Base spread of every shot |
 | Weight | kg | Weight with standard magazine | Carry capacity, stamina costs, sprint penalties |
 | Recoil | 1–100 | Base kick per shot; multiplied by the calibre's recoil modifier | Spread added per follow-up round; reduced by Marksmanship |

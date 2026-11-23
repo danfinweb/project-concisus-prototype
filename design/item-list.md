@@ -8,26 +8,28 @@ Nov 22, 2026 · @Dan
 
 The barrel is part of the weapon, not a mod: each weapon has a fixed barrel length multiplier. Recoil is the gun's base value; the calibre's recoil modifier applies on top. Base MoA is on the game scale from the weapon profile: 5 (the AK-74M) spreads over a torso-plus-head target at 50 m, about 17 cm per point.
 
-| Weapon | Type | Calibre | Fire modes | Magazine | Barrel mult. | Ergonomics | Base MoA | Weight (kg) | Recoil |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| PM | Pistol | 9×18 mm | \[1\] | 8 | 0.85 | 80 | 12.5 | 0.73 | 25 |
-| Glock 17 | Pistol | 9×19 mm | \[1\] | 17 | 0.9 | 85 | 10 | 0.9 | 28 |
-| PP-19-01 Vityaz | Sub-machine gun | 9×19 mm | \[1, auto\] | 30 | 1.0 | 70 | 7.5 | 2.9 | 30 |
-| MP5 | Sub-machine gun | 9×19 mm | \[1, 3, auto\] | 30 | 1.0 | 75 | 6.3 | 2.6 | 28 |
-| Remington 870 | Shotgun (pump) | 12 gauge | \[1\] | 6 | 1.0 | 60 | 18.8 | 3.6 | 75 |
-| Saiga-12 | Shotgun | 12 gauge | \[1\] | 8 | 1.0 | 50 | 18.8 | 3.6 | 70 |
-| AK-74M | Assault rifle | 5.45×39 mm | \[1, auto\] | 30 | 1.0 | 55 | 5 | 3.4 | 40 |
-| AKM | Assault rifle | 7.62×39 mm | \[1, auto\] | 30 | 1.0 | 50 | 6.3 | 3.3 | 45 |
-| M4A1 | Assault rifle | 5.56×45 mm | \[1, auto\] | 30 | 0.95 | 65 | 3.8 | 3.1 | 35 |
-| FN FAL | Battle rifle | 7.62×51 mm | \[1, auto\] | 20 | 1.1 | 40 | 3.8 | 4.3 | 50 |
-| HK G3 | Battle rifle | 7.62×51 mm | \[1, auto\] | 20 | 1.1 | 40 | 3.8 | 4.4 | 50 |
-| SVD | Designated marksman rifle | 7.62×54R | \[1\] | 10 | 1.15 | 35 | 2.5 | 4.3 | 45 |
-| M110 | Designated marksman rifle | 7.62×51 mm | \[1\] | 20 | 1.1 | 40 | 1.9 | 5.0 | 45 |
-| SV-98 | Sniper rifle (bolt) | 7.62×54R | \[1\] | 10 | 1.2 | 30 | 1.0 | 5.8 | 55 |
-| M24 | Sniper rifle (bolt) | 7.62×51 mm | \[1\] | 5 | 1.2 | 30 | 1.0 | 5.4 | 55 |
-| RPK-74 | Light machine gun | 5.45×39 mm | \[1, auto\] | 45 | 1.1 | 40 | 5 | 5.0 | 35 |
-| M249 | Light machine gun | 5.56×45 mm | \[auto\] | 100 | 1.05 | 25 | 5 | 7.5 | 35 |
-| PKM | Light machine gun | 7.62×54R | \[auto\] | 100 | 1.1 | 20 | 5 | 8.5 | 45 |
+| Weapon | Type | Calibre | Fire modes | Magazine | Feed type | Barrel mult. | Ergonomics | Base MoA | Weight (kg) | Recoil |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PM | Pistol | 9×18 mm | \[1\] | 8 | Pistol | 0.85 | 80 | 12.5 | 0.73 | 25 |
+| Glock 17 | Pistol | 9×19 mm | \[1\] | 17 | Pistol | 0.9 | 85 | 10 | 0.9 | 28 |
+| PP-19-01 Vityaz | Sub-machine gun | 9×19 mm | \[1, auto\] | 30 | Box magazine | 1.0 | 70 | 7.5 | 2.9 | 30 |
+| MP5 | Sub-machine gun | 9×19 mm | \[1, 3, auto\] | 30 | Box magazine | 1.0 | 75 | 6.3 | 2.6 | 28 |
+| Remington 870 | Shotgun (pump) | 12 gauge | \[1\] | 6 | Tube | 1.0 | 60 | 18.8 | 3.6 | 75 |
+| Saiga-12 | Shotgun | 12 gauge | \[1\] | 8 | Box magazine | 1.0 | 50 | 18.8 | 3.6 | 70 |
+| AK-74M | Assault rifle | 5.45×39 mm | \[1, auto\] | 30 | Box magazine | 1.0 | 55 | 5 | 3.4 | 40 |
+| AKM | Assault rifle | 7.62×39 mm | \[1, auto\] | 30 | Box magazine | 1.0 | 50 | 6.3 | 3.3 | 45 |
+| M4A1 | Assault rifle | 5.56×45 mm | \[1, auto\] | 30 | Box magazine | 0.95 | 65 | 3.8 | 3.1 | 35 |
+| FN FAL | Battle rifle | 7.62×51 mm | \[1, auto\] | 20 | Box magazine | 1.1 | 40 | 3.8 | 4.3 | 50 |
+| HK G3 | Battle rifle | 7.62×51 mm | \[1, auto\] | 20 | Box magazine | 1.1 | 40 | 3.8 | 4.4 | 50 |
+| SVD | Designated marksman rifle | 7.62×54R | \[1\] | 10 | Box magazine | 1.15 | 35 | 2.5 | 4.3 | 45 |
+| M110 | Designated marksman rifle | 7.62×51 mm | \[1\] | 20 | Box magazine | 1.1 | 40 | 1.9 | 5.0 | 45 |
+| SV-98 | Sniper rifle (bolt) | 7.62×54R | \[1\] | 10 | Box magazine | 1.2 | 30 | 1.0 | 5.8 | 55 |
+| M24 | Sniper rifle (bolt) | 7.62×51 mm | \[1\] | 5 | Box magazine | 1.2 | 30 | 1.0 | 5.4 | 55 |
+| RPK-74 | Light machine gun | 5.45×39 mm | \[1, auto\] | 40 | Box magazine | 1.1 | 40 | 5 | 5.0 | 35 |
+| M249 | Light machine gun | 5.56×45 mm | \[auto\] | 100 | Belt | 1.05 | 25 | 5 | 7.5 | 35 |
+| PKM | Light machine gun | 7.62×54R | \[auto\] | 100 | Belt | 1.1 | 20 | 5 | 8.5 | 45 |
+
+**Feed type** sets the reload cost (see Tactical actions). **Magazines are items:** each magazine has a calibre, a capacity, a weight and the weapons it fits, and its rounds are counted; it is refilled from loose ammunition. Magazines of the same pattern are shared: the RPK-74's 40-round magazine and the AK-74M's 30-round magazine fit both weapons. Belts work the same way for belt-fed weapons; tube-fed shotguns load loose shells.
 
 ## Calibres
 
@@ -142,6 +144,15 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | IFAK (individual first aid kit) | Restores HP; stops light bleeding | 6 | 60 HP total | Up to 15 HP per use |
 | Medkit | Restores HP; stops light and heavy bleeding | 8 | 300 HP total | Large; backpack item |
 | Surgical kit | Brings an arm or leg at 0 HP back to 1 HP | 15 | 3 | Needs Medical 40+ |
+
+## Grenades
+
+**Draft — placeholder values.** Grenades go in the vest's grenade pouches or the belt (from the backpack +4 AP, see Tactical actions). Strength sets the throwing distance; a wounded or disabled arm widens the landing scatter.
+
+| Grenade | Weight (kg) | Effect | Radius (tiles) | Duration | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Frag grenade | 0.6 | Damage 100 at the point of impact, falling evenly to 0 at the edge; penetration class 2; solid cover between the blast and a soldier blocks it | 4 | Instant, on landing | Loud: heard across the map |
+| Smoke grenade | 0.5 | Smoke cloud that blocks sight into, out of and through it; no damage | 3 | 4 turns | Quiet |
 
 ## Barter goods
 
