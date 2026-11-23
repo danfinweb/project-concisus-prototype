@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: 8972470 (update, 2026-11-22; previous 9c7498b)
+Design baseline: 69be026 (update, 2026-11-23; previous 8972470)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
