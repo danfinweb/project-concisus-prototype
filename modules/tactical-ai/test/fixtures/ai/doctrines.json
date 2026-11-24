@@ -1,0 +1,86 @@
+{
+  "tac-balanced": {
+    "id": "tac-balanced",
+    "layer": "tactical",
+    "wGoal": 0.4,
+    "wFit": 0.4,
+    "wCoord": 0.2,
+    "logTopN": 3,
+    "considerations": {
+      "survival": { "weight": 1, "curve": { "type": "linear", "points": [[0, 1], [0.3, 0.95], [1, 0.1]] } },
+      "survival.exposure": { "weight": 0.4, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "survival.threat": { "weight": 0.3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "survival.hp": { "weight": 0.2, "curve": { "type": "linear", "points": [[0, 1], [1, 0]] } },
+      "survival.morale": { "weight": 0.1, "curve": { "type": "linear", "points": [[0, 1], [100, 0]] } },
+      "battleGoal": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.attack": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.defend": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.escort": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.reachExit": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.hold": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.retreat": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "actionFit": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "requestBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "claimPenalty": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+    },
+    "roles": {
+      "byWeaponType": {
+        "pistol": "flank", "shotgun": "flank", "smg": "flank", "assaultRifle": "flank",
+        "battleRifle": "suppress", "dmr": "suppress", "sniperRifle": "suppress", "lmg": "suppress"
+      },
+      "fitBonus": 0.3,
+      "claimTurns": 1
+    }
+  },
+  "tac-goal": {
+    "id": "tac-goal",
+    "layer": "tactical",
+    "wGoal": 0.8,
+    "wFit": 0.1,
+    "wCoord": 0.1,
+    "logTopN": 3,
+    "considerations": {
+      "survival": { "weight": 1, "curve": { "type": "linear", "points": [[0, 1], [0.3, 0.95], [1, 0.1]] } },
+      "survival.exposure": { "weight": 0.4, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "survival.threat": { "weight": 0.3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "survival.hp": { "weight": 0.2, "curve": { "type": "linear", "points": [[0, 1], [1, 0]] } },
+      "survival.morale": { "weight": 0.1, "curve": { "type": "linear", "points": [[0, 1], [100, 0]] } },
+      "battleGoal": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.reachExit": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.attack": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.retreat": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "actionFit": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "requestBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "claimPenalty": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+    },
+    "roles": { "byWeaponType": { "assaultRifle": "flank", "lmg": "suppress", "dmr": "suppress" }, "fitBonus": 0.3, "claimTurns": 1 }
+  },
+  "tac-fit": {
+    "id": "tac-fit",
+    "layer": "tactical",
+    "wGoal": 0.1,
+    "wFit": 0.8,
+    "wCoord": 0.1,
+    "logTopN": 3,
+    "considerations": {
+      "survival": { "weight": 1, "curve": { "type": "linear", "points": [[0, 1], [0.3, 0.95], [1, 0.1]] } },
+      "survival.exposure": { "weight": 0.4, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "survival.threat": { "weight": 0.3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "survival.hp": { "weight": 0.2, "curve": { "type": "linear", "points": [[0, 1], [1, 0]] } },
+      "survival.morale": { "weight": 0.1, "curve": { "type": "linear", "points": [[0, 1], [100, 0]] } },
+      "battleGoal": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.reachExit": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.attack": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "battleGoal.retreat": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "actionFit": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "requestBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "claimPenalty": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+    },
+    "roles": { "byWeaponType": { "assaultRifle": "flank", "lmg": "suppress", "dmr": "suppress" }, "fitBonus": 0.3, "claimTurns": 1 }
+  },
+  "str-generic": {
+    "id": "str-generic",
+    "layer": "strategic",
+    "considerations": {}
+  }
+}

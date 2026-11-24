@@ -1,0 +1,20 @@
+{
+  "akm": {
+    "id": "akm", "kind": "weapon", "name": "AKM", "weightKg": 3.6, "valueUsd": 800,
+    "weaponType": "assaultRifle", "calibre": "c762x39", "fireModes": [1, "auto"], "magazineSize": 30,
+    "barrelMultiplier": 1.0, "ergonomics": 40, "baseMoa": 4, "recoil": 45, "modSlots": ["muzzle", "stock"],
+    "feedType": "boxMagazine"
+  },
+  "pkm": {
+    "id": "pkm", "kind": "weapon", "name": "PKM", "weightKg": 7.5, "valueUsd": 2500,
+    "weaponType": "lmg", "calibre": "c762x54r", "fireModes": ["auto"], "magazineSize": 100,
+    "barrelMultiplier": 1.1, "ergonomics": 15, "baseMoa": 3, "recoil": 40, "modSlots": [],
+    "feedType": "belt"
+  },
+  "svd": {
+    "id": "svd", "kind": "weapon", "name": "SVD", "weightKg": 4.3, "valueUsd": 2200,
+    "weaponType": "dmr", "calibre": "c762x54r", "fireModes": [1], "magazineSize": 10,
+    "barrelMultiplier": 1.2, "ergonomics": 30, "baseMoa": 1.5, "recoil": 55, "modSlots": ["optic"],
+    "feedType": "boxMagazine"
+  }
+}
