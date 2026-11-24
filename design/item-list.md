@@ -29,7 +29,50 @@ The barrel is part of the weapon, not a mod: each weapon has a fixed barrel leng
 | M249 | Light machine gun | 5.56×45 mm | \[auto\] | 100 | Belt | 1.05 | 25 | 5 | 7.5 | 35 |
 | PKM | Light machine gun | 7.62×54R | \[auto\] | 100 | Belt | 1.1 | 20 | 5 | 8.5 | 45 |
 
-**Feed type** sets the reload cost (see Tactical actions). **Magazines are items:** each magazine has a calibre, a capacity, a weight and the weapons it fits, and its rounds are counted; it is refilled from loose ammunition. Magazines of the same pattern are shared: the RPK-74's 40-round magazine and the AK-74M's 30-round magazine fit both weapons. Belts work the same way for belt-fed weapons; tube-fed shotguns load loose shells.
+**Trader prices (draft).** Full price in US dollars at a faction trader.
+
+| Weapon | Price (draft) |
+| --- | --- |
+| PM | $150 |
+| Glock 17 | $400 |
+| PP-19-01 Vityaz | $600 |
+| MP5 | $900 |
+| Remington 870 | $350 |
+| Saiga-12 | $650 |
+| AK-74M | $700 |
+| AKM | $600 |
+| M4A1 | $1,200 |
+| FN FAL | $1,100 |
+| HK G3 | $1,000 |
+| SVD | $1,500 |
+| M110 | $3,000 |
+| SV-98 | $2,500 |
+| M24 | $2,800 |
+| RPK-74 | $1,100 |
+| M249 | $3,500 |
+| PKM | $2,500 |
+
+**Feed type** sets the reload cost (see Tactical actions). **Magazines are items:** each magazine has a calibre, a capacity, a weight and the weapons it fits, and its rounds are counted; it is refilled from loose ammunition only between fights, never in battle, and holds one load type at a time. Magazines of the same pattern are shared: the RPK-74's 40-round magazine and the AK-74M's 30-round magazine fit both weapons. Only the pairs listed in the magazine table below share magazines; the FN FAL and HK G3 do not, although both fire 7.62×51 mm. An extended magazine is its own magazine item with a larger capacity, not a mod. Stripper-clip and bolt-action feeds are kept for later content; no weapon here uses them yet. Belts work the same way for belt-fed weapons; tube-fed shotguns load loose shells.
+
+| Magazine | Fits | Rounds | Empty weight (kg, draft) | Price (draft) |
+| --- | --- | --- | --- | --- |
+| PM magazine | PM | 8 | 0.08 | $10 |
+| Glock 17 magazine | Glock 17 | 17 | 0.07 | $25 |
+| Vityaz magazine | PP-19-01 Vityaz | 30 | 0.2 | $30 |
+| MP5 magazine | MP5 | 30 | 0.15 | $30 |
+| Saiga-12 magazine | Saiga-12 | 8 | 0.3 | $40 |
+| AK-74 magazine | AK-74M, RPK-74 | 30 | 0.23 | $20 |
+| RPK-74 magazine | AK-74M, RPK-74 | 40 | 0.33 | $35 |
+| AKM magazine | AKM | 30 | 0.33 | $20 |
+| STANAG magazine | M4A1 | 30 | 0.12 | $20 |
+| FAL magazine | FN FAL | 20 | 0.27 | $30 |
+| G3 magazine | HK G3 | 20 | 0.23 | $25 |
+| SVD magazine | SVD | 10 | 0.21 | $40 |
+| M110 magazine | M110 | 20 | 0.18 | $50 |
+| SV-98 magazine | SV-98 | 10 | 0.2 | $45 |
+| M24 magazine | M24 | 5 | 0.1 | $30 |
+| M249 belt (with box) | M249 | 100 | 0.35 | $40 |
+| PKM belt (with box) | PKM | 100 | 0.4 | $40 |
 
 ## Calibres
 
@@ -48,7 +91,7 @@ Damage is the base damage per projectile at the muzzle with barrel multiplier 1.
 
 ## Ammunition
 
-Each load multiplies its calibre's damage by the standard modifier of its ammo type: FMJ ×1.0, AP ×0.9, HP ×1.25, Subsonic ×0.8, Tracer ×1.0, Buckshot and Slug ×1.0 (the 12 gauge damage already differs by load). **Falloff** is the share of muzzle damage a load loses over its own falloff range; damage never drops below 10% of muzzle damage. Placeholder ranges by ammo type: FMJ and Tracer 15 tiles, AP 18, HP 12, Subsonic 10, Buckshot and Slug 15. Penetration class is the highest armour class the round defeats (0 = unarmoured targets only); it never changes with distance. Subsonic loads fired through a suppressor are heard only within 6 tiles. Tracer loads lower burst recoil spread ×0.85 (draft). For reference: a thorax has 85 base HP, a head 35.
+Each load multiplies its calibre's damage by the standard modifier of its ammo type: FMJ ×1.0, AP ×0.9, HP ×1.25, Subsonic ×0.8, Tracer ×1.0, Buckshot and Slug ×1.0 (the 12 gauge damage already differs by load). **Falloff** is the share of muzzle damage a load loses over its own falloff range; damage never drops below 10% of muzzle damage. Placeholder ranges by ammo type: FMJ and Tracer 15 tiles, AP 18, HP 12, Subsonic 10, Buckshot and Slug 15. Penetration class is the highest armour class the round defeats (0 = unarmoured targets only); it never changes with distance. Subsonic loads fired through a suppressor are heard only within 6 tiles. Tracer loads lower burst recoil spread ×0.85 (draft). Spread modifier by ammo type (draft): Subsonic ×1.1, Slug ×0.5, every other load ×1.0. For reference: a thorax has 85 base HP, a head 35.
 
 | Calibre | Ammo | Damage modifier | Falloff (% of damage) | Falloff range (tiles) | Penetration class | Subsonic |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -90,8 +133,16 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | SSh-68 steel helmet | 2 | 30 | 1.5 | Cheap, common |
 | PASGT | 3 | 45 | 1.4 |  |
 | 6B47 | 3 | 45 | 1.3 |  |
-| High-cut ballistic helmet | 4 | 50 | 1.1 | Mounts for night vision; no hearing penalty |
-| Altyn with visor | 5 | 60 | 4.0 | Visor covers the face; hearing penalty; vision cone 90° instead of 120° |
+| High-cut ballistic helmet | 4 | 50 | 1.1 | No hearing penalty |
+| Altyn with visor | 5 | 60 | 4.0 | Visor counts as part of the head protection; hearing penalty; vision cone 90° instead of 120° |
+
+| Helmet | Price (draft) |
+| --- | --- |
+| SSh-68 steel helmet | $80 |
+| PASGT | $300 |
+| 6B47 | $350 |
+| High-cut ballistic helmet | $900 |
+| Altyn with visor | $1,500 |
 
 ## Body armour
 
@@ -104,6 +155,15 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | 6B13 | 5 | 70 | 10.5 | — |  |
 | Heavy assault armour | 6 | 85 | 14.0 | — | −5 AP on every activation (draft); no stamina penalty |
 
+| Body armour | Price (draft) |
+| --- | --- |
+| Soft armour vest | $250 |
+| 6B23 | $600 |
+| Plate carrier, steel plates | $700 |
+| Plate carrier, ceramic plates | $1,400 |
+| 6B13 | $1,100 |
+| Heavy assault armour | $2,500 |
+
 ## Load-bearing vests
 
 | Vest | Capacity (kg) | Max magazines | Max grenades | Max medical items | Max other items | Own weight (kg) | Notes |
@@ -113,7 +173,14 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | MOLLE tactical vest | 7 | 6 | 4 | 3 | 3 | 1.6 |  |
 | Low-profile recon rig | 3 | 3 | 1 | 2 | 1 | 0.5 | Quiet; small |
 
-**Other items** covers everything that is not a magazine, grenade or medical item: barter goods, operation and faction items, and small tools. Only items up to 1 kg fit in a vest or plate carrier pouch; heavier ones (car battery, diesel canister, toolbox, crates, plant spare parts, demolition charges, bolt cutters) go in a backpack.
+| Vest | Price (draft) |
+| --- | --- |
+| Lifchik (old-pattern rig) | $40 |
+| Commercial chest rig | $120 |
+| MOLLE tactical vest | $250 |
+| Low-profile recon rig | $200 |
+
+**Other items** covers everything that is not a magazine, grenade or medical item: barter goods, operation and faction items, and small tools. Only items up to 1 kg fit in a vest, plate carrier or belt pouch; heavier ones (car battery, diesel canister, toolbox, crates, plant spare parts, demolition charges, bolt cutters) go in a backpack.
 
 ## Battle belts
 
@@ -123,6 +190,14 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | Padded battle belt | 1 | 3 | 0.7 |
 | Heavy battle belt | 1 | 4.5 | 1.1 |
 
+The holster holds the sidearm (a pistol). Belt pouches follow the vest rules: only items up to 1 kg, and the same type limits.
+
+| Battle belt | Price (draft) |
+| --- | --- |
+| Leather belt | $20 |
+| Padded battle belt | $90 |
+| Heavy battle belt | $150 |
+
 ## Backpacks
 
 | Backpack | Capacity (kg) | Own weight (kg) | Notes |
@@ -131,6 +206,13 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | Patrol pack | 20 | 1.2 |  |
 | Assault pack | 25 | 1.5 |  |
 | Large rucksack | 35 | 2.5 | No sprinting while worn |
+
+| Backpack | Price (draft) |
+| --- | --- |
+| Duffel bag | $30 |
+| Patrol pack | $120 |
+| Assault pack | $180 |
+| Large rucksack | $250 |
 
 ## Medical items
 
@@ -145,18 +227,36 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | Medkit | Restores HP; stops light and heavy bleeding | 8 | 300 HP total | Large; backpack item |
 | Surgical kit | Brings an arm or leg at 0 HP back to 1 HP | 15 | 3 | Needs Medical 40+ |
 
+The medkit restores 40 HP per use before the Medical multiplier (draft).
+
+| Medical item | Weight (kg, draft) | Price (draft) |
+| --- | --- | --- |
+| Bandage | 0.05 | $10 |
+| Tourniquet | 0.1 | $25 |
+| Hemostatic dressing | 0.1 | $40 |
+| Splint | 0.2 | $30 |
+| Painkillers | 0.05 | $20 |
+| IFAK | 0.4 | $80 |
+| Medkit | 2.0 | $400 |
+| Surgical kit | 1.5 | $600 |
+
 ## Grenades
 
-**Draft — placeholder values.** Grenades go in the vest's grenade pouches or the belt (from the backpack +4 AP, see Tactical actions). Strength sets the throwing distance; a wounded or disabled arm widens the landing scatter.
+**Draft — placeholder values.** Grenades go in the vest's grenade pouches or the belt, at most 2 (draft) (from the backpack +4 AP, see Tactical actions). Strength sets the throwing distance; a wounded or disabled arm widens the landing scatter.
 
 | Grenade | Weight (kg) | Effect | Radius (tiles) | Duration | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Frag grenade | 0.6 | Damage 100 at the point of impact, falling evenly to 0 at the edge; penetration class 2; full cover between the blast and a soldier blocks it, half cover halves it; the damage is split over the six body zones by their share of the silhouette, each checked against its own armour | 4 | Instant, on landing | Loud: heard across the map |
 | Smoke grenade | 0.5 | Smoke cloud that blocks sight into, out of and through it; no damage | 3 | 4 turns | Quiet |
 
+| Grenade | Price (draft) | Rarity (draft) |
+| --- | --- | --- |
+| Frag grenade | $60 | Uncommon |
+| Smoke grenade | $30 | Common |
+
 ## Mods
 
-**Draft — placeholder values.** A first set of optics and one laser. Optics multiply the range part of shooter spread; a laser multiplies shooter spread on snap shots (see Hit model in the GDD). Which weapons each mod fits is set in the item editor.
+**Draft — placeholder values.** A first set of optics and one laser. Optics multiply the range part of shooter spread; a laser multiplies shooter spread on snap shots (see Hit model in the GDD). Which weapons each mod fits is set in the item editor. Tactical mods (laser, flashlight) may also carry small modifiers such as weight or ergonomics, set per mod.
 
 | Mod | Slot | Effect | Weight (kg) |
 | --- | --- | --- | --- |
@@ -191,7 +291,7 @@ Civilian items with no use in combat. They are sold for money or traded for gear
 | Old laptop | 2.5 | $150 | Uncommon | Offices, apartments |
 | Wristwatch | 0.1 | $120 | Uncommon | Bodies, apartments |
 | Foreign banknotes (bundle) | 0.1 | $100 | Uncommon | Bodies, safes |
-| Painted icon | 0.5 | $200 | Rare | Churches, old houses |
+| Painted icon | 0.5 | $200 | Rare | Churches, apartments |
 | Wedding ring | 0.01 | $250 | Rare | Bodies, apartments |
 | Gold chain | 0.05 | $400 | Rare | Bodies, safes |
 
@@ -201,6 +301,7 @@ Civilian items with no use in combat. They are sold for money or traded for gear
 - Each trader offers 1–3 barter deals per day: a gear item for a list of goods, counted at 100% of value (for example an AK-74M for two cartons of cigarettes and a gold chain).
 - Barter deals are the only source of some rare gear at a trader; they are refreshed at the daily tick.
 - Loot rolls use rarity weights common 60 / uncommon 30 / rare 10; rare goods appear only in apartments, safes, churches and on bodies.
+- Loot location tags (draft): bodies, houses, apartments, shops, offices, warehouses, depots, military depots, garages, farms, industry, power lines, churches, safes, hospitals, command posts, convoys, vehicle wrecks, Krug caches. "Everywhere" means any tag.
 
 ## Operation and faction items
 
@@ -227,3 +328,4 @@ Items that open options during operations or can be handed in to a faction for m
 - Reputation from hand-ins goes through applyRep as a friendly act toward the receiving faction.
 - A hand-in is never attributed to the faction it hurts; only a survivor at the scene of the loot can report it, like any other hostile act.
 - Faction items count toward weight and use the "other" type limit in vests and plate carriers.
+- "Its enemies" means every faction whose relation toward the item's owner is at or below the hostile threshold (−50).

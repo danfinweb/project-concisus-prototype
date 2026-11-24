@@ -71,7 +71,7 @@ Viktor Karsin, a former army quartermaster who had kept fuel and grain moving ac
 
 **Flavour events**
 
-These have no gameplay effect. They appear only in the news feed, on radio intercepts or as visual changes on the map, and make Veligrad feel lived in.
+These have no gameplay effect. They appear only in the news feed, on radio intercepts or as visual changes on the map, and make Veligrad feel lived in. Events marked Random roll a small chance once a day for each eligible tile or situation (draft: 0.5% per day); they only show text and visuals.
 
 | Event | When | What the player sees |
 | --- | --- | --- |

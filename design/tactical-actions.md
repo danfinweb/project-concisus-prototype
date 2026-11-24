@@ -13,7 +13,7 @@ Nov 22, 2026 · @Dan
 | Set facing at the end of an activation | Free | — | Defined |
 | Set reaction (Fire, Take cover, Hold) | Free | Chosen during the activation, applied automatically; can be changed any number of times in the activation | Draft |
 | Hold overwatch | 4 AP | Lasts until the soldier's next activation, or ends early when the soldier is suppressed or has fewer rounds loaded than the fire mode fires; its Fire reactions use the weapon's current fire mode and get no snap-shot penalty. Without overwatch a Fire reaction is a single snap shot | Draft |
-| Reaction attempt | 1 stamina point | Success: 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%, adjusted for distance, the mover's stance, noise and the reactor's wounds. One attempt per mover per entry into the vision cone. Not possible while suppressed or at 0 stamina points | Defined |
+| Reaction attempt | 1 stamina point | Success: 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%, adjusted for distance, the mover's stance, noise and the reactor's wounds. When a visible action in place (firing, reloading, using an item) triggers it, the acting soldier counts as the mover for stance and noise; the sprint modifier does not apply. One attempt per mover per entry into the vision cone. Not possible while suppressed or at 0 stamina points | Defined |
 | Leave the map at an exit | Free | The soldier must be on an exit tile (ending a move there, or already standing there at the start of its activation) and the exit's condition must be met (fuel, a boat at a set turn, a paid crossing). Soldiers leave one by one; the battle ends for the player when none of its soldiers is left on the map | Draft |
 
 ## Movement

@@ -8,7 +8,7 @@ Nov 22, 2026 · @Dan
 
 Assigned once, when a soldier is generated.
 
-- **Strongest attribute decides:** the soldier's highest attribute picks the row, its value picks the column. If two attributes are within 5 points of each other, one of them is picked at random.
+- **Strongest attribute decides:** the soldier's highest attribute picks the row, its value picks the column. Every attribute within 5 points of the highest one is a candidate, and one of them is picked at random.
 - **No attribute at 40 or above:** the callsign comes from the Generic list.
 - **No duplicates:** never a callsign already used by a living soldier in the roster. If a list is used up, the next soldier gets a number suffix (Ox-2).
 
@@ -27,7 +27,7 @@ Assigned once, when a soldier is generated.
 
 ## Earned callsigns (OPTIONAL — ignore for the first build iterations)
 
-Deeds by prestige rank. A deed's callsign replaces the current one only if its prestige is higher; a callsign the player has chosen is never replaced.
+Deeds by prestige rank. A deed's callsign replaces the current one only if its prestige is higher; a callsign the player has chosen is never replaced. Each deed counts only once per soldier, and a milestone already reached (5 ops) does not trigger again later. If a deed's callsign list is used up, the soldier keeps the current callsign.
 
 | Prestige | Deed | Callsigns |
 | --- | --- | --- |

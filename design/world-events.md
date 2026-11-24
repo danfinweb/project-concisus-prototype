@@ -8,18 +8,18 @@ Nov 22, 2026 · @Dan
 
 | Event | Trigger | Effect | Duration | Player hooks |
 | --- | --- | --- | --- | --- |
-| PMC joint assault | A high-value point of interest (oil or arms plant, a Krug hub) is weakly held and both rival PMCs are idle | Varyag and Aegis put their rivalry aside and attack it together with their strongest squads | Until the assault ends | Contracts to defend the target or to join the assault; the PMCs' relation drops sharply afterwards |
-| Weapon shipment | A faction has lost ground for several days | Its influence sends a large shipment: a higher share of elite soldiers and better gear in its new squads | 10 days | Intercept the convoy for loot and a big reputation loss with that faction; or escort it |
-| Rising hostility | A faction suffers repeated losses against one other faction | Its relation toward that faction drops; it shifts squads to attack it and hunts anyone working for it | Until relations recover | Contracts against the target; working for the target becomes riskier |
+| PMC joint assault | A high-value point of interest (oil or arms plant, a Krug hub) is weakly held (draft: 2 squads or fewer guard it) and both rival PMCs are idle | Varyag and Aegis put their rivalry aside and attack it together with their strongest squads | Until the assault ends | Contracts to defend the target or to join the assault; the PMCs' relation drops sharply afterwards |
+| Weapon shipment | A faction has lost ground for several days (draft: it lost tiles on 3 or more of the last 5 days) | Its influence sends a large shipment: a higher share of elite soldiers and better gear in its new squads | 10 days | Intercept the convoy for loot and a big reputation loss with that faction; or escort it |
+| Rising hostility | A faction suffers repeated losses against one other faction (draft: 3 or more lost fights against it in the last 7 days) | Its relation toward that faction drops; it shifts squads to attack it and hunts anyone working for it | Until relations recover | Contracts against the target; working for the target becomes riskier |
 | Operation dispute | A player op (or any fight) kills soldiers of an uninvolved faction, or hits a Krug convoy in crossfire | The hurt faction blames another — or the player — and relations collapse between them; the Krug may suspend trade with both sides | 7–14 days | Pay compensation, hand over evidence (documents) to redirect the blame, or exploit the feud |
-| Front offensive | The SSV or the VDK has a strength advantage along part of the front | Squads concentrate and push; points of interest change hands quickly | 5–10 days | Many contracts on both sides; dangerous roads near the front |
-| Local ceasefire | Heavy losses on both sides in one area | No fighting between the SSV and the VDK in those regions | 7 days | Breaking it costs heavy reputation with both; safe travel through the area |
-| Defection | A garrison of a losing faction has low supply | It either joins the faction pressing it (the nearest enemy, or the one that attacked it last), taking its point of interest with it, or disbands, leaving the point of interest uncontrolled | Instant | Contracts to secure or punish the defectors |
+| Front offensive | The SSV or the VDK has a strength advantage along part of the front (draft: 1.5× the enemy's soldiers in a front sector, the front tiles within 3 tiles of one front tile) | Squads concentrate and push; points of interest change hands quickly | 5–10 days | Many contracts on both sides; dangerous roads near the front |
+| Local ceasefire | Heavy losses on both sides in one area (draft: each side lost 15 or more soldiers in the last 3 days within an area, the tiles within 2 tiles of a fight) | No fighting between the SSV and the VDK in those regions | 7 days | Breaking it costs heavy reputation with both; safe travel through the area |
+| Defection | A garrison of a losing faction has low supply (draft: below 25%) | It either joins the faction pressing it (the faction that attacked it last, or else the nearest enemy), taking its point of interest with it, or disbands, leaving the point of interest uncontrolled (draft: 60% join, 40% disband) | Instant | Contracts to secure or punish the defectors |
 | Fuel shortage | An oil plant is destroyed or cut off | Fuel prices ×2; faction squads move less | Until supply is restored | Fuel runs pay well; jerrycans become valuable loot |
 | Chemical leak | A chemical plant is fought over | Its region and neighbours become hazardous; medical prices rise | 5 days | Medical supply contracts; risky shortcut through the zone |
 | Bounty on the PMC | The player's reputation with a faction falls to −50 or lower | That faction offers a bounty: extra hunt squads, rival PMCs join in | Until reputation recovers or the bounty is paid off | Lie low, pay off the debt, or fight it out |
 | Refugee movement | A city changes hands | Civilians flee to neighbouring regions: loyalty shifts, cheap local recruits appear | 10 days | Escort and supply contracts; a recruiting chance |
-| Rogue PMC (rare) | See Coups in the GDD | Varyag or Aegis turns on its patron | Campaign | See Coups |
+| Rogue PMC (rare) | See Coups in the GDD | Varyag or Aegis turns on its patron and rushes the capital; this rush is the rogue event itself, at most once per campaign | Campaign | See Coups |
 | Resistance group forms | Civilian loyalty toward the controlling faction is low in a region (draft: ≤ −40), usually after heavy fighting, a city changing hands or harsh occupation | A small militia or guerrilla group (1–3 squads of 3–5 poorly equipped locals) forms in that region, usually inside territory held by the faction it opposes. When it forms it picks its stance toward every faction: hostile to the controller, and allied with, neutral to or hostile toward the others — some side with the controller's enemy, some trust no one. It ambushes patrols and supply runs and stirs up nearby regions | Until destroyed, disbanded (loyalty recovers) or absorbed by an allied faction | Supply or fight alongside it for standing with its allies; hunt it for the controller; recruit cheap locals from it. It may ambush the player if the player works for the faction it opposes |
 
 ## Desperate measures
@@ -35,11 +35,13 @@ Nov 22, 2026 · @Dan
 | Low liquidity | Its income cannot cover salaries and contract payments; contracts go unpaid |
 | Capital threatened | Enemy squads within 2 regions of its capital or, if the capital is lost, its last city |
 | Key plants lost | It holds fewer than half of the oil and arms plants it held at the start |
-| Isolation | Three or more factions are hostile to it (relations ≤ −50) |
+| Isolation | Three or more factions are hostile to it (relations ≤ −50); resistance groups do not count |
 | Its PMC has gone rogue | Varyag (for the SSV) or Aegis (for the VDK) has turned on it |
 | Repeated defeats by the player | The player's PMC beat its squads in 3 or more fights in the last 7 days |
 
 **Measures**
+
+A measure and a nuclear strike may run at the same time; both count toward the shared cap of 3 with world events. Durations (draft): forced conscription 7 days, penal battalions 10 days, open call for help 14 days, paying any price 7 days, mining the roads 14 days or until cleared, martial law 10 days, VIP strike until the team succeeds or is destroyed (at most 7 days); scorched earth and seizing Krug stocks are instant.
 
 | Measure | Who | Typical signs | Effect | Player hooks |
 | --- | --- | --- | --- | --- |
@@ -58,9 +60,9 @@ Nov 22, 2026 · @Dan
 
 Both the SSV and the VDK hold a few tactical warheads (background in Story & Lore). Using one is the last measure of a faction facing defeat.
 
-- **Trigger:** five or more crisis signs, one of them Capital threatened, and its patron does not stop it. At most once per campaign.
+- **Trigger:** five or more crisis signs, one of them Capital threatened, and its patron does not stop it (draft: the patron vetoes it with a 50% chance). At most once per campaign.
 - **Warning signs:** several days ahead — a special convoy moving under heavy escort, air defence massing, Krug rumours of evacuations among officers' families, radio silence on command channels.
-- **Effect:** the target region (usually an enemy-held city or a major troop concentration) is destroyed: every unit there is lost and its point of interest is ruined for the rest of the campaign. That region and its neighbours become a contaminated zone: soldiers lose HP every turn they spend there (tactical effect OPTIONAL, later build), and loot cannot be sold.
+- **Effect:** the target region (usually an enemy-held city or a major troop concentration) is destroyed: every unit there is lost and its point of interest is ruined for the rest of the campaign. That region and its neighbours become a contaminated zone: soldiers lose HP every turn they spend there (tactical effect OPTIONAL, later build), and squads on the strategic map lose HP every hour they stay in a contaminated tile (draft: 2 HP per soldier per hour), and loot cannot be sold.
 - **Aftermath:** every other faction turns hostile toward the striking faction; its patron may cut support; civilian loyalty collapses and refugees flood neighbouring regions. The war's balance changes for good.
 - **Player hooks:** find the convoy through intel and intercept or sabotage it to prevent the strike; warn the target faction; or escort it for a huge price and lasting hostility from everyone else.
 
