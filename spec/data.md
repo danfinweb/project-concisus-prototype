@@ -866,7 +866,7 @@ ammunition crate $500 → data/items.json; no `valueUsd` on the other nine.
 | `revealAdjacentSquads` | Encrypted radio | Carried by a squad: shows that faction's squads within range (STR) | `rangeRegions` 1, `durationDays` 7 |
 | `extendRadio` | Codebook | With an encrypted radio of the same faction: extends it (STR) | `rangeRegions` 2, `durationDays` 14 |
 | `demolition` | Demolition charge | Destroys a wall or vehicle; required for sabotage objectives (TAC/MGT missions) | — |
-| `cutLock` | Bolt cutters | Opens locked gates and containers silently (TAC) | `apCost` 10 |
+| `cutLock` | Bolt cutters | Opens locked gates and containers silently (TAC-071) | `apCost` 10 (design: Defined; the only field for the base cost, read by TAC-071; the Sapper perk replaces it, MGT-009 `boltCutterAp`) |
 | `poiKey` | POI key | Opens the locked rooms of its point of interest (TAC) | — |
 | `restockMedical` | Medical supply crate | Restocks a squad once (MGT) | 4 bandages, 2 tourniquets |
 | `restockAmmo` | Ammunition crate | Restocks a squad's loose ammo once (MGT) | — |

@@ -5,6 +5,12 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | strategic_perception_view | 0.10.0 | Cleanup 3: `patronRelations` (the patron's relations, for factions whose patron is on the map); `mapShape` hex uses axial `x`, `y` | strategic, strategic-ai |
+| 2026-11-24 | management_requests | 0.10.0 | Cleanup 3: `dailyRollover.krugMarkets` (Krug market tile IDs whose prices move, MGT-040) | strategic, management |
+| 2026-11-24 | data/recruitment | 0.7.0 | Cleanup 3: `priceFormula` typed `{ spread }` (0–1, not set) | management |
+| 2026-11-24 | data/ai-doctrines | 0.8.0 | Cleanup 3 (description): where each personality value enters (SAI-010) | strategic-ai |
+| 2026-11-24 | data/tactical-rules | 0.10.0 | Cleanup 3: `bodyWeightKg` (TAC-074, not set) | tactical, tools |
+| 2026-11-24 | data/items | 0.10.0 | Cleanup 3: `opEffect.apCost` for `cutLock`, the one field for the bolt cutter AP cost (ITM-026, TAC-071) | tactical, tools, management |
 | 2026-11-24 | management_requests | 0.9.0 | Cleanup 2: payloads for hire, localRecruits, trade, barter, vehicleTrade, handIn, hospital, repair, refuel, buyFob, opReturn (MGT-076); `$defs/itemRef`; `reputationAct` `faction`/`count`; results `amountUsd`, `soldierId` | strategic, management |
 | 2026-11-24 | battle_result | 0.5.0 | Cleanup 2: `acts[].type` enum (battle subset of repActs), `faction` x-ref, `count` ≥ 1; `skillUse[]` = `{skill, uses}` | tactical, strategic, management |
 | 2026-11-24 | strategic_perception_view | 0.9.0 | Cleanup 2: required `mapShape`; `recruitsAvailable`; `knownSquads.id` (required with faction, region), `knownTarget`; `knownRegions.roadTo`, `roadCrossing` | strategic, strategic-ai |

@@ -3,7 +3,7 @@
   "$id": "data/recruitment.schema.json",
   "title": "Recruitment",
   "description": "Hiring pools and price tiers (= soldier ranks) with hire price, fee per op and attribute range (spec MGT-002..MGT-005, MGT-022, MGT-074). Fees are paid once per op at launch; there are no salaries.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
@@ -40,7 +40,13 @@
         "additionalProperties": false
       }
     },
-    "priceFormula": { "type": "object", "description": "MGT-003: scaling of the hire price with the average attribute within a tier, not set" },
+    "priceFormula": {
+      "type": "object", "description": "MGT-003: linear scaling of the hire price with the average attribute within a tier",
+      "properties": {
+        "spread": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the tier hirePriceUsd added at the top of the attribute range and taken off at the bottom (MGT-003); absent = flat price. Not set (design: no number)" }
+      },
+      "additionalProperties": false
+    },
     "attributeDistribution": { "type": "object", "description": "MGT-022: distribution within the tier range, not set" }
   },
   "additionalProperties": false

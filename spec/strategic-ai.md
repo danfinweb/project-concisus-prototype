@@ -51,6 +51,7 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `capital` | The capital tile, its `holder`, `occupant` and `contestedSince` (STR-007) |
 | `vips` | Its own VIPs and the enemy VIPs it holds intel on (STR-045, STR-048): `id`, `faction`, `rank`, `regionId`; own VIPs `guardSquadIds`; enemy VIPs `guardSize`, `observed` and `intelExpires` (after it, last known state) |
 | `relations` | Its relation to every other faction (range and thresholds → see STR-051) |
+| `patronRelations` | Only for a faction whose patron is a faction on the map (GEN-004, `factions.patron`; today `varyag` → `ssv`, `aegis` → `vdk`): its patron's relation to every other faction (STR-051), for `patronStanding` (SAI-006; cleanup 2026-11-24, spec choice) |
 | `reputationWithPlayer` | Its reputation `value` toward the player and the derived `standing` (MGT-054) |
 | `funds` | Its own money (STR-092); other factions' funds are never in the view |
 | `overdraft` | Only under `fundsMode = scoreTerm`: its own hidden deficit (funds then show 0, STR-092); never another faction's |
@@ -125,8 +126,9 @@ cleanup 2026-11-24): `linear` (piecewise-linear through the points) and `step` (
 whose `x` ≤ the input); both clamp outside the points (below the first `x` → first `y`, above the last →
 last `y`). Schema: `ai-doctrines` `$defs/consideration`, `$defs/curve`.
 
-Situation-map layers (SAI-007) are per-region values on a 0–1 scale (how a layer is normalised is doctrine
-data). Names the code reads and the unit of each input (spec choice, cleanup 2026-11-24); a doctrine may
+Situation-map layers (SAI-007) are per-region values on a 0–1 scale: each layer's raw value is divided by
+its largest value over the view's known regions (all 0 when that largest value is 0); no constants, no
+doctrine field (spec choice, cleanup 2026-11-24). Names the code reads and the unit of each input (spec choice, cleanup 2026-11-24); a doctrine may
 leave out a name it does not use (the term then adds 0):
 
 | Name | Where | Used by | Input (unit) |
@@ -142,7 +144,7 @@ leave out a name it does not use (the term then adds 0):
 | `plants` | `gainTerms` | SAI-008 | plant POIs (STR-010) the objective takes or holds (count) |
 | `income` | `gainTerms` | SAI-008 | POI income the objective gains or keeps (USD per day, STR-014) |
 | `contractPay` | `gainTerms` | SAI-008, SAI-015 | pay of the offer taken (MGT-046 formula, SAI-014); 0 otherwise (USD) |
-| `patronStanding` | `gainTerms` | SAI-008 | 1 if the objective is its patron's contract or acts against a faction hostile to its patron (STR-051), else 0 |
+| `patronStanding` | `gainTerms` | SAI-008 | 1 if the objective is its patron's contract or acts against a faction hostile to its patron (the view's `patronRelations` value ≤ `hostileAt`, STR-051), else 0 |
 | `tradeRoutes` | `gainTerms` | SAI-008 | Krug route tiles the objective secures (tiles) |
 | `markets` | `gainTerms` | SAI-008 | `krugMarket` tiles the objective holds or guards (count) |
 | `avoidWar` | `gainTerms` | SAI-008 | 1 if the objective needs no fight, else 0 |
@@ -189,7 +191,8 @@ How each goal turns into gain terms is doctrine data: `ownGain` is the weighted 
 **Rule.** The operational planner turns the strategist's objectives into commands: assigns own squads to
 objectives (`setGoal`) and gives each squad its action for the hour (`moveSquad`, `hold`, `scout`,
 `attack`), raises a squad (`recruit`, STR-096) or hires a Krug escort for a shipment (`hireEscort`,
-STR-094), or emits `offerContract` (SAI-014) when its own squads can't reach the objective or are worth more
+STR-094; a shipment is an own squad whose `goal` is `supplyRun` or `tradeRoute`, STR-094, spec choice,
+cleanup 2026-11-24), or emits `offerContract` (SAI-014) when its own squads can't reach the objective or are worth more
 elsewhere.
 **Values.** assignment scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/ai.md › Strategic AI › Faction AI tiers; › Controller hand-off; design/management.md › Contracts and missions › Where contracts come from
@@ -200,7 +203,17 @@ references one doctrine through `factions.doctrine` in data/factions.json (the o
 not list its factions). A doctrine sets the weights and curves of SAI-006 to SAI-009, SAI-015 and
 SAI-016 (`considerations`, `commitmentBonus`, `gainTerms`), and the faction's personality:
 `personality.aggression`, `personality.riskTolerance`, `personality.contractUse` and
-`personality.hostility` (faction → weight). Factions created during play take their doctrine from data:
+`personality.hostility` (faction → weight). Personality values are not SAI-006 considerations; they
+scale terms before the response curves (spec choice, cleanup 2026-11-24):
+- `aggression` multiplies the `damageToRivals` input (absent: 1);
+- `hostility` weighs that input per rival: the target faction's `hostility` weight divided by the
+  doctrine's largest `hostility` weight; a faction not listed (or no weights) counts 1 if its relation is
+  ≤ `hostileAt` (STR-051), else 0; the player counts 1 while the faction is hostile to it (SAI-013),
+  else 0;
+- `riskTolerance` divides the `risk` input by `1 + riskTolerance` (absent: 0);
+- `contractUse` adds `contractUse ×` the objective's score to the score of posting it as a contract
+  (`offerContract`, SAI-014) (absent: 0).
+Factions created during play take their doctrine from data:
 every resistance group uses the `doctrine` of the `resistance` template record in data/factions.json; a
 rogue PMC switches to the `rogueDoctrine` of its own faction record (SAI-002). Faction character is
 expressed through doctrine data, not code. Design draft character per doctrine:
@@ -264,7 +277,12 @@ offer a contract or raise a squad (`recruit`, STR-096) it cannot pay for, and ST
 so the AI should not emit it; in the test mode `fundsMode = scoreTerm` funds only weigh in the score
 (STR-092): funds show 0 once spent, and the view's `overdraft` lowers the score of every candidate that
 costs money, through the doctrine consideration `overdraft` (weight and curve in `considerations`). Raising a squad is scored like any other candidate action of the planner (SAI-009): its gain is
-the objectives the new squad can cover. Offers carry the offer fields of SAI-004 (MGT contract terms);
+the objectives the new squad can cover.
+Board and deadline of an offer it posts (spec choice, cleanup 2026-11-24): `boardLocation` is its own
+region with a POI nearest to the objective's target region (the target region if it holds none);
+`deadline` = the current hour + max(1, h) hours, with h = 2 × the move hours of the planned tile path from
+the board to the target (there and back) + the target tile's terrain move hours (one crossing) — move hours by STR-006 (the road hours where
+the path follows a road, else the entered tile's terrain hours). Offers carry the offer fields of SAI-004 (MGT contract terms);
 Management validates pay, filters by reputation and shows them.
 **Values.** offer scoring, deniability thresholds, the `overdraft` consideration — not set (design: all
 behaviour values unset) → data/ai/doctrines.json.
@@ -390,3 +408,10 @@ values unset) → data/ai/doctrines.json (Krug doctrine).
     squad's `knownGoal`/`knownTarget` has no source. Needs a design decision: what "the player's objective"
     is for this check (e.g. the target/location of a signed contract mission revealed by intel, or the tile
     the player's squad moves toward), and when intel reveals it.
+20. **Resolved (cleanup 2026-11-24, view 0.10.0):** SCOPE findings of the `/apply-spec` run, made spec
+    choices as the core built them: layers are normalised by their largest value on the known map
+    (SAI-006); where each personality value enters (SAI-010); axial hex coordinates (STR-005); offer board
+    and deadline (SAI-014); `patronRelations` in the view for `patronStanding` (SAI-003, SAI-006); a
+    shipment for `hireEscort` is an own `supplyRun` or `tradeRoute` squad (SAI-009, STR-094). SAI-006,
+    SAI-010, SAI-014, SAI-009 — layer normalisation had no field, personality had no input, the hex
+    convention, the offer deadline, the patron's enemies and the shipment to escort were unstated.

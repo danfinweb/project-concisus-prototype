@@ -3,7 +3,7 @@
   "$id": "management_requests.schema.json",
   "title": "Management requests",
   "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: contract offers, player services at a location, op launches (fees per op), op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request; it publishes the resulting state in management_view (MGT-072). Spec: STR-004, STR-015, STR-029, STR-039..STR-044, STR-093, MGT-001, MGT-002..MGT-005, MGT-011, MGT-036, MGT-039..MGT-051, MGT-056..MGT-060, MGT-064, MGT-068, MGT-070, MGT-076 (payload fields and handling per type).",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/management"],
   "type": "object",
@@ -77,6 +77,7 @@
         "plantId": { "type": "string", "description": "plantOutput: the held plant POI that delivers (STR-015, MGT-068)" },
         "fobId": { "type": "string", "description": "plantOutput: the receiving PMC FOB (STR-015); soldierFate returned: the FOB the soldier rejoins at; launchOp: the FOB the op starts from, where insured items return (MGT-036)" },
         "day": { "type": "integer", "minimum": 1, "description": "dailyRollover: the day that starts (STR-004)" },
+        "krugMarkets": { "type": "array", "items": { "type": "string" }, "description": "dailyRollover: IDs of every tile flagged krugMarket at that check (STR-005); Management moves the Krug prices of exactly these markets and drops the price lists of markets not listed (MGT-040, spec choice)" },
         "hours": { "type": "integer", "minimum": 1 },
         "atFob": { "type": "boolean" },
         "params": { "type": "object" }

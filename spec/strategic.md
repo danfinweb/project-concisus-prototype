@@ -73,7 +73,8 @@ roll (GEN-017), and the flavour event rolls (STR-081); (3) daily plant output to
 capital holder's bonus income (STR-007); (4) campaign checks: faction victory (SSV, VDK, player, rogue
 PMC), the reformed ceasefire count (GEN-019), day limit and cash-out offer (GEN-012), coup holding phase
 (GEN-015); (5) the low-risk contract check (STR-098); (6) notify MGT that the barter refresh is due (a
-`dailyRollover` management request with its `day`). Each check uses the state after the tick's movement
+`dailyRollover` management request with its `day` and `krugMarkets`, the IDs of every tile flagged
+`krugMarket` now, whose Krug prices Management moves, MGT-040; cleanup 2026-11-24). Each check uses the state after the tick's movement
 and fights.
 **Source.** design/strategic-layer.md › Overview (Time); design/strategic-actions.md › Trade, services, contracts and factions; design/management.md › Base & meta progression; › Gear, loot & return › Design risk; design/design.md › Factions & campaign › Player role, › Coups
 
@@ -84,7 +85,9 @@ and fights.
 file means one tile. The grid shape is `mapShape`: `square` (default, consistent with the tactical layer)
 or `hex` (a switchable option for testing). Adjacency follows from the shape: on the square grid a tile
 connects only to its 4 edge neighbours, with no diagonal moves; on hex, to its 6 neighbours. Region
-distance is counted in adjacency steps (square: Manhattan distance). Every faction moves its
+distance is counted in adjacency steps (square: Manhattan distance). On hex, `x`, `y` are axial
+coordinates: the neighbours of (x, y) are (x±1, y), (x, y±1), (x+1, y−1) and (x−1, y+1), and the distance
+is (|dx| + |dy| + |dx + dy|) / 2 (spec choice, cleanup 2026-11-24). Every faction moves its
 squads tile by tile. Each tile holds: `x`, `y`; `terrain` (exactly one base terrain, an ID of
 data/strategic-terrain.json, STR-006, STR-095); `poi` (none or one point of interest, STR-010);
 `controller` (faction id or `none`); `road` (none, or a road lying on top of the terrain: kind `asphalt` or
@@ -344,7 +347,8 @@ resistance group and a rogue PMC (SAI-002); never the civilian population or the
 receives a `strategic_perception_view` (its fog-of-war view,
 STR-008, including its own funds and, under `fundsMode = scoreTerm`, its overdraft, STR-092, the
 contracts it is part of, as employer or contractor, STR-093, its own recruit pool `recruitsAvailable`,
-STR-096, and the map's `mapShape`, STR-005; fields: SAI-003) and returns `strategic_commands`. Commands and how
+STR-096, the map's `mapShape`, STR-005, and for a faction with a patron on the map its patron's
+relations `patronRelations`, STR-051; fields: SAI-003) and returns `strategic_commands`. Commands and how
 Strategic resolves each:
 
 | Command | Resolves as |
@@ -511,7 +515,9 @@ has not signed, the offer leaves the player's board: Strategic sends `contractEn
   shown at Krug markets (MGT-051).
 - **Paid Krug escort:** the player or an AI faction can pay the Krug to escort one of its shipments.
   1. **Request.** Allowed only while the shipment (convoy squad) is on a tile flagged `krugMarket` and
-     has not left yet (no move since it formed or was loaded there). An AI faction sends
+     has not left yet (no move since it formed or was loaded there). An AI faction's shipment is one of
+     its squads whose goal is `supplyRun` or `tradeRoute` (STR-018); Strategic rejects a `hireEscort` for
+     any other squad (spec choice, cleanup 2026-11-24). An AI faction sends
      `hireEscort { escortFor, route }` (STR-021); the player hires with a strategic action of the same
      shape for one of its squads on that tile (`escortFor` = that squad), resolved by Strategic through
      steps 1–4 like an AI request; MGT only books the debit on accept (`payKrugEscort`, step 4; cleanup

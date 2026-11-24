@@ -3,7 +3,7 @@
   "$id": "data/items.schema.json",
   "title": "Items",
   "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, DAT-030, ITM-001..ITM-034. valueUsd is the full faction-trader price (ITM-034).",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -197,7 +197,8 @@
         "perFaction": { "type": "boolean" },
         "perPoi": { "type": "boolean" },
         "opEffect": { "type": ["object", "null"], "properties": {
-          "type": { "enum": ["revealSquadPlan", "revealAdjacentSquads", "extendRadio", "demolition", "cutLock", "poiKey", "restockMedical", "restockAmmo"] } } },
+          "type": { "enum": ["revealSquadPlan", "revealAdjacentSquads", "extendRadio", "demolition", "cutLock", "poiKey", "restockMedical", "restockAmmo"] },
+          "apCost": { "type": "integer", "minimum": 1, "description": "ITM-026 / TAC-071: type cutLock only, AP to cut a lock; design 10 (the single field for the base cost; Sapper perk boltCutterAp replaces it, MGT-009)" } } },
         "handIn": { "type": "array", "items": { "type": "object", "required": ["receiver"], "properties": {
           "receiver": { "enum": ["issuingFaction", "enemiesOfIssuer", "factions", "rivalOfOwningPmc", "plantHolder", "cityHolder", "resistanceGroup", "krug"] },
           "factions": { "type": "array", "items": { "type": "string", "x-ref": "factions" } },

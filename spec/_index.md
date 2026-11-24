@@ -205,8 +205,8 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [TAC-051] | Blunt damage and armour wear | modules/tactical | design/tactical-layer.md › Derived per shot; › Derived per shot › Armour wear and weapon condition (draft); design/item-list.md › Body armour |
 | [TAC-052] | Body zones and upright hitboxes | modules/tactical | design/tactical-layer.md › Body zones and hitboxes |
 | [TAC-053] | Aiming arm pose (open) | modules/tactical | design/tactical-layer.md › Body zones and hitboxes |
-| [TAC-054] | Crouched hitboxes | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
-| [TAC-055] | Prone hitboxes and limits | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
+| [TAC-054] | Crouched hitboxes (open) | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
+| [TAC-055] | Prone hitboxes and limits (open) | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
 | [TAC-056] | Cover occlusion | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
 | [TAC-057] | Zone HP | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Health and effects per zone; design/management.md › Soldier attributes › Derived values |
 | [TAC-058] | Zone damage effects | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › Movement (Leg wounds), Weapons, AP modifiers on an activation |
@@ -223,9 +223,9 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [TAC-069] | Drop the backpack | modules/tactical | design/tactical-actions.md › Gear and interaction; design/data-definitions.md › Soldier equipment slots |
 | [TAC-070] | Pick up or loot | modules/tactical | design/tactical-actions.md › Gear and interaction; design/data-definitions.md › Soldier equipment slots |
 | [TAC-071] | Cut a lock | modules/tactical | design/tactical-actions.md › Gear and interaction; design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors |
-| [TAC-072] | Place a demolition charge | modules/tactical | design/tactical-actions.md › Gear and interaction |
+| [TAC-072] | Place a demolition charge (open) | modules/tactical | design/tactical-actions.md › Gear and interaction |
 | [TAC-073] | Restrain a VIP | modules/tactical | design/tactical-actions.md › Gear and interaction |
-| [TAC-074] | Carry or drag a body | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a body) |
+| [TAC-074] | Carry or drag a body (open) | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a body) |
 | [TAC-084] | Doors | modules/tactical | design/tactical-actions.md › Gear and interaction (Open a door, Close a door); design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors |
 | [TAC-085] | Cover edge destruction | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors (Destruction) |
 | [TAC-086] | Tactical map types | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Inputs, Map types |

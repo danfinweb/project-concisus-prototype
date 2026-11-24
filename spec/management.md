@@ -57,17 +57,20 @@ rules).
 ### [MGT-003] Hire price
 **Rule.** A candidate's hire price starts from its tier's `hirePriceUsd` (MGT-002) and scales with the
 candidate's average attribute within the tier (price follows stats): a candidate at the middle of the tier's
-attribute range pays the tier price, a better one more, a worse one less. The exact scaling (e.g. ±
-`priceFormula.spread` of the tier price from the bottom to the top of the attribute range) is not designed.
+attribute range pays the tier price, a better one more, a worse one less. Scaling (spec choice, cleanup
+2026-11-24; linear): with `mid` and `half` the middle and half-width of the tier's `attributeRange`,
+price = `hirePriceUsd` × (1 + `priceFormula.spread` × (average attribute − `mid`) ÷ `half`), so the top of
+the range pays + `spread` of the tier price and the bottom − `spread`; without `spread` (or `half` = 0) the
+price is flat. The price is rounded to whole USD and never below 0, after the modifiers.
 Price modifiers, applied after the scaling: a Krug recruit (local recruit from Krug standing, GEN-010) costs
 × (1 + `resentment.priceMarkup`) (Krug resentment, GEN overview); an extra refugee recruit (STR-065, sent in a
 `localRecruits` request) costs the normal hire price; it is hired with `feeDiscount` =
 `params.recruitFeeDiscount` (MGT-001), so its fee per op is lower for as long as it serves (MGT-005).
 **Values.** tier hire prices (design draft, MGT-002) → data/recruitment.json `tiers[].hirePriceUsd`;
-scaling within a tier `priceFormula` — not set (design: "scales with the average attribute") →
-data/recruitment.json; `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json (Krug record,
+scaling within a tier `priceFormula.spread` (share of the tier price, 0–1) — not set (design: "scales
+with the average attribute", no number; Open questions 1) → data/recruitment.json; `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json (Krug record,
 schema owned by STR/GEN); `params.recruitFeeDiscount` — 0.30 (design draft) → data/events.json (STR-065)
-**Status.** open (scaling)
+**Status.** open (scaling value `priceFormula.spread`)
 **Source.** design/management.md › Soldiers & progression (Recruitment); design/design.md › The Krug; design/world-events.md › Events (Refugee movement)
 
 ### [MGT-004] Player-chosen callsign and kit marks
@@ -462,7 +465,16 @@ their own) have prices that fluctuate over time and are public: every price is v
 player without intel. Stock improves with Krug standing (GEN-010). Each item's base price is its
 `valueUsd` (ITM-034). Once per day (00:00 `dailyRollover`) each Krug price moves by a seeded factor in
 [−`dailyMaxChange`, +`dailyMaxChange`] of its current price, then is clamped to
-[base × (1 − `maxDeviation`), base × (1 + `maxDeviation`)]. Krug resentment: whatever the player pays the Krug (purchases, barter deals counted against the player, services) is × (1 + `resentment.priceMarkup`) on top (GEN overview, Krug resentment); what the Krug pays the player (ITM-022) is unchanged (spec reading: "cost the player more").
+[base × (1 − `maxDeviation`), base × (1 + `maxDeviation`)].
+Price state (spec choice, cleanup 2026-11-24): the current Krug prices live in Management's `economy` slice
+as `economy.krugPrices`: market tile ID → item ID → current price (USD, before the resentment markup).
+Each Krug market keeps its own price list (spec reading of "Krug markets with … prices"; Open questions
+56). An item with no entry is at its base price. The `dailyRollover` request (MGT-068) carries
+`krugMarkets`, the IDs of every tile flagged `krugMarket` at that check (Strategic, STR-005): Management
+moves the price of every item definition that has a `valueUsd`, at every listed market, in ascending order
+of market ID then item ID, with its own seeded RNG (TEC-015); a listed market without a list starts at the
+base prices; lists of markets not listed are dropped. Trades at a Krug market (`trade`, MGT-076) use that
+market's list. Krug resentment: whatever the player pays the Krug (purchases, barter deals counted against the player, services) is × (1 + `resentment.priceMarkup`) on top (GEN overview, Krug resentment); what the Krug pays the player (ITM-022) is unchanged (spec reading: "cost the player more").
 **Values.** `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json; `krugPriceFluctuation.dailyMaxChange` — 0.10; `krugPriceFluctuation.maxDeviation` — 0.30
 (design draft) → data/traders.json
 **Status.** Draft
@@ -821,7 +833,8 @@ stops delivering. Strategic sends each delivery as a `plantOutput` management re
 `fobId` (the receiving FOB, STR-015) and the `items` and/or `amountUsd` (the type's `dailyOutput`
 `{ items [{ item, count }], amountUsd }` after STR-011); Management adds the items to that FOB's stash and
 credits the amount (MGT-070); at each daily check it also sends
-`dailyRollover` with `day` (STR-004).
+`dailyRollover` with `day` (STR-004) and `krugMarkets` (the Krug market tiles whose prices move, MGT-040;
+cleanup 2026-11-24).
 **Values.** (design drafts) daily output: oil plant 20 fuel units; mechanical plant 10 kg spare parts;
 chemical plant 5 medical kits; arms plant 2 weapons and 300 rounds; mineral plant $1,500 plus +10% per
 mineral plant held to every other held plant's output, at most +30% → data/poi.json (`dailyOutput`,
@@ -838,7 +851,8 @@ build (design: OPTIONAL).
 **Source.** design/management.md › Base & meta progression
 
 ### [MGT-070] Economy ledger
-**Rule.** `economy` holds the PMC's money balance and a list of debts. Each debt: creditor faction,
+**Rule.** `economy` holds the PMC's money balance, a list of debts and the current Krug market prices
+(`krugPrices`, MGT-040). Each debt: creditor faction,
 amount, origin (a Krug deal; a failed contract's advance is never a debt, MGT-048). Paying a debt's full
 amount removes it (Krug: entry in Karsin's book, GEN-008). Every credit and debit is logged with game time.
 The balance never goes below zero: a debit larger than the balance fails as a whole (nothing is paid, the
@@ -944,7 +958,7 @@ Brokering a ceasefire (STR-099) has no cost and sends no request.
 
 ## Open questions
 
-1. **Partly resolved (2026-11-24):** four draft tiers with hire price, fee per op (replacing the earlier salary per day; no renewals, 2026-11-24 b) and attribute range (MGT-002, MGT-003, MGT-005). Still open: price scaling within a tier, pools (tiers and candidates per pool, refresh), attribute distribution within the range. MGT-002, MGT-003, MGT-005, MGT-022: price tiers, hire price formula, attribute ranges per tier,
+1. **Partly resolved (2026-11-24):** four draft tiers with hire price, fee per op (replacing the earlier salary per day; no renewals, 2026-11-24 b) and attribute range (MGT-002, MGT-003, MGT-005). **Partly resolved (cleanup 2026-11-24):** the scaling rule is linear with `priceFormula.spread` (MGT-003, recruitment 0.7.0); its value is still open. Still open: the price scaling value `spread` within a tier, pools (tiers and candidates per pool, refresh), attribute distribution within the range. MGT-002, MGT-003, MGT-005, MGT-022: price tiers, hire price formula, attribute ranges per tier,
    salaries, pay interval and renewal terms are all unset.
 2. **Resolved (2026-11-24):** morale per soldier; squad morale = average when the op forms (MGT-008). MGT-008: morale is "squad-wide", but squads are formed per op. Is morale stored per squad, per PMC, or
    reset when a squad is re-formed?
@@ -1089,3 +1103,9 @@ Brokering a ceasefire (STR-099) has no cost and sends no request.
     but no value is set (`contractBroken` covers betrayal only). Options: each mission still open at the
     deadline fails and costs `repActs.missionFailed`; one new contract-level value (e.g.
     `repActs.contractFailed`); or both. Same question for `allFailed` (missions already paid their loss).
+56. MGT-040 (cleanup 2026-11-24): the Krug price state now lives in `economy.krugPrices` and moves at the
+    `dailyRollover` for the markets Strategic lists in `krugMarkets` (management_requests 0.10.0). Spec
+    reading: each Krug market keeps its own price list, moved independently (seeded). Needs a design
+    decision: per-market prices (arbitrage between markets possible) or one network-wide Krug price list
+    shared by every market. Also open: which items each Krug market stocks (the price list covers every
+    item with a `valueUsd`; stock by Krug standing is not defined).

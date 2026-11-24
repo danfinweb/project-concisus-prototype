@@ -3,7 +3,7 @@
   "$id": "data/ai-doctrines.schema.json",
   "title": "AI doctrines",
   "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, SAI-014..SAI-017, TAI-007..TAI-016). The faction → doctrine link is factions.doctrine (SAI-010); a doctrine does not list its factions.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -12,7 +12,7 @@
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
       "layer": { "enum": ["strategic", "tactical"], "description": "SAI-010 / TAI-015" },
       "personality": {
-        "type": "object", "description": "SAI-010 (strategic doctrines): faction character as consideration inputs (not set)",
+        "type": "object", "description": "SAI-010 (strategic doctrines): faction character; scales terms before the response curves, not a consideration: aggression × damageToRivals, hostility weighs damageToRivals per rival, risk ÷ (1 + riskTolerance), contractUse × objective score added to posting it (not set)",
         "properties": {
           "aggression": { "type": "number" },
           "riskTolerance": { "type": "number" },
