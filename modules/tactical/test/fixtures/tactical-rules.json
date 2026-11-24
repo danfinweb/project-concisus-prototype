@@ -1,0 +1,17 @@
+{
+  "apBase": 25,
+  "apAgilityDivisor": 10,
+  "activationCost": 2,
+  "activationSurcharge": 1,
+  "staminaBase": 2,
+  "staminaEnduranceDivisor": 20,
+  "staminaPerWoundedLeg": 1,
+  "staminaRecovery": 1,
+  "woundedThreshold": 0.5,
+  "suppressionAp": 5,
+  "stunApLoss": 10,
+  "painApLoss": 4,
+  "encumbranceApPenalty": 5,
+  "heavyEncumbranceApPenalty": 10,
+  "stallTurns": 2
+}
