@@ -3,7 +3,7 @@
   "$id": "strategic_perception_view.schema.json",
   "title": "Strategic perception view",
   "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-009, STR-017, STR-020, STR-021, STR-070, STR-092, STR-094, SAI-002, SAI-003, SAI-005, SAI-015, SAI-017. Views are also built for factions created during play (resistance groups, STR-067, with IDs made at creation; a rogue PMC, STR-066), never for the civilian population or the off-map influences (SAI-002).",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/strategic-ai"],
   "type": "object",
@@ -30,19 +30,88 @@
     "knownSquads": { "type": "array", "description": "Noticed foreign squads, the player's included", "items": { "type": "object", "properties": {
       "faction": { "type": "string" }, "region": { "type": "string" }, "estimatedStrength": { "type": "number" }, "seen": { "type": "object" }, "knownGoal": { "type": "string" } } } },
     "capital": { "type": "object", "description": "STR-007", "properties": { "tile": { "type": "string" }, "holder": { "type": ["string", "null"] }, "occupant": { "type": ["string", "null"] }, "contestedSince": { "type": ["object", "null"] } } },
-    "vips": { "type": "array", "items": { "type": "object" }, "description": "Own VIPs and known enemy VIPs with intel expiry" },
+    "vips": { "type": "array", "items": { "$ref": "#/$defs/vip" }, "description": "Own VIPs and known enemy VIPs with intel expiry (STR-045, STR-048)" },
     "relations": { "type": "object", "description": "faction → relation; range and thresholds: STR-051" },
     "reputationWithPlayer": { "type": "object", "properties": { "value": { "type": "number" }, "standing": { "enum": ["hostile", "unfriendly", "neutral", "friendly", "trusted"] } } },
     "funds": { "type": "number", "description": "This faction's own money (STR-092); other factions' funds are never visible" },
     "overdraft": { "type": "number", "minimum": 0, "description": "Only under fundsMode scoreTerm: this faction's own hidden deficit (funds then show 0); lowers its AI scores (STR-092, SAI-014). Absent or 0 under hardLimit" },
-    "contracts": { "type": "array", "items": { "type": "object" }, "description": "Contracts this faction posted, with status" },
-    "contractOffers": { "type": "array", "items": { "type": "object" }, "description": "Other factions' open contract offers this faction may evaluate (SAI-015), each with its id" },
-    "events": { "type": "array", "items": { "type": "object" }, "description": "Active events and measures that affect it" },
+    "contracts": { "type": "array", "items": { "$ref": "#/$defs/contract" }, "description": "Contracts this faction posted (role employer) or took with acceptContract (role contractor), with status (SAI-003, SAI-015)" },
+    "contractOffers": { "type": "array", "items": { "$ref": "#/$defs/contractOffer" }, "description": "Other factions' open contract offers this faction may evaluate (SAI-015), each with its id" },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" }, "description": "Active events and measures that affect it (STR-050 event instance)" },
     "crisisSigns": { "type": "array", "items": { "type": "string" } },
     "availableMeasures": { "type": "array", "items": { "type": "string", "x-ref": "events" }, "description": "Measures it may pick now with pickMeasure (STR-070)" },
     "escortRequests": { "type": "array", "description": "Krug view only: pending paid-escort requests to answer with answerEscort (STR-094, SAI-017)", "items": { "type": "object", "required": ["id", "requester", "convoy"], "properties": {
       "id": { "type": "string" }, "requester": { "type": "string", "description": "Requesting faction, the player included" }, "convoy": { "type": "string", "description": "The convoy squad" }, "region": { "type": "string", "description": "The Krug-market tile it waits on" },
       "route": { "type": "array", "items": { "type": "string" }, "description": "Planned tile path" }, "priceUsd": { "type": "number", "minimum": 0 },
       "relation": { "type": "integer", "description": "AI requester: its relation with the Krug (STR-051)" }, "reputation": { "type": "number", "description": "Player requester: the Krug's reputation toward the player" } } } }
+  },
+  "$defs": {
+    "timestamp": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+    "vip": {
+      "type": "object", "required": ["id", "faction", "rank"],
+      "description": "STR-045 VIP as this faction knows it. Own VIPs: current state. Enemy VIPs: only with intel (STR-048); after intelExpires the entry shows the last known state",
+      "properties": {
+        "id": { "type": "string" },
+        "faction": { "type": "string", "x-ref": "factions" },
+        "rank": { "enum": ["major", "colonel", "general", "leader"] },
+        "regionId": { "type": "string", "description": "Current region (own VIP) or region from intel (enemy VIP)" },
+        "guardSquadIds": { "type": "array", "items": { "type": "string" }, "description": "Own VIPs only: the guard squads (STR-045)" },
+        "guardSize": { "type": "integer", "minimum": 0, "description": "Enemy VIPs: guard size from intel (STR-048)" },
+        "observed": { "$ref": "#/$defs/timestamp", "description": "Enemy VIPs: when the intel was acquired" },
+        "intelExpires": { "$ref": "#/$defs/timestamp", "description": "Enemy VIPs: end of intel validity (observed + vip.intelHours, STR-048)" }
+      }
+    },
+    "contract": {
+      "type": "object", "required": ["id", "role", "employer", "status"],
+      "description": "A contract this faction posted or took (SAI-003, spec choice)",
+      "properties": {
+        "id": { "type": "string", "description": "The offer id (strategic_commands contractOffer.id)" },
+        "role": { "enum": ["employer", "contractor"], "description": "employer: this faction posted it; contractor: this faction took it with acceptContract (SAI-015)" },
+        "employer": { "type": "string", "x-ref": "factions" },
+        "contractor": { "type": ["string", "null"], "description": "Who took it (a rival PMC or the player); null while open" },
+        "targetFaction": { "type": ["string", "null"], "x-ref": "factions" },
+        "sourceGoal": { "type": "string", "description": "The STR-018 goal the offer serves" },
+        "missions": { "type": "array", "items": { "type": "object", "required": ["key", "missionId", "status"], "properties": {
+          "key": { "type": "string" }, "missionId": { "type": "string", "x-ref": "missions" }, "targets": { "type": "array" }, "location": { "type": "string" },
+          "status": { "enum": ["open", "done", "failed"], "description": "Per mission (spec choice)" } } } },
+        "deadline": { "$ref": "#/$defs/timestamp" },
+        "status": { "enum": ["open", "accepted", "done", "failed"], "description": "open: posted, not taken; accepted: taken by a contractor; done / failed: ended (SAI-003)" },
+        "counterContractOf": { "type": ["string", "null"] }
+      }
+    },
+    "event": {
+      "type": "object", "required": ["eventId", "startTime"],
+      "description": "STR-050 event instance { eventId, subjects, startTime, endTime | condition }",
+      "properties": {
+        "eventId": { "type": "string", "x-ref": "events", "description": "Event or measure record" },
+        "subjects": { "type": "array", "items": { "type": "string" }, "description": "Factions, regions or POIs the instance is about" },
+        "startTime": { "$ref": "#/$defs/timestamp" },
+        "endTime": { "anyOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }], "description": "Fixed end, or null when it ends on its condition" },
+        "condition": { "description": "End condition when endTime is null (STR-050)" }
+      }
+    },
+    "contractOffer": {
+      "description": "COPY of strategic_commands.schema.json $defs/contractOffer (unchanged since strategic_commands 0.6.0); keep identical (no cross-file refs in shared/schema.js)",
+      "type": "object", "required": ["id", "employer", "missions"],
+      "properties": {
+        "id": { "type": "string", "description": "Offer ID, unique per campaign; acceptContract.contractId and MGT refer to it" },
+        "employer": { "type": "string", "x-ref": "factions" },
+        "targetFaction": { "type": ["string", "null"], "x-ref": "factions", "description": "The faction the missions act against, if any (reputation acts, MGT-056)" },
+        "sourceGoal": { "type": "string", "description": "The STR-018 goal the offer serves" },
+        "missions": { "type": "array", "items": { "type": "object", "required": ["key", "missionId"], "properties": { "key": { "type": "string", "description": "Per-mission key, unique within the offer (two missions of one type are told apart by it)" }, "missionId": { "type": "string", "x-ref": "missions", "description": "Mission type" }, "targets": { "type": "array" }, "location": { "type": "string" } } } },
+        "deadline": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+        "payInputs": { "type": "object", "description": "Distance, danger, urgency (MGT-046)" },
+        "reputationGain": { "type": "integer", "description": "Deprecated, optional: MGT-056 now derives the reputation gain per mission from its pay band; kept for compatibility (management_requests holds an identical copy)" },
+        "intelLevel": { "enum": ["exact", "lastKnown", "rumour"], "description": "MGT-049" },
+        "deniable": { "type": "boolean" },
+        "reputationGate": {
+          "type": "object", "description": "MGT-055 contract flags set by the offering faction: better = Friendly or better only, sensitive = Trusted only",
+          "properties": { "better": { "type": "boolean" }, "sensitive": { "type": "boolean" } },
+          "additionalProperties": false
+        },
+        "boardLocation": { "type": "string" },
+        "counterContractOf": { "type": ["string", "null"] }
+      }
+    }
   }
 }

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_perception_view.schema.json",
   "title": "Tactical perception view",
-  "description": "What one side knows under fog of war at an AI-controlled activation. Built by tactical/core, passed to that side's controller as plain data: decide(view, rng) gets no query functions; path, line-of-sight and shot previews are precomputed in allowedActions (TAI-001). Spec: TAI-001, TAI-002, TAI-004, TAI-006, TAI-008, TAI-012, TAC-094, TAC-095.",
-  "version": "0.6.0",
+  "description": "What one side knows under fog of war at an AI-controlled activation. Built by tactical/core, passed to that side's controller as plain data: decide(view, rng) gets no query functions; path, line-of-sight and shot previews are precomputed in allowedActions (TAI-001). Spec: TAI-001, TAI-002, TAI-004, TAI-005, TAI-006, TAI-008, TAI-012, TAI-013, TAI-014, TAC-001, TAC-094, TAC-095.",
+  "version": "0.7.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/tactical-ai"],
   "type": "object",
@@ -19,19 +19,25 @@
       "id": { "type": "string" }, "position": { "type": "object" }, "level": { "type": "integer" }, "facing": { "type": "number" },
       "stance": { "enum": ["upright", "crouched", "prone"] }, "ap": { "type": "integer" }, "stamina": { "type": "integer" }, "staminaMax": { "type": "integer" },
       "zoneHp": { "type": "object" }, "conditions": { "type": "array" }, "suppressed": { "type": "boolean" },
-      "reaction": { "enum": ["fire", "takeCover", "hold"] }, "equipment": { "type": "object" }, "role": { "type": "string", "description": "TAI-014" },
+      "reaction": { "enum": ["fire", "takeCover", "hold"] }, "equipment": { "type": "object" }, "role": { "type": ["string", "null"], "enum": ["flank", "suppress", "retreat", "callReinforcements", null], "description": "TAI-014: the role from squadPlan.roles, null while none is assigned; callReinforcements is OPTIONAL (later build) and never assigned until built" },
       "rank": { "enum": ["recruit", "regular", "veteran", "elite"], "description": "From the tactical map request; sets the squad leader (TAI-013, TAC-094)" }, "morale": { "type": "number", "description": "Battle morale (TAC-095) plus the Leadership bonus while the leader is alive (TAC-094); survival input (TAI-008)" }, "limbs": { "type": "object", "description": "zone → healthy | wounded | disabled" },
       "overwatch": { "type": "boolean" }, "weaponJammed": { "type": "boolean", "description": "TAC-083: the active weapon is jammed (clearJam)" }, "alerted": { "type": "boolean" }, "outOfAction": { "type": "boolean" },
       "carrying": { "type": ["string", "null"] }, "magazines": { "type": "array", "items": { "type": "object" } } } } },
     "squadMorale": { "type": "number", "description": "Average battle morale of the side's units on the map, without the Leadership bonus (TAC-095, TAI-004)" },
-    "squadPlan": { "type": "object" },
-    "blackboard": { "type": "object", "description": "Squad requests and claims (TAI-012)" },
+    "squadPlan": { "$ref": "#/$defs/squadPlan" },
+    "blackboard": { "$ref": "#/$defs/blackboard" },
+    "rejection": { "type": ["object", "null"], "description": "TAI-005: on a retry call, the command TAC rejected last in this activation and why; null otherwise", "required": ["command", "reason"], "properties": {
+      "command": { "type": "object", "description": "The rejected tactical_commands command" },
+      "reason": { "type": "string", "description": "Short reason code, e.g. notEnoughAp, noLineOfSight, invalidPath (spec choice: free string)" } } },
     "knownEnemies": { "type": "array", "items": { "type": "object", "properties": {
       "id": { "type": "string" }, "position": { "type": "object", "description": "Current position while visibleNow, else last seen or heard" }, "level": { "type": "integer" },
       "seenTurn": { "type": "integer" }, "visibleNow": { "type": "boolean" },
       "stance": { "type": "string", "description": "Only while visibleNow" }, "facing": { "type": "number", "description": "Only while visibleNow (TAI-004)" },
       "visibleGear": { "type": "object", "description": "What the player would see: weaponType, helmetClass, armourClass (TAI-004)" } } } },
-    "knownNeutrals": { "type": "array", "items": { "type": "object" } },
+    "knownNeutrals": { "type": "array", "description": "Known units of the neutral side whose faction is not hostile to the viewing side (TAC-001); once hostile to it, they are listed in knownEnemies instead. Same last-known rule as knownEnemies (TAI-004)", "items": { "type": "object", "required": ["id"], "properties": {
+      "id": { "type": "string" }, "faction": { "type": "string" }, "position": { "type": "object", "description": "Current position while visibleNow, else last seen or heard" }, "level": { "type": "integer" },
+      "seenTurn": { "type": "integer" }, "visibleNow": { "type": "boolean" },
+      "stance": { "type": "string", "description": "Only while visibleNow" }, "facing": { "type": "number", "description": "Only while visibleNow" } } } },
     "noises": { "type": "array", "items": { "type": "object", "properties": { "origin": { "type": "object" }, "direction": { "type": "number" }, "distance": { "type": "number" }, "turn": { "type": "integer" } } } },
     "map": { "type": "object", "description": "Known to the side only (TAI-004)", "properties": {
       "tiles": { "type": "array", "items": { "type": "object" }, "description": "Known tiles: terrain cost, impassable and obscuring flags (TAC-029, TAC-082), edge cover, level, doors with state open | closed | locked (TAC-084), windows, destroyed state" },
@@ -40,8 +46,9 @@
       "bodies": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "tile": { "type": "object" }, "searched": { "type": "boolean" }, "contents": { "type": "array", "description": "Only once searched by the side (TAC-070)" } } } },
       "smoke": { "type": "array", "items": { "type": "object", "properties": { "tile": { "type": "object" }, "radiusTiles": { "type": "integer" }, "untilTurn": { "type": "integer" } } }, "description": "Known smoke clouds (TAC-079)" }
     } },
-    "allowedActions": { "type": "array", "description": "Precomputed answers the player UI would show (TAI-001, TAI-004): legal command types for the active unit with AP costs, path previews and shot previews", "items": { "type": "object", "required": ["type"], "properties": {
+    "allowedActions": { "type": "array", "description": "Precomputed answers the player UI would show (TAI-001, TAI-004): legal command types for the active unit with AP costs, path previews and shot previews. With activeUnit null: one activate entry per unit that may be activated (stamina >= activationCost, TAC-005, TAC-008), plus one pass entry", "items": { "type": "object", "required": ["type"], "properties": {
       "type": { "type": "string", "description": "A tactical_commands command type" },
+      "unit": { "type": "string", "description": "activate: a unit that may be activated now" },
       "apCost": { "type": "integer" },
       "reachable": { "type": "array", "description": "move: tiles with path AP cost and AP left (TAC-037)", "items": { "type": "object", "properties": { "tile": { "type": "object" }, "apCost": { "type": "integer" }, "apLeft": { "type": "integer" } } } },
       "targets": { "type": "array", "description": "shoot / throwGrenade: targets in line of sight with the shot preview (TAC-046)", "items": { "type": "object", "properties": {
@@ -49,5 +56,49 @@
         "zoneShares": { "type": "object" }, "likelyZone": { "type": "string" }, "penetrates": { "type": "boolean" } } } } } } },
     "battleGoal": { "type": "object", "description": "The active unit's goal: its own from the request, else its side's (TAI-009, TAI-018)", "properties": { "goal": { "type": "string" }, "targets": { "type": "array", "items": { "type": "string" } }, "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1 } } },
     "objectives": { "type": "array", "items": { "type": "object" }, "description": "Tactical-map objectives of the battle known to the side (TAC-076)" }
+  },
+  "$defs": {
+    "squadPlan": {
+      "type": "object", "description": "TAI-012, TAI-013 (spec choice): stored by TAC, changed only by a setPlan write from the current leader",
+      "properties": {
+        "leader": { "type": ["string", "null"], "description": "Current squad leader (TAC-094), set by TAC" },
+        "setBy": { "type": ["string", "null"], "description": "Unit whose setPlan write made this plan" },
+        "setTurn": { "type": ["integer", "null"] },
+        "roles": { "type": "object", "description": "unit ID → role (TAI-014)", "additionalProperties": { "enum": ["flank", "suppress", "retreat", "callReinforcements"] } },
+        "intent": { "type": "object", "description": "AI-owned plan content; TAC stores it without interpreting it" }
+      }
+    },
+    "blackboard": {
+      "type": "object", "description": "Squad requests and claims (TAI-012, spec choice)",
+      "properties": {
+        "requests": { "type": "array", "items": { "$ref": "#/$defs/request" } },
+        "claims": { "type": "array", "items": { "$ref": "#/$defs/claim" } }
+      }
+    },
+    "request": {
+      "type": "object", "required": ["id", "type", "by"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "description": "e.g. suppress, coverSector, reinforce (AI-defined; TAC does not interpret)" },
+        "by": { "type": "string", "description": "Unit that posted it" },
+        "target": { "type": "string", "description": "Unit ID, e.g. the unit to suppress" },
+        "tile": { "type": "object" },
+        "sector": { "type": "object", "description": "e.g. {from, direction, widthDeg}" },
+        "untilTurn": { "type": "integer", "description": "Last turn it is valid; TAC drops it after that" },
+        "data": { "type": "object" }
+      }
+    },
+    "claim": {
+      "type": "object", "required": ["id", "unit", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "unit": { "type": "string", "description": "Claiming unit" },
+        "kind": { "enum": ["tile", "target", "request"] },
+        "tile": { "type": "object" },
+        "target": { "type": "string", "description": "Claimed unit ID" },
+        "request": { "type": "string", "description": "Claimed request id" },
+        "untilTurn": { "type": "integer", "description": "Last turn it is valid; TAC drops it after that" }
+      }
+    }
   }
 }

@@ -2,12 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "management_view.schema.json",
   "title": "Management view",
-  "description": "What other modules may read of the Management-owned slices: reputation per faction with the derived standing, the contracts with their status, and the PMC's funds. Produced after each batch of management_requests and on load. Spec: MGT-042, MGT-053, MGT-054, MGT-070, MGT-072, STR-093, SAI-013.",
-  "version": "0.2.0",
+  "description": "What other modules may read of the Management-owned slices: reputation per faction with the derived standing, the contracts with their status, the PMC's funds, and the soldier data Strategic needs (tactical map requests, VIP morale shock, recon and pilot checks). Produced after each batch of management_requests and on load. Spec: MGT-001, MGT-042, MGT-053, MGT-054, MGT-070, MGT-072, STR-017, STR-047, STR-093, SAI-013.",
+  "version": "0.3.0",
   "x-producer": "modules/management",
   "x-consumers": ["modules/strategic"],
   "type": "object",
-  "required": ["time", "reputation", "contracts", "funds"],
+  "required": ["time", "reputation", "contracts", "funds", "roster"],
   "additionalProperties": false,
   "properties": {
     "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
@@ -28,14 +28,33 @@
       "items": { "$ref": "#/$defs/contract" }
     },
     "funds": {
-      "type": "object", "required": ["balanceUsd"], "additionalProperties": false,
+      "type": "object", "required": ["balanceUsd", "debtsUsd"], "additionalProperties": false,
       "properties": {
         "balanceUsd": { "type": "number", "minimum": 0, "description": "economy balance (MGT-070); never negative" },
-        "debtsUsd": { "type": "number", "minimum": 0, "description": "Sum of open debts (MGT-070)" }
+        "debtsUsd": { "type": "number", "minimum": 0, "description": "Sum of open debts (MGT-070); 0 when there are none" }
       }
+    },
+    "roster": {
+      "type": "array",
+      "description": "Every soldier whose status is not dead (MGT-001, MGT-072): what Strategic copies into tactical_map_request units[] and uses for STR-024, STR-034, STR-047",
+      "items": { "$ref": "#/$defs/soldier" }
     }
   },
   "$defs": {
+    "soldier": {
+      "type": "object", "required": ["id", "status", "rank", "morale", "attributes", "perks"], "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "Roster ID (tactical_map_request units[].id)" },
+        "status": { "enum": ["active", "mia", "captured"], "description": "MGT-001 (dead soldiers are on the memorial, not listed)" },
+        "rank": { "enum": ["recruit", "regular", "veteran", "elite"], "description": "MGT-074" },
+        "morale": { "type": "number", "minimum": 0, "maximum": 100, "description": "MGT-008" },
+        "attributes": { "type": "object", "description": "The eight attributes by name (MGT-021)", "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 100 } },
+        "nerve": { "type": "number", "description": "MGT-031" },
+        "wounds": { "type": "object", "description": "MGT-001 wounds: zoneHp and conditions in the battle_result shapes", "properties": { "zoneHp": { "type": "object" }, "conditions": { "type": "array", "items": { "type": "object" } } }, "additionalProperties": false },
+        "equipment": { "type": "object", "description": "Slot → item instance, the tactical_map_request units[].equipment shape (MGT-001)" },
+        "perks": { "type": "array", "items": { "type": "string" }, "description": "Perk IDs the soldier has (management-rules perks[].id, MGT-009); tactical_map_request units[].perks (TAC-096)" }
+      }
+    },
     "standing": { "enum": ["hostile", "unfriendly", "neutral", "friendly", "trusted"], "description": "MGT-054, derived from value by management-rules standingThresholds" },
     "contract": {
       "type": "object", "required": ["id", "employer", "status"], "additionalProperties": false,

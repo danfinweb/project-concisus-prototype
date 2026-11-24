@@ -48,15 +48,16 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 | `side`, `faction`, `doctrine` | Controlled side, faction ID, doctrine ID of the side (TAI-015) |
 | `turn`, `timeOfDay` | Turn number; `day` or `night` battle (TAC-003) |
 | `activeUnit` | Unit to act (null when choosing which unit to activate) |
-| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank` (`recruit`, `regular`, `veteran`, `elite`; TAI-013), `morale` (the unit's battle morale, TAC-095, plus the Leadership bonus while its leader is alive, TAC-094), `role` (TAI-014), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
+| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank` (`recruit`, `regular`, `veteran`, `elite`; TAI-013), `morale` (the unit's battle morale, TAC-095, plus the Leadership bonus while its leader is alive, TAC-094), `role` (TAI-014; from `squadPlan.roles`, null while none is assigned), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
 | `squadMorale` | Average battle morale of the side's units still on the map (TAC-095, without the Leadership bonus); at battle start the request's `sides[].morale` for units sent without their own |
-| `squadPlan` | Current plan set by the squad leader (TAI-013) and the current leader's unit ID |
-| `blackboard` | Squad requests and claims (TAI-012) |
+| `squadPlan` | Current plan set by the squad leader (TAI-013): `leader` (current leader, TAC-094), `setBy`, `setTurn`, `roles` (unit → role, TAI-014), `intent` (AI-owned, not interpreted by TAC) |
+| `blackboard` | Squad `requests` and `claims` (TAI-012) |
+| `rejection` | On a retry call, the command TAC rejected last in this activation and its `reason`; else null (TAI-005) |
 | `knownEnemies[]` | Opposing units: `id`, `position`, `level`, `seenTurn`, `visibleNow`; while `visibleNow`, also `stance`, `facing` and `visibleGear` (the gear the player would see: `weaponType`, `helmetClass`, `armourClass`); otherwise the last seen or heard position and turn |
-| `knownNeutrals[]` | Units of the neutral side known on the map (TAC-001) |
+| `knownNeutrals[]` | Known units of the neutral side whose faction is not hostile to this side (TAC-001), same fields and last-known rule as `knownEnemies` (with `faction`, without `visibleGear`); once hostile to this side they are listed in `knownEnemies` instead |
 | `noises[]` | Noise markers since the unit's last activation (TAC-019): `origin` tile, `direction` and `distance` from the active unit, `turn` |
 | `map` | Tiles known to the side: `tiles` (terrain cost, impassable and obscuring flags, cover per tile edge, level, doors with state open, closed or locked, windows, destroyed state; TAC-029, TAC-082, TAC-084), `exits` (`id`, tile, condition), `containers` and `bodies` (contents only once searched by the side, TAC-070), `smoke` (clouds with tile, `radiusTiles`, last turn) |
-| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with path AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082) |
+| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with path AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082). With `activeUnit: null`: one `activate` entry (with `unit`) per unit that may be activated (stamina ≥ `activationCost`, TAC-005, TAC-008), plus one `pass` entry, so the AI never reads `tactical-rules` for this |
 | `battleGoal` | The active unit's aim in this battle: `goal` (attack, defend, escort, reach an exit, hold), `targets` and `acceptableLoss`, as set by the strategic layer in the tactical map request (TAI-009, TAI-018) |
 | `objectives[]` | The mission objectives of the battle that can be met on the tactical map (TAC-076), as known to the side |
 
@@ -79,7 +80,8 @@ class (as shown in the shot preview), nothing more (no durability, no carried it
 | `climb` | `tile` (ladder) | TAC-034 |
 | `shoot` | `target` (unit ID) or `tile`, `fireMode`, `aimSteps` | TAC-039, TAC-040 |
 | `reload` | `magazine` (item instance), `sourceSlot`; for a tube, `shells` (count) | TAC-041 |
-| `swapWeapon` | — | TAC-042 |
+| `swapWeapon` | `slot` (`weapon1`, `weapon2`, `holster`) | TAC-042 |
+| `clearJam` | — | TAC-083 |
 | `throwGrenade` | `item` (grenade), `sourceSlot`, `tile` | TAC-043 |
 | `setReaction` | `reaction` (`fire`, `takeCover`, `hold`) | TAC-021 |
 | `holdOverwatch` | — | TAC-075 |
@@ -89,6 +91,7 @@ class (as shown in the shot preview), nothing more (no durability, no carried it
 | `search` | `target` (container or body) | TAC-070 |
 | `pickUp` | `target` (container, body or tile), `item` | TAC-070 |
 | `cutLock` | `target` (door or container) | TAC-071 |
+| `closeDoor` | `edge` (the door's tile edge `{tile, side}`; opening is part of `move`) | TAC-084 |
 | `placeCharge` | `item`, `target` | TAC-072 |
 | `restrainVip` | `unit` | TAC-073 |
 | `liftBody` | `target` (adjacent body), `mode` (`carry`, `drag`) | TAC-074 |
@@ -102,8 +105,8 @@ reaction setting `setReaction` with `reaction: takeCover`. The commands schema i
 validation; this table lists the fields each type uses.
 
 TAC validates every command; an illegal command (not enough AP, no line of sight, invalid path) is
-rejected and not resolved. The rejection goes back to the controller with its reason, and the controller
-is asked again, up to `commandRetries` times per activation; after that the activation ends (TAC-005).
+rejected and not resolved. The rejection goes back to the controller with its reason (the view's
+`rejection`: the command and a `reason` code), and the controller is asked again, up to `commandRetries` times per activation; after that the activation ends (TAC-005).
 Every rejection is logged in the decision log (TAI-016).
 **Values.** `commandRetries` — 3 (draft) → data/tactical-rules.json
 **Source.** design/ai.md › Tactical AI › Controller hand-off (3, 4); design/tactical-actions.md (Hold overwatch, Reload, Carry or drag a body, Pick up or loot, Leave the map)
@@ -142,7 +145,7 @@ passes both in the view. `acceptableLoss` is a share 0–1 of the side's soldier
 left the map (TAC-038); wounded soldiers, disabled limbs included, never count. Once that share is
 reached, the side's battle goal becomes retreat: its units move to an exit and leave the map (TAC-038),
 and goal progress is scored toward that exit. A retreating side still fires and reacts.
-**Values.** goal weights per goal type — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.battleGoal.<goal>` (the generic `considerations` map, name → {weight, curve}); `acceptableLoss` per battle goal — not set (draft) → set by the strategic layer in the tactical map request.
+**Values.** goal weights per goal type — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations`, one flat entry per goal type named `battleGoal.<goal>` (e.g. `battleGoal.attack`; the generic map, name → {weight, curve}; a dotted name, not a nested object — spec choice, cleanup 2026-11-24); `acceptableLoss` per battle goal — not set (draft) → set by the strategic layer in the tactical map request.
 **Status.** open (threshold values)
 **Source.** design/ai.md › Tactical AI › Unit scoring
 
@@ -163,6 +166,15 @@ and a penalty for actions on tiles or targets a squadmate has claimed (TAI-012).
 reinforce) and `claims` (unit U claims a tile, a target or request R, until turn T). The AI owns no state:
 the blackboard is stored by TAC in the `battle` slice, passed in the view, and changed only through
 `blackboardWrites` returned by the AI. TAC applies the writes without interpreting them.
+Shapes and write semantics (spec choice, cleanup 2026-11-24; schemas: perception view `$defs.blackboard`,
+`$defs.squadPlan`; commands `$defs.blackboardWrite`): a request has `id`, `type` (AI-defined, e.g.
+`suppress`, `coverSector`, `reinforce`), `by` (posting unit) and optional `target`, `tile`, `sector`,
+`untilTurn`, `data`; a claim has `id`, `unit`, `kind` (`tile`, `target`, `request`), the claimed `tile`,
+`target` or `request` id, and optional `untilTurn`. Write ops: `addRequest`, `addClaim` (an existing `id` is
+replaced), `removeRequest`, `removeClaim` (by `id`; an unknown id is ignored) and `setPlan` (`roles`,
+`intent`; TAI-013). TAC applies them in order when it receives the controller's answer, also when commands
+in it are rejected. An entry with `untilTurn` is dropped by TAC once that turn has passed; one without stays
+until removed.
 **Source.** design/ai.md › Tactical AI › Unit scoring; CLAUDE.md › State ownership
 
 ### [TAI-013] Squad leader plan
@@ -171,8 +183,11 @@ ranks `recruit` < `regular` < `veteran` < `elite` (the hiring tiers, MGT), set p
 request (`sides[].units[].rank`) and passed in the view (`squad[].rank`, TAI-004). On a tie in rank, the soldier with the highest average of its attribute
 values leads; if that ties too, the first in the request's unit order. It sets the squad plan and roles:
 its activation assigns roles (TAI-014) and posts requests to the blackboard; other units read the plan
-from the view. If the leader dies, the next highest-ranked living soldier (same tie-break) becomes leader
-at its next activation and keeps the current plan. Until then the plan stays as it was. The leader also lends
+from the view. The leader writes the plan with a `setPlan` blackboard write (TAI-012); TAC applies it only
+when the call's `activeUnit` is the current leader (TAC-094) and records `setBy` and `setTurn` (spec
+choice). If the leader dies or leaves the map (TAC-038, TAC-094), the next highest-ranked soldier still on
+the map (same tie-break) becomes leader at its next activation and keeps the current plan. Until then the
+plan stays as it was. The leader also lends
 the whole squad, itself included, a Leadership bonus to morale and reaction chance; TAC applies it (TAC-094) and the view's
 `squad[].morale` already includes it, so the AI adds nothing itself.
 **Source.** design/ai.md › Tactical AI › Unit scoring; design/ai.md › Tactical AI (roles, squad leader); design/management.md › Soldiers & progression (Rank and leadership)
@@ -180,7 +195,9 @@ the whole squad, itself included, a Leadership bonus to morale and reaction chan
 ### [TAI-014] Squad roles
 **Rule.** Enemy squads assign units the roles `flank`, `suppress`, `retreat`. A role changes `actionFit` for
 actions that match it. The role `callReinforcements` is OPTIONAL (later build): until it is built, no role
-calls reinforcements and a side fights with the units on the map.
+calls reinforcements and a side fights with the units on the map. The role values are a closed set:
+`flank`, `suppress`, `retreat`, `callReinforcements` (view `squad[].role`, null while a unit has no role;
+`squadPlan.roles`).
 **Source.** design/ai.md › Tactical AI; design/tactical-layer.md › Overview (Enemy AI)
 
 ### [TAI-015] Doctrines
@@ -192,7 +209,10 @@ TAC passes it in the view's `doctrine`. All squads of a side use that doctrine. 
 
 ### [TAI-016] Decision log
 **Rule.** Every call returns `log` entries: `turn`, `unit`, the chosen command, and the top-scored options
-with total score and the four consideration scores. TAC, the game debug overlay or the Test Lab stores or
+with total score and the four consideration scores (spec choice, commands `$defs.logEntry`: `turn`, `unit`
+— null for the choice of whom to activate —, `chosen`, `options[]` best first with `command`, `score`,
+`survival`, `battleGoal`, `actionFit`, `coordination`, and on a retry call the `rejection` it answers,
+TAI-005). TAC, the game debug overlay or the Test Lab stores or
 shows them; the AI keeps none.
 **Values.** `logTopN` — not set (design: Open) → data/ai/doctrines.json.
 **Source.** design/ai.md › Overview (Logging); design/presentation-tech.md › Prototype tech stack (Debugging)
@@ -261,3 +281,9 @@ player moves the VIP as part of the player's activations, and the VIP never reac
     unit order)?
 14. **Resolved (design 3aac08f):** the VIP is set by `vipControl` in the tactical map request; with `player` it moves only and never reacts (TAI-018). TAI-018 — With `vipControl: player`, does the VIP join the player's activation choice like a squad soldier
     (stamina, reactions), and does the setting live in game settings or in the tactical map request?
+15. TAI-017 / TAI-015 / TAI-009 — A neutral faction that turned hostile (TAC-001) becomes a third AI side,
+    but the request normally gives a `role: neutral` side no `doctrine` and no `battleGoal` entry. Which
+    doctrine and battle goal does the AI use for it (options: the request always carries both for neutral
+    sides, set by the strategic layer; a fixed default such as attack the attacking side, or defend/hold
+    then retreat at an acceptable loss), and can a civilian side turn hostile at all? Found in the cleanup of
+    2026-11-24; needs a design decision.

@@ -47,14 +47,14 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `knownRegions` | Every region it has seen: `terrain`, `road`, `poi`, `krugMarket`, `controller`, `loyalty` (per faction), `flags` — current if in recon range, else last known state with the time `observed` |
 | `knownSquads` | Foreign squads it knows of (including the player's): `faction`, `region`, `estimatedStrength`, time `seen`, `knownGoal` if intel reveals it |
 | `capital` | The capital tile, its `holder`, `occupant` and `contestedSince` (STR-007) |
-| `vips` | Its own VIPs and the enemy VIPs it holds intel on, with intel expiry (STR-045, STR-048) |
+| `vips` | Its own VIPs and the enemy VIPs it holds intel on (STR-045, STR-048): `id`, `faction`, `rank`, `regionId`; own VIPs `guardSquadIds`; enemy VIPs `guardSize`, `observed` and `intelExpires` (after it, last known state) |
 | `relations` | Its relation to every other faction (range and thresholds → see STR-051) |
 | `reputationWithPlayer` | Its reputation `value` toward the player and the derived `standing` (MGT-054) |
 | `funds` | Its own money (STR-092); other factions' funds are never in the view |
 | `overdraft` | Only under `fundsMode = scoreTerm`: its own hidden deficit (funds then show 0, STR-092); never another faction's |
-| `contracts` | Contracts it has posted, with status (open, accepted, done, failed) |
-| `contractOffers` | Open contract offers of other factions it could take, each with its `id` (SAI-015) |
-| `events` | World events and measures it is aware of that affect it (STR) |
+| `contracts` | Contracts it has posted (`role: employer`) or taken with `acceptContract` (`role: contractor`, SAI-015): `id`, `role`, `employer`, `contractor` (null while open), `targetFaction`, `sourceGoal`, `missions` (`key`, `missionId`, `targets`, `location`, `status` `open`/`done`/`failed`), `deadline`, `status` (`open`, `accepted`, `done`, `failed`), `counterContractOf` (cleanup 2026-11-24, spec choice) |
+| `contractOffers` | Open contract offers of other factions it could take, each with its `id` (SAI-015); each has the offer fields of SAI-004 (`contractOffer` shape) |
+| `events` | World events and measures it is aware of that affect it, as STR-050 event instances: `eventId`, `subjects`, `startTime`, `endTime` (null when it ends on its `condition`) |
 | `crisisSigns` | Its true crisis signs from the last daily check (STR-069) |
 | `availableMeasures` | Desperate measures it may start now (STR-070, SAI-016) |
 | `escortRequests` | Krug only: pending paid-escort requests (STR-094), each `id`, `requester`, `convoy` (squad), `region`, `route`, `priceUsd`, and the requester's standing toward the Krug (`relation`, or for the player `reputation`) (SAI-017) |
@@ -84,6 +84,14 @@ The Strategic Layer validates every command; an illegal command (unknown or fore
 non-adjacent region, contract by a faction that may not post it, a measure not in `availableMeasures`, a
 `recruit`, `offerContract` or `hireEscort` the faction cannot pay for under `hardLimit`, an `answerEscort`
 by a faction other than the Krug or for an unknown request) is rejected and not resolved.
+One action per squad (STR-020): `moveSquad`, `hold`, `scout` and `attack` are the squad's action for the
+hour; `setGoal`, `acceptContract.squads` and `answerEscort.squad` are assignments, not actions. In one set a
+squad may get at most one action and at most one assignment (so `setGoal` plus `moveSquad` for the same
+squad is valid). Commands are validated in list order: a later command that names a squad already given an
+action (or an assignment) in that set is rejected, the earlier one stands and the rest of the set is
+unaffected; for `acceptContract` the whole command is rejected if any of its `squads` is already assigned.
+A squad named in no action command continues its move in progress or stands by (STR-020). (cleanup
+2026-11-24, spec choice: first wins.)
 Valid contract offers are forwarded to Management as a `contractOffer` management request (STR-044).
 Trade and buying gear are not commands: AI squads are supplied by the rules of STR-014 and STR-092.
 **Source.** design/ai.md › Strategic AI (Controller hand-off; Faction AI tiers); design/ai.md › Overview
@@ -167,8 +175,11 @@ guidance) → data/ai/doctrines.json; `doctrine`, `rogueDoctrine` links → data
 
 ### [SAI-011] Decision log
 **Rule.** Every call returns `log` entries alongside the commands: one per decision, with `time`, `faction`,
-`tier` (situation, strategist, planner), the chosen option, and the top-scored options with their total score
-and per-consideration scores. The caller (game shell, Test Lab) stores or shows the log; the AI keeps none.
+`tier` (`situation`, `strategist`, `planner`), `decision` (what was decided, e.g. the objective choice or
+one squad's action), `chosen` (the chosen option's label) and `options`: the top-scored options, best
+first, each `{ option, total, considerations }` with `considerations` as consideration name → score after
+its response curve (schema `strategic_commands` `$defs/logEntry`; field names: spec choice, cleanup
+2026-11-24). The caller (game shell, Test Lab) stores or shows the log; the AI keeps none.
 **Values.** `logTopN` (options kept per decision) — not set (design: Open) → data/ai/doctrines.json.
 **Source.** design/ai.md (Logging)
 
@@ -214,7 +225,9 @@ their own side (their patron's side: Varyag SSV, Aegis VDK). `contractOffers` in
 offers; the other factions' views hold none. A rival PMC evaluates them with the same utility scoring as
 its own objectives (SAI-006, SAI-008): an offer is a candidate objective whose gain includes its pay. A
 rival that takes one returns `acceptContract`; STR validates it and settles the pay between the two
-factions' funds (STR-093). An offer a rival takes before the player signs it leaves the player's board:
+factions' funds (STR-093). A taken contract then appears in the rival's view under `contracts` with
+`role: contractor` (SAI-003): it plans the missions as an objective it already pursues (`commitmentBonus`,
+SAI-008) and sees each mission's and the contract's status. An offer a rival takes before the player signs it leaves the player's board:
 Strategic sends MGT `contractEnded` with reason `taken`; only a contract the player has already signed
 can become a race (MGT-052). The Krug never takes other factions' contracts. Its escort work runs both
 ways (STR-094): it offers escort contracts for its own convoys, and a faction can ask the Krug to escort
@@ -301,3 +314,16 @@ values unset) → data/ai/doctrines.json (Krug doctrine).
 13. **Resolved (2026-11-24):** scored by the Krug AI, which may refuse (SAI-017, `answerEscort`).
     SAI-004, SAI-015 — the command is `hireEscort { escortFor }` (cleanup 2026-11-23); still open: how does a faction ask the Krug to escort one of its shipments (a new command, e.g.
     `hireEscort`), and how is the Krug's side of it decided (always accept, or scored by the Krug AI)?
+14. **Resolved (cleanup 2026-11-24, view 0.8.0):** contracts a rival PMC has taken are in its view's
+    `contracts` with `role: contractor` and per-mission status (SAI-003, SAI-015). Who decides that a
+    rival's mission goal is met is STR (STR-027, STR-093). SAI-003/SAI-015 — after `acceptContract` the
+    rival no longer saw the contract's missions, deadline or status.
+15. **Resolved (cleanup 2026-11-24, view 0.8.0):** `vips`, `contracts`, `contractOffers` and `events` are
+    typed from STR-045/STR-048, SAI-004 (`contractOffer` copy) and STR-050 (SAI-003). SAI-003 — these view
+    items had no fields.
+16. **Resolved (cleanup 2026-11-24):** per squad and set at most one action (`moveSquad`, `hold`, `scout`,
+    `attack`) and one assignment (`setGoal`, `acceptContract`, `answerEscort`); first wins (SAI-004).
+    SAI-004/STR-020 — the ordered list could name one squad twice.
+17. **Resolved (cleanup 2026-11-24, commands 0.7.0):** decision log entry `{ time, faction, tier, decision,
+    chosen, options[{ option, total, considerations }] }` (SAI-011). SAI-011 — the log entry fields had no
+    names.

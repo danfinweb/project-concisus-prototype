@@ -3,7 +3,7 @@
   "$id": "strategic_commands.schema.json",
   "title": "Strategic commands",
   "description": "One command set a faction controller returns for every hour that passes: the same commands a player issues. They resolve together with the player's actions (STR-003). The strategic layer validates and resolves them; a valid offerContract reaches Management as a management_requests contractOffer request (STR-044), not through this interface. Spec: STR-003, STR-020, STR-021, STR-044, STR-070, STR-094, STR-096, SAI-004, SAI-011, SAI-014..SAI-017.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "x-producer": "modules/strategic-ai",
   "x-consumers": ["modules/strategic"],
   "type": "object",
@@ -11,14 +11,29 @@
   "properties": {
     "faction": { "type": "string", "x-ref": "factions" },
     "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } },
-    "log": { "type": "array", "description": "Decision log: time, faction, tier, chosen option, top-N options with per-consideration scores (SAI-011)", "items": { "type": "object" } }
+    "log": { "type": "array", "description": "Decision log, one entry per decision (SAI-011)", "items": { "$ref": "#/$defs/logEntry" } }
   },
   "$defs": {
+    "logEntry": {
+      "type": "object", "required": ["time", "faction", "tier", "decision", "chosen", "options"],
+      "description": "SAI-011 decision log entry (field names: spec choice)",
+      "properties": {
+        "time": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
+        "faction": { "type": "string", "x-ref": "factions" },
+        "tier": { "enum": ["situation", "strategist", "planner"] },
+        "decision": { "type": "string", "description": "What was decided, e.g. the objective choice or one squad's action" },
+        "chosen": { "type": "string", "description": "The chosen option (the option label of one entry of options)" },
+        "options": { "type": "array", "description": "Top-scored options, best first, at most the doctrine's logTopN", "items": { "type": "object", "required": ["option", "total"], "properties": {
+          "option": { "type": "string", "description": "Option label" },
+          "total": { "type": "number", "description": "Total score" },
+          "considerations": { "type": "object", "description": "consideration name → its score after the response curve", "additionalProperties": { "type": "number" } } } } }
+      }
+    },
     "command": {
       "type": "object", "required": ["type"],
       "properties": {
         "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "acceptContract", "hireEscort", "answerEscort", "pickMeasure", "recruit", "pass"] },
-        "squad": { "type": "string", "description": "setGoal, moveSquad, hold, scout, attack: an own squad; answerEscort: the Krug squad attached when accepting" },
+        "squad": { "type": "string", "description": "setGoal, moveSquad, hold, scout, attack: an own squad; answerEscort: the Krug squad attached when accepting. Per squad and set: at most one action and one assignment, first wins (SAI-004)" },
         "squads": { "type": "array", "items": { "type": "string" }, "description": "acceptContract: squads assigned to the accepted contract (SAI-015)" },
         "contractId": { "type": "string", "description": "acceptContract: the id of the offer taken (an entry of the view's contractOffers)" },
         "goal": { "enum": ["patrol", "supplyRun", "attackPoi", "holdPoi", "escort", "tradeRoute", "hunt"], "description": "setGoal (STR-018)" },

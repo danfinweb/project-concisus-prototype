@@ -5,6 +5,16 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | management_requests | 0.8.0 | Cleanup: new `moraleChange` (`moraleChanges [{soldier, delta}]`); per-type payload fields for MGT-076 (`hpLost`, `modifierId`, `target`, `factor`, `regions`); `launchOp.fobId`; stale `feesUsd` and contractOffer-version text fixed | strategic, management |
+| 2026-11-24 | management_view | 0.3.0 | Cleanup: required `roster` (`$defs/soldier`: id, status, rank, morale, attributes, nerve, wounds, equipment, perks); `funds.debtsUsd` required (0 when none) | management, strategic |
+| 2026-11-24 | strategic_perception_view | 0.8.0 | Cleanup: typed `vips`, `contracts` (`role` employer/contractor, `contractor`, per-mission `status`), `contractOffers` (local copy of `contractOffer`), `events` (STR-050 instance); `$defs/timestamp` | strategic, strategic-ai |
+| 2026-11-24 | strategic_commands | 0.7.0 | Cleanup: typed `log` items (`$defs/logEntry`); one action plus one assignment per squad, first wins (SAI-004, STR-021) | strategic-ai, strategic, tools (Test Lab, cross-sim) |
+| 2026-11-24 | tactical_map_request | 0.9.0 | Cleanup: `units[].perks` (perk IDs, TAC-096); `acceptableLoss` description fixed (dead or left the map) | strategic, tactical, management |
+| 2026-11-24 | tactical_perception_view | 0.7.0 | Cleanup: typed `squadPlan`, `blackboard`, `knownNeutrals`; role enum; `allowedActions[].unit` for activate; new `rejection` | tactical, tactical-ai |
+| 2026-11-24 | tactical_commands | 0.6.0 | Cleanup: typed `blackboardWrites` (add/remove request or claim, setPlan) and `log` entries | tactical-ai, tactical |
+| 2026-11-24 | data/ai-doctrines | 0.5.0 | Cleanup: `considerations` entries typed `{weight, curve {type, points}}`; per-goal entries use flat dotted names | tactical-ai, strategic-ai, tools |
+| 2026-11-24 | data/poi | 0.7.0 | Cleanup: `dailyOutput` typed `{items [{item, count}], amountUsd}` | strategic, tools |
+| 2026-11-24 | data/management-rules | 0.9.0 | Cleanup: `snapShotPenaltyMoa` description names TAC-023 and TAC-044 (text only) | management, tactical |
 | 2026-11-24 | management_requests | 0.7.0 | `launchOp.hiredPilot` removed: a hired pilot is a roster soldier listed in `soldiers` (MGT-005) | strategic, management |
 | 2026-11-24 | data/strategic-rules | 0.7.0 | New `actionHours.brokerCeasefire` (STR-099, not set) | strategic |
 | 2026-11-24 | data/events | 0.7.0 | `params.shortageMoveFactor` dropped: a fuel shortage only doubles fuel prices (STR-062) | strategic |

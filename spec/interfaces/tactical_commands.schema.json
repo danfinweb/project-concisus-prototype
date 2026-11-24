@@ -2,18 +2,56 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_commands.schema.json",
   "title": "Tactical commands",
-  "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. There is no takeCover command: taking cover is move / changeStance, or setReaction with reaction takeCover (TAI-005). Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-084.",
-  "version": "0.5.0",
+  "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. There is no takeCover command: taking cover is move / changeStance, or setReaction with reaction takeCover (TAI-005). Spec: TAI-005, TAI-006, TAI-012, TAI-013, TAI-016, TAC-005..TAC-084.",
+  "version": "0.6.0",
   "x-producer": "modules/tactical-ai",
   "x-consumers": ["modules/tactical"],
   "type": "object",
   "required": ["commands"],
   "properties": {
     "commands": { "type": "array", "items": { "$ref": "#/$defs/command" } },
-    "blackboardWrites": { "type": "array", "items": { "type": "object" } },
-    "log": { "type": "array", "description": "Decision log: turn, unit, chosen command, top-N options with survival, goal, fit and coordination scores (TAI-016)", "items": { "type": "object" } }
+    "blackboardWrites": { "type": "array", "description": "TAI-012 (spec choice): applied by TAC in order when it receives the answer, without interpreting them", "items": { "$ref": "#/$defs/blackboardWrite" } },
+    "log": { "type": "array", "description": "Decision log (TAI-016)", "items": { "$ref": "#/$defs/logEntry" } }
   },
   "$defs": {
+    "blackboardWrite": {
+      "type": "object", "required": ["op"],
+      "properties": {
+        "op": { "enum": ["addRequest", "removeRequest", "addClaim", "removeClaim", "setPlan"], "description": "add* with an existing id replaces that entry; remove* of an unknown id is ignored; setPlan replaces roles and intent and is applied only when the call's activeUnit is the current leader (TAC-094), else dropped" },
+        "request": { "$ref": "#/$defs/request", "description": "addRequest" },
+        "claim": { "$ref": "#/$defs/claim", "description": "addClaim" },
+        "id": { "type": "string", "description": "removeRequest, removeClaim: entry id" },
+        "plan": { "type": "object", "description": "setPlan: {roles, intent}; TAC adds leader, setBy, setTurn (perception view $defs.squadPlan)", "properties": {
+          "roles": { "type": "object", "description": "unit ID → role (TAI-014)", "additionalProperties": { "enum": ["flank", "suppress", "retreat", "callReinforcements"] } },
+          "intent": { "type": "object" } } }
+      }
+    },
+    "request": {
+      "type": "object", "required": ["id", "type", "by"], "description": "Same shape as the perception view $defs.request",
+      "properties": {
+        "id": { "type": "string" }, "type": { "type": "string" }, "by": { "type": "string" }, "target": { "type": "string" },
+        "tile": { "type": "object" }, "sector": { "type": "object" }, "untilTurn": { "type": "integer" }, "data": { "type": "object" }
+      }
+    },
+    "claim": {
+      "type": "object", "required": ["id", "unit", "kind"], "description": "Same shape as the perception view $defs.claim",
+      "properties": {
+        "id": { "type": "string" }, "unit": { "type": "string" }, "kind": { "enum": ["tile", "target", "request"] },
+        "tile": { "type": "object" }, "target": { "type": "string" }, "request": { "type": "string" }, "untilTurn": { "type": "integer" }
+      }
+    },
+    "logEntry": {
+      "type": "object", "required": ["turn", "unit"], "description": "TAI-016 (spec choice)",
+      "properties": {
+        "turn": { "type": "integer" },
+        "unit": { "type": ["string", "null"], "description": "Active unit; null for the choice of whom to activate" },
+        "chosen": { "$ref": "#/$defs/command" },
+        "options": { "type": "array", "description": "Top logTopN options, best first", "items": { "type": "object", "required": ["command", "score"], "properties": {
+          "command": { "$ref": "#/$defs/command" }, "score": { "type": "number" },
+          "survival": { "type": "number" }, "battleGoal": { "type": "number" }, "actionFit": { "type": "number" }, "coordination": { "type": "number" } } } },
+        "rejection": { "type": "object", "description": "TAI-005: the rejection this call answers (copied from the view's rejection)", "properties": { "command": { "type": "object" }, "reason": { "type": "string" } } }
+      }
+    },
     "command": {
       "type": "object", "required": ["type"],
       "properties": {

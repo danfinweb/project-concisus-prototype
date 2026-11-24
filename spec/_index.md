@@ -21,7 +21,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 
 ## IDs
 
-420 IDs (first split 2026-11-22, updated from design c1333f3). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+421 IDs (first split 2026-11-22, updated from design c1333f3, cleanup 2026-11-24). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -314,6 +314,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [MGT-073] | Shared economy rules for running costs and income | modules/management | design/management.md › Soldiers & progression (Contracts & morale); design/data-definitions.md › Vehicles (draft) |
 | [MGT-074] | Rank and promotion | modules/management | design/management.md › Soldiers & progression (Rank and leadership) |
 | [MGT-075] | Squad leader and Leadership bonus | modules/management | design/management.md › Soldiers & progression (Rank and leadership); design/ai.md › Tactical AI |
+| [MGT-076] | Management request handling | modules/management | design/strategic-actions.md › Trade, services, contracts and factions; design/world-events.md › Events |
 | [SAI-001] | Controller role | modules/strategic-ai | design/ai.md; design/ai.md › Strategic AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [SAI-002] | Invocation | modules/strategic-ai | design/ai.md › Strategic AI › Controller hand-off; › Strategic Layer (Time) |
 | [SAI-003] | Strategic perception view | modules/strategic-ai | design/ai.md › Strategic AI › Controller hand-off; › Faction AI tiers; design/strategic-layer.md › Map (Fog of war); › Squads and simulation (Faction funds (draft)) |

@@ -3,7 +3,7 @@
   "$id": "data/ai-doctrines.schema.json",
   "title": "AI doctrines",
   "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, SAI-014..SAI-017, TAI-007..TAI-016). The faction → doctrine link is factions.doctrine (SAI-010); a doctrine does not list its factions.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -23,13 +23,22 @@
       },
       "commitmentBonus": { "type": "object", "description": "SAI-008: bonus term for objectives the faction already pursues, as {weight, curve {type, points}} (not set)" },
       "gainTerms": { "type": "object", "description": "SAI-008: ownGain terms rated against the faction's ultimate goal: term name → {weight, curve {type, points}} (not set)" },
-      "considerations": { "type": "object", "description": "SAI-006 / TAI-007: name → {weight, curve {type, points}}" },
+      "considerations": { "type": "object", "description": "SAI-006 / TAI-007: flat map, name → {weight, curve {type, points}}. Names are flat strings; a per-type consideration uses a dotted name, e.g. battleGoal.attack (TAI-009, spec choice), never a nested object", "additionalProperties": { "$ref": "#/$defs/consideration" } },
       "escortAccept": { "type": "object", "description": "SAI-017 (Krug doctrine): Krug escort request scoring: considerations (price, requester standing, free squads, route danger) and the refusal threshold (not set)" },
       "wGoal": { "type": "number", "description": "TAI-009" },
       "wFit": { "type": "number", "description": "TAI-010" },
       "wCoord": { "type": "number", "description": "TAI-011" },
       "logTopN": { "type": "integer", "description": "SAI-011 / TAI-016" },
       "roles": { "type": "object", "description": "TAI-014, reserved" }
+    }
+  },
+  "$defs": {
+    "consideration": {
+      "type": "object",
+      "properties": {
+        "weight": { "type": "number" },
+        "curve": { "type": "object", "properties": { "type": { "type": "string" }, "points": { "type": "array" } } }
+      }
     }
   }
 }

@@ -154,7 +154,7 @@ the current occupant took it, reset whenever control changes (losing the capital
 occupant that keeps unbroken control for `capitalHoldDays` becomes the holder, and the capital is no
 longer contested. The holder's effects: it holds the leader seat (its leader stays in the capital,
 STR-045) and receives `capitalBonusIncomeUsd` per day into its funds at the daily check (STR-004, STR-092;
-for the player: a management request to MGT). A rival PMC (or any other faction) that becomes holder just
+for the player: a `capitalIncome` management request with `amountUsd`, MGT-076). A rival PMC (or any other faction) that becomes holder just
 holds it, and the campaign goes on; only the SSV, the VDK, the player and a rogue PMC can go on to meet the
 victory rule (GEN-012), and a rogue PMC that meets it ends the campaign as a loss for the player. If the player becomes holder this way, that alone is not a
 coup: the `playerCoup` ending needs the coup requirements met and the final operation won (GEN-013,
@@ -272,12 +272,16 @@ data/poi.json; `supplyDeficitEffect` (object) — not set (design: Open) → dat
 **Rule.** Action "Station a squad at a plant": allowed for a player squad in a region whose plant the
 PMC has taken. While at least one PMC squad is stationed there, the PMC holds the plant; at each daily
 check the plant's output (STR-010, modified by STR-011) is sent to MGT as a `plantOutput` management
-request with `location` = the receiving FOB, `items` and/or `amountUsd`, `plantId` and `fobId`; the
+request with `location` = the receiving FOB, `items` and/or `amountUsd`, `plantId` and `fobId`. The output
+is the plant type's `dailyOutput` (data/poi.json: `items` `[{ item, count }]` and/or `amountUsd`); STR-011
+multiplies every `count` and `amountUsd`, rounded down to whole items and dollars (spec choice; cleanup
+2026-11-24). Whether a PMC-held plant also pays its STR-014 `income` is Open questions 56; the
 receiving FOB is the PMC FOB with the lowest region distance (tie: lowest id). When no PMC squad remains
 stationed, control returns to the region's controller before the next daily check. Starting the station
 takes `actionHours.station`; the squad then stays (each hour it holds, STR-020) until the player orders it
 away.
-**Values.** `actionHours.station` — 0 (design draft) → data/strategic-rules.json; per-type `dailyOutput` → data/poi.json.
+**Values.** `actionHours.station` — 0 (design draft) → data/strategic-rules.json; per-type `dailyOutput`
+`{ items [{ item, count }], amountUsd }` (drafts in MGT-068) → data/poi.json.
 **Source.** design/strategic-actions.md › Movement and operations; design/management.md › Base & meta progression
 
 ### [STR-016] FOBs on the map
@@ -301,7 +305,9 @@ store beyond the soldiers' own gear), and loot it takes or brings home must fit 
 backpacks, vests and belts (carry weight: MGT-033, TAC-027). `transit` is the move in progress, `{ toRegion, hoursLeft }`, or `null` when the squad
 is not moving (the perception view uses the same name, STR-021). Non-player squads use the same rules: they
 move by STR-006, burn fuel, use supplies and fight. Soldier records live in MGT for the player and in the
-world state for AI squads (strength, gear tier, rank mix).
+world state for AI squads (strength, gear tier, rank mix). Player soldier data Strategic needs (rank,
+morale, attributes, nerve, wounds, equipment, perks) it reads from `management_view` `roster` (MGT-072).
+Whether AI squads keep per-soldier rank, HP and morale is Open questions 54.
 **Source.** design/strategic-layer.md › Squads and simulation (draft); design/data-definitions.md › Vehicles (draft)
 
 ### [STR-018] Squad goals
@@ -334,7 +340,8 @@ actions of one hour resolve together (STR-003, step 2).
 (each tick, STR-003), every non-player faction — `ssv`, `vdk`, `varyag`, `aegis`, `krug`, every
 resistance group and a rogue PMC (SAI-002); never the civilian population or the off-map influences —
 receives a `strategic_perception_view` (its fog-of-war view,
-STR-008, including its own funds and, under `fundsMode = scoreTerm`, its overdraft, STR-092) and returns `strategic_commands`. Commands and how
+STR-008, including its own funds and, under `fundsMode = scoreTerm`, its overdraft, STR-092, and the
+contracts it is part of, as employer or contractor, STR-093) and returns `strategic_commands`. Commands and how
 Strategic resolves each:
 
 | Command | Resolves as |
@@ -354,7 +361,14 @@ Strategic resolves each:
 
 Strategic validates each command against the same rules as player actions (passability, fuel, durations,
 funds limit, STR-092) and drops invalid ones with a logged reason; valid ones resolve together with the
-player's actions (STR-003). The controller never changes the world state directly. Contract offers go to
+player's actions (STR-003). Squad use within one command set (spec choice, SAI-004; cleanup 2026-11-24):
+- `moveSquad`, `hold`, `scout` and `attack` are **actions**; `setGoal`, `acceptContract.squads` and
+  `answerEscort.squad` are **assignments**. In one command set a squad gets at most one action and at most
+  one assignment.
+- Commands are validated in list order. A later command that names a squad already used for the same kind
+  (action or assignment) is rejected; the rest of the set stands. An `acceptContract` is rejected whole if
+  any of its squads is already assigned.
+- A squad with no action this hour continues its move in progress, or else stands by. The controller never changes the world state directly. Contract offers go to
 MGT (STR-044).
 **Source.** design/ai.md (intro); design/ai.md › Strategic AI (Controller hand-off); design/strategic-layer.md › Squads and simulation (Faction funds)
 
@@ -476,8 +490,12 @@ payment due, nothing is deducted and the contract fails at once: Strategic sends
 reputation (MGT), and no money flows back to the employer. An offer whose advance the employer cannot pay
 from its current funds cannot be signed:
 Strategic rejects the player's `acceptContract` (and an AI `acceptContract`) for it. A contract between two
-AI factions (SAI-015) is settled inside the `world` slice: Strategic moves the pay from the employer's
-funds to the contractor's, under the same rule. When a rival PMC takes an offer (SAI-015) that the player
+AI factions (SAI-015) is settled inside the `world` slice: Strategic checks each mission's goal with its
+own rules (STR-027: the fights it resolves, deliveries, hand-overs, holds, deadlines), sets the mission and
+contract status in `world`, shows that status in both factions' perception views (`contracts`, with `role`
+`employer` or `contractor` and per-mission `status` `open` | `done` | `failed`; SAI-003), and moves each
+pay share from the employer's funds to the contractor's under the same rule (cleanup 2026-11-24). How a
+mission type normally judged on the tactical layer is met between AI squads is Open questions 55. When a rival PMC takes an offer (SAI-015) that the player
 has not signed, the offer leaves the player's board: Strategic sends `contractEnded` with reason `taken`
 (MGT-052); a contract the player already signed stays and becomes a race.
 **Source.** design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft)); design/design.md › Overview › Core loop; design/management.md › Contracts and missions › Contract terms; design/strategic-actions.md › Trade, services, contracts and factions
@@ -489,8 +507,10 @@ has not signed, the offer leaves the player's board: Strategic sends `contractEn
 - **Paid Krug escort:** the player or an AI faction can pay the Krug to escort one of its shipments.
   1. **Request.** Allowed only while the shipment (convoy squad) is on a tile flagged `krugMarket` and
      has not left yet (no move since it formed or was loaded there). An AI faction sends
-     `hireEscort { escortFor, route }` (STR-021); the player hires through the Krug market (MGT, forwarded
-     to Strategic). `route` is the convoy's planned tile path to its destination. Hiring takes
+     `hireEscort { escortFor, route }` (STR-021); the player hires with a strategic action of the same
+     shape for one of its squads on that tile (`escortFor` = that squad), resolved by Strategic through
+     steps 1–4 like an AI request; MGT only books the debit on accept (`payKrugEscort`, step 4; cleanup
+     2026-11-24). `route` is the convoy's planned tile path to its destination. Hiring takes
      `actionHours.krugEscort`. A convoy has at most one Krug escort squad: a request for a convoy that
      already has an escort or a pending request is rejected.
      **Resentment.** When the requester is a foreign PMC (the player's PMC, Varyag, Aegis or a rogue PMC;
@@ -505,7 +525,8 @@ has not signed, the offer leaves the player's board: Strategic sends `contractEn
      squad }` (SAI-017); the Krug may refuse. A request not answered in that hour lapses (refused). An
      accepted answer resolves before the hour's moves. An AI convoy waits on the tile until the answer.
   4. **On accept:** the price moves from the requester's funds to the Krug's (STR-092; for the player
-     debited through MGT, `payKrugEscort`), and the named Krug squad (any Krug squad, not only one on the
+     debited through MGT, `payKrugEscort` with `faction` `krug`, `squad` and `amountUsd`, MGT-076; if MGT
+     returns `ok: false` the hire fails and no escort is assigned), and the named Krug squad (any Krug squad, not only one on the
      convoy's tile) is assigned to the convoy. If it is not on the convoy's tile, it first travels there by
      the normal move rules (STR-031, STR-032) and the convoy waits on its tile until the escort arrives,
      which may delay the departure; if it is already there, the convoy can leave in the same tick. Once
@@ -569,9 +590,10 @@ not return are reported to MGT as MIA, captured or dead.
 ### [STR-028] Launch an op
 **Rule.** At an FOB, the player commits a squad, its loadout and at most one vehicle (none: the squad goes
 on foot, STR-017); they are locked to the op until it ends. Launching takes `actionHours.launch`: with 0
-the squad's first move starts at once in the same planning phase. Each soldier's fee per op (and a hired
-pilot's, STR-034) is paid at launch: Strategic sends a `launchOp` management request (`squad`,
-`soldiers` (a helicopter pilot is one of them), optional `insuredItems`; MGT-005); if MGT returns `ok: false` the PMC
+the squad's first move starts at once in the same planning phase. Each soldier's fee per op (a
+helicopter pilot is one of the soldiers, STR-034) is paid at launch: Strategic sends a `launchOp`
+management request (`squad`, `soldiers`, `fobId` = the FOB the op starts from, optional `insuredItems`;
+MGT-005, MGT-036); if MGT returns `ok: false` the PMC
 cannot pay and the op does not launch (no fee, no launch). Amounts and booking: MGT.
 **Values.** `actionHours.launch` — 0 (design draft) → data/strategic-rules.json; fees per op → MGT.
 **Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft); design/management.md › Soldiers & progression
@@ -621,8 +643,8 @@ data/vehicles.json and no rule reads it.
 ### [STR-034] Fly one region by helicopter
 **Rule.** A helicopter moves to any adjacent region in `heliMoveHours`, any terrain incl. water and
 mountains, costing `fuelPerRegion` fuel. Requires a pilot seat filled by a soldier with Technical ≥
-`pilotTechnicalMin` or a hired pilot (MGT; paid a fee per op at launch, STR-028); the pilot counts against
-seats. Both values are single values
+`pilotTechnicalMin` (a hired pilot is such a roster soldier, paid the normal fee of its rank at launch,
+STR-028, MGT-005); the pilot counts against seats. Both values are single values
 for every helicopter, owned here (DAT-028 points to them; vehicle records carry no copy). Every faction with
 a squad or POI within the helicopter's noise range notices it (STR-008). **Fire on helicopters:** military
 points of interest are the POIs of a type flagged `military` (design: arms plants and governmental
@@ -776,8 +798,9 @@ position is hidden unless the viewer holds valid intel (STR-048) or sees its reg
 **Rule.** When a non-leader VIP dies, every squad of its faction within radius `R(rank)` of the VIP's
 region is reached: Major R = 0 (same region), Colonel R = 3, General R = ∞ (all squads of the faction).
 Each soldier in a reached squad loses morale by that soldier's own rank: Elite −40, Veteran −25, Regular
-−10, Recruit −5 (player soldiers: through MGT, which holds morale per soldier; AI squads: in the world
-slice).
+−10, Recruit −5 (player soldiers: through MGT, which holds morale per soldier: Strategic reads each
+soldier's `rank` from `management_view` `roster` and sends a `moraleChange` management request with one
+`{ soldier, delta }` per soldier, MGT-076; AI squads: in the world slice, see Open questions 54).
 **Values.** `vip.shockRadius` — major 0, colonel 3, general `all`; `vip.moraleLoss` — elite 40, veteran 25, regular 10, recruit 5 → data/strategic-rules.json.
 **Source.** design/strategic-layer.md › VIPs
 
@@ -936,14 +959,14 @@ them).
 
 ### [STR-062] Event: Fuel shortage
 **Rule.** Trigger: an oil plant is ruined or cut off (no road path to its controller's other
-regions). Effect: fuel prices ×2 (sent to MGT as a price modifier); nobody moves slower. Ends when supply is
+regions). Effect: fuel prices ×2 (sent to MGT as a `priceModifier` request, target `fuel`, MGT-076); nobody moves slower. Ends when supply is
 restored.
 **Values.** `fuelPriceFactor` — design 2 → data/events.json (`params.shortageMoveFactor` removed).
 **Source.** design/world-events.md › Events
 
 ### [STR-063] Event: Chemical leak
 **Rule.** Trigger: a fight takes place at a chemical plant. Effect: the plant region and its adjacent
-regions get the `hazard` flag; medical prices × `params.medicalPriceFactor` (MGT modifier). Duration
+regions get the `hazard` flag; medical prices × `params.medicalPriceFactor` (a `priceModifier` request, target `medical`, MGT-076). Duration
 `leakDays`. While the leak lasts, squads on a `hazard` tile lose HP each strategic hour as on a
 contaminated tile (STR-097). Unlike contaminated loot (STR-080), loot from a leak tile can still be sold.
 **Values.** `leakDays` — design 5; HP loss → STR-097; `params.medicalPriceFactor` 1.5 (design draft) →
@@ -1138,8 +1161,9 @@ loyalty collapses; Refugee movement fires for neighbours. Escort contracts only 
 `contaminated` (STR-080) or `hazard` (STR-063, while the chemical leak lasts) loses
 `contaminationHpPerHour` HP; a squad in transit
 counts as on its origin tile (STR-020). For AI squads the loss is applied in the `world` slice; for player
-squads Strategic sends it to MGT, which owns soldier HP (roster), as a management request naming the squad,
-the soldiers and the HP lost. Healing in the same tick (STR-037) is computed by MGT on top.
+squads Strategic sends it to MGT, which owns soldier HP (roster), as a `contaminationTick` management
+request naming the `squad`, the `soldiers` and the HP lost per soldier (`hpLost`, MGT-076). How that loss is
+split over the body zones is Open questions in spec/management.md (51); for AI squads see Open questions 54. Healing in the same tick (STR-037) is computed by MGT on top.
 **Values.** `contaminationHpPerHour` — 2 HP per soldier per hour (design draft) → data/strategic-rules.json.
 **Source.** design/world-events.md › Nuclear strike (rare); › Events (Chemical leak); design/strategic-layer.md › Map (draft) › Points of interest (Industrial plant — chemical); › World events (draft) (Desperate measures (draft))
 
@@ -1427,3 +1451,17 @@ road, each with a non-water landable neighbour.
 53. STR-034, STR-041: a damaged helicopter over land lands and "waits for repair at a mechanical plant".
     When it lands on a tile without a mechanical plant, how does the repair reach it (a plant service sent
     out, transport, field repair by a Technical soldier as for weapons)? Until decided, it stays grounded.
+54. STR-017, STR-047, STR-097 (cleanup 2026-11-24): AI squads are kept as aggregates (strength, gear tier,
+    rank mix), but the VIP morale shock (by each soldier's rank), the contamination HP loss (per soldier) and
+    `tactical_map_request` `units[].rank` / `units[].morale` are per soldier. Options: (a) the `world` slice
+    keeps a per-soldier record (rank, HP, morale) for every AI soldier; (b) aggregate rules — morale loss
+    weighted by the rank mix on the squad morale, HP loss as a strength loss, and per-soldier values
+    generated per engagement (spec reading today: `units[].tier` is the aggregate fallback, rank drawn from
+    the rank mix, morale = squad morale, zone HP full).
+55. STR-093, SAI-015 (cleanup 2026-11-24): how is a mission type normally judged on the tactical layer
+    (assassinate_vip, capture_vip, destroy a target) met when only AI squads fight on the strategic layer?
+    Options: met when the strategic fight (STR-026) that kills or captures the target is won, or a separate
+    rule per mission type.
+56. STR-014, STR-015, MGT-068 (cleanup 2026-11-24): does a plant the PMC holds also pay its STR-014 `income`
+    (and does `supplyOutput` mean anything for the PMC), or only its MGT-068 `dailyOutput` (the mineral
+    plant's $1,500 equals its `income`)? Options: `dailyOutput` only; `dailyOutput` plus `income`.

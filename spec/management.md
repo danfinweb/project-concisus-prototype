@@ -14,12 +14,16 @@ rules in TAC.
 **Rule.** Each soldier in `roster` stores: `id`; `serviceNumber` (unique per campaign, assigned at
 generation, never changes); `callsign` (current displayed callsign); `callsignSource` (`generated` |
 `earned` | `player`); `callsignPrestige` (0 for generated, 1–5 for earned); the eight attributes
-(MGT-021); `nerve` (MGT-031); `morale` (MGT-008); `wounds` (per body zone, structure per TAC Medical
-system); `rank` (a tier ID, MGT-002: the hiring tier at hiring, rising by MGT-074, never dropping; the fee per
+(MGT-021); `nerve` (MGT-031); `morale` (MGT-008); `wounds` (`{ zoneHp, conditions }`, per body zone,
+in the `battle_result` shapes, TAC Medical system; spec choice); `equipment` (slot → item instance, the
+slots of DAT/`tactical_map_request`); `perks` (perk IDs unlocked, MGT-009; never removed; sent as
+`tactical_map_request` `units[].perks`, TAC-096); `skillXp` (xp toward the next point, per skill,
+MGT-023); `skillIdleDays` (days since last use, per skill, MGT-025); `rank` (a tier ID, MGT-002: the hiring tier at hiring, rising by MGT-074, never dropping; the fee per
 op follows it, MGT-005); `feeDiscount` (0–1, default 0: the share taken off its fee per op for as long as it
 serves, set at hiring, e.g. a refugee recruit, MGT-003); `deeds` (IDs of deeds already earned, MGT-018); `status` (`active` | `mia` | `captured` |
 `dead`); `hiredSkills` (the four skill values at hiring, the drift floor of MGT-025); `serviceRecord`
-(MGT-006); `kitMarks` (cosmetic patches and colours). No name, portrait, voice, backstory or personality is generated or stored. Derived
+(MGT-006); `kitMarks` (cosmetic patches and colours). Strategic reads the fields it needs through
+`management_view` `roster` (MGT-072). No name, portrait, voice, backstory or personality is generated or stored. Derived
 values (MGT-026…MGT-030) are never stored. A `battle_result` soldier status `leftMap` (left through an
 exit) is stored as `active`; `battle_result` `mia`, `captured` and `dead` are provisional, and the final
 `mia` / `captured` / `dead` status of a soldier who does not reach an FOB is set only by a
@@ -73,8 +77,8 @@ The service number is unchanged. The player may also set `kitMarks` (cosmetic on
 **Rule.** A soldier is paid per deployment, not per day: each soldier on an op costs the fee per op of its
 current `rank` (`tiers[].feePerOpUsd` of the tier with that ID, MGT-002, MGT-074) × (1 − its `feeDiscount`,
 MGT-001), rounded to whole dollars, paid when the op launches.
-Strategic sends a `launchOp` management request (`squad`, `soldiers`, optional
-`insuredItems`) when the player launches an op (STR "Launch an op"); Management debits, as one payment, the
+Strategic sends a `launchOp` management request (`squad`, `soldiers`, `fobId` = the FOB the op starts
+from, optional `insuredItems`) when the player launches an op (STR "Launch an op"); Management debits, as one payment, the
 sum of the listed soldiers' fees (a hired helicopter pilot is a normal roster soldier with Technical
 `pilotTechnicalMin`+, listed in `soldiers` and paid the normal fee of its rank, DAT-028), plus the insurance premium of MGT-036. If the balance
 cannot cover the whole sum (MGT-070) nothing is paid, the result is `ok: false` and the op does not launch
@@ -151,13 +155,14 @@ iterations; morale persistence itself is not.
 **Rule.** Perks unlock when a skill (`marksmanship`, `recon`, `medical`, `technical`) reaches a threshold:
 one perk per skill at `perkThresholds[0]` and one at `perkThresholds[1]` (8 perks in all). A perk, once
 unlocked, stays (spec assumption, also if the skill drifts back, MGT-025). Leadership is not a perk: it
-comes from rank only (MGT-075). Management records which perks a soldier has; each effect is applied by the
+comes from rank only (MGT-075). Management records which perks a soldier has (`perks`, MGT-001;
+published in `management_view` `roster`, MGT-072); each effect is applied by the
 owner of the rule it changes (TAC for battle rules, MGT-067 for repairs, TAC recovery for FOB healing):
 
 | Perk (`perks[].id`) | Skill, threshold | Effect (`perks[].effect`) |
 | --- | --- | --- |
 | `steadyAim` | marksmanship 50 | Shooter spread × 0.9 on shots with at least one aim step (`shooterSpreadFactor` 0.9, `minAimSteps` 1; TAC-044) |
-| `snapShooter` | marksmanship 80 | Snap-shot penalty +1.5 MoA instead of the normal one (`snapShotPenaltyMoa` 1.5; TAC-044) |
+| `snapShooter` | marksmanship 80 | Snap-shot penalty +1.5 MoA instead of the normal one (`snapShotPenaltyMoa` 1.5 replaces `snapShotSpread` of TAC-023, in the spread sum of TAC-044) |
 | `quietStep` | recon 50 | Enemies notice the soldier at 20% shorter distance (`noticeDistanceFactor` 0.8; TAC-081) |
 | `ghost` | recon 80 | Reaction chance against the soldier −10 while crouched or prone (`reactionChanceAgainst` −10, `whileStance` [crouched, prone]; TAC-022) |
 | `fieldMedic` | medical 50 | Medical items cost 1 AP less, never below 1 (`medicalApReduction` 1, `medicalApMin` 1; TAC Medical system) |
@@ -406,7 +411,7 @@ effects (accuracy, ergonomics, recoil, audible range, AP cost) and slots are DAT
 `insurance.premiumFraction` × the insured items' `valueUsd` (ITM-034), debited when the op starts, together with the fees in the `launchOp` payment (MGT-005; `insuredItems`). For each
 insured item lost on that op (MGT-011), roll (seeded) `insurance.recoveryChance`; on success the item
 returns to the stash of the FOB the op started from after `insurance.delayDays` days (spec choice of the
-FOB). Insurance covers one op.
+FOB; `launchOp` `fobId`, MGT-005). Insurance covers one op.
 **Values.** `insurance.premiumFraction` — 0.10 per op; `insurance.recoveryChance` — 0.5;
 `insurance.delayDays` — 3 (design draft) → data/management-rules.json
 **Status.** Draft
@@ -630,8 +635,9 @@ rival then pursues the same missions. If the rival completes a mission first, th
 (`missionOutcome` `failure`, `outcomeReason: rivalFirst`): no pay share and **no** reputation loss (no
 `repActs.missionFailed`). While competing, an Unfriendly faction treats the player as hostile (MGT-055).
 The Krug never takes other factions' contracts. A Krug escort for a shipment is hired at a Krug-market tile
-before the shipment leaves; its price follows distance and danger (STR-094, priced in data owned by STR)
-and is debited from `economy` (`payKrugEscort`).
+before the shipment leaves; its price follows distance and danger (STR-094, priced in data owned by STR).
+The hire is a strategic action that Strategic resolves (STR-094); Management only debits the price from
+`economy` when the Krug accepts (`payKrugEscort`, MGT-076).
 **Source.** design/management.md › Contracts and missions › Where contracts come from; › Reputation › Standing; design/strategic-layer.md › Squads and simulation
 
 ## Reputation
@@ -796,7 +802,9 @@ and vehicle repairs; chemical plant → medical supplies; arms plant → weapons
 → medium income to `economy` plus a boost to the output of every other plant the PMC holds; hidden-city
 complex (optional) → prototype items. An unguarded plant falls back to the region's controller (STR) and
 stops delivering. Strategic sends each delivery as a `plantOutput` management request with `plantId`,
-`fobId` (the receiving FOB, STR-015) and the `items` and/or `amountUsd`; at each daily check it also sends
+`fobId` (the receiving FOB, STR-015) and the `items` and/or `amountUsd` (the type's `dailyOutput`
+`{ items [{ item, count }], amountUsd }` after STR-011); Management adds the items to that FOB's stash and
+credits the amount (MGT-070); at each daily check it also sends
 `dailyRollover` with `day` (STR-004).
 **Values.** (design drafts) daily output: oil plant 20 fuel units; mechanical plant 10 kg spare parts;
 chemical plant 5 medical kits; arms plant 2 weapons and 300 rounds; mineral plant $1,500 plus +10% per
@@ -860,9 +868,38 @@ Management-owned slices; consumer: modules/strategic. It holds, at game time `{ 
   `deadline`, `pay`, `advance`, `missions[]` (`key`, `missionId`, `location`, `pay`, `outcome` `open` |
   `success` | `failure`). Strategic uses the signed ones for STR-093 payments and deadlines.
 - `funds`: `{ balanceUsd, debtsUsd }` — the PMC's money balance (`economy`, MGT-070) and the sum of its
-  open debts.
-No other part of `roster`, `unlocks` or `economy` is published.
+  open debts; both always present (`debtsUsd` 0 when there are none).
+- `roster` (cleanup 2026-11-24): every soldier not `dead`, with `id`, `status`, `rank`, `morale`,
+  `attributes`, `nerve`, `wounds` (`zoneHp`, `conditions`), `equipment` and `perks` (MGT-001) — what
+  Strategic copies into `tactical_map_request` `units[]` (MGT-008, MGT-075, TAC-096) and uses for the
+  VIP morale shock (STR-047), evasion (STR-024) and the pilot check (STR-034).
+No other part of `roster` (callsign, service record, xp, deeds, fee discount), `unlocks` or `economy` is
+published.
 **Source.** design/management.md › Reputation (draft); › Contracts and missions › Contract terms; design/strategic-layer.md › Squads and simulation (Faction funds (draft)) (structure is a spec decision)
+
+### [MGT-076] Management request handling
+**Rule.** Payload fields (`management_requests`) and what Management does, for the request types whose
+rule lives elsewhere (spec choice of the fields; cleanup 2026-11-24). Every debit follows MGT-070 (`ok:
+false` and nothing paid when the balance cannot cover it); on `ok: true` for a payment to a faction,
+Strategic credits that faction's funds (STR-092). Results list one entry per request.
+
+| Type | Payload | Management does | Rule |
+| --- | --- | --- | --- |
+| `healingTick` | `squad`, `soldiers`, `hours`, `atFob` | heals the listed soldiers' `wounds` for `hours` by the recovery rule (best Medical of the squad, faster at an FOB; Trauma surgeon `fobHealFactor`) | STR-037, TAC recovery, MGT-009 |
+| `contaminationTick` | `squad`, `soldiers`, `hpLost` | removes `hpLost` HP from each listed soldier's `wounds` (zone split: Open questions 51) | STR-097 |
+| `moraleChange` | `moraleChanges` `[{ soldier, delta }]` | adds each `delta` to that soldier's `morale`, clamped 0–100 | STR-047, MGT-008 |
+| `capitalIncome` | `amountUsd` | credits `economy` | STR-007, MGT-070 |
+| `priceModifier` | `modifierId`, `target` (`fuel` \| `medical`), `factor`, optional `regions` | multiplies the prices of that target by `factor` (on top of MGT-039, MGT-040, MGT-067) while active; a later request with the same `modifierId` replaces it, `factor` 1 removes it. Spec reading: `fuel` = fuel items and `servicePrices.fuelPerUnitUsd`; `medical` = medical items and `servicePrices.hospitalPerWoundUsd` | STR-062, STR-063 |
+| `payCompensation` | `faction`, `amountUsd` | debits `economy`; no reputation change (none designed) | STR-043 |
+| `payOffBounty` | `faction`, `amountUsd` | debits `economy`; no reputation change (none designed) | STR-043, STR-064 |
+| `payKrugPass` | `faction` (`krug`), `squad`, `amountUsd` | debits `economy` | STR-025 |
+| `payKrugEscort` | `faction` (`krug`), `squad`, `amountUsd` | debits `economy` | STR-094, MGT-052 |
+| `buyIntel` | `faction` (seller), `amountUsd` | debits `economy`; Strategic checks the standing (from `management_view`) and grants the intel on `ok: true` | STR-048 |
+| `handOver` | `squad`, `contractId`, `missionKey`, optional `items` | removes the listed items from the squad's containers and vehicle storage (MGT-032); the mission's success arrives separately as `missionOutcome` | STR-040, MGT-044 |
+
+Amounts are computed by Strategic from its own data (STR prices); Management checks only the balance.
+Brokering a ceasefire (STR-099) has no cost and sends no request.
+**Source.** design/strategic-actions.md › Trade, services, contracts and factions; design/world-events.md › Events (structure is a spec decision)
 
 ## Open questions
 
@@ -993,3 +1030,10 @@ No other part of `roster`, `unlocks` or `economy` is published.
     serve; the hire price is normal (MGT-001 `feeDiscount`, MGT-003, MGT-005). MGT-003, STR-065: refugee recruits come with a "fee 30% lower". With the fee-per-op model "fee" could mean
     the hire price or the fee per op. Spec: the hire price (the design calls them cheap recruits); the fee per
     op stays the rank's fee.
+51. STR-097, MGT-076 (cleanup 2026-11-24): the strategic HP loss on contaminated tiles is given per soldier,
+    but Management stores HP per body zone (`wounds.zoneHp`). Which zones lose it? Options: spread evenly
+    over all zones; thorax only; a seeded zone per point. A zone reaching 0 HP has battle effects
+    (TAC-059), so the choice changes outcomes.
+52. MGT-010, MGT-076, STR-037 (cleanup 2026-11-24): `healingTick` applies "TAC recovery" (HP per hour from
+    the squad's best Medical, faster at an FOB), but spec/tactical.md has no recovery-rate rule and the
+    design gives no rate. Needed: the HP per hour (in and out of an FOB) and how it scales with Medical.

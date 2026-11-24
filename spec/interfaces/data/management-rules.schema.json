@@ -3,7 +3,7 @@
   "$id": "data/management-rules.schema.json",
   "title": "Management rules",
   "description": "Global management constants (spec MGT). The weight to AP/stamina penalty is TAC-027 (tactical-rules); the pay interval and running-cost formulas are economy-rules (MGT-073).",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
@@ -15,7 +15,7 @@
       "properties": {
         "shooterSpreadFactor": { "type": "number", "exclusiveMinimum": 0, "description": "steadyAim 0.9 (TAC-044)" },
         "minAimSteps": { "type": "integer", "minimum": 0, "description": "steadyAim 1" },
-        "snapShotPenaltyMoa": { "type": "number", "minimum": 0, "description": "snapShooter 1.5, replaces the normal snap-shot penalty (TAC-044)" },
+        "snapShotPenaltyMoa": { "type": "number", "minimum": 0, "description": "snapShooter 1.5, replaces snapShotSpread, the snap-shot penalty of TAC-023, in the spread sum of TAC-044" },
         "noticeDistanceFactor": { "type": "number", "exclusiveMinimum": 0, "description": "quietStep 0.8 (TAC-081)" },
         "reactionChanceAgainst": { "type": "number", "description": "ghost -10 (TAC-022)" },
         "whileStance": { "type": "array", "items": { "enum": ["upright", "crouched", "prone"] }, "description": "ghost [crouched, prone]" },

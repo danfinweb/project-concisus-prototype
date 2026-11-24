@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
-  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAC-094, TAC-095, TAI-009, TAI-013, TAI-018.",
-  "version": "0.8.0",
+  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAC-094, TAC-095, TAC-096, TAI-009, TAI-013, TAI-018.",
+  "version": "0.9.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -74,7 +74,7 @@
       "properties": {
         "goal": { "type": "string" },
         "targets": { "type": "array", "items": { "type": "string" } },
-        "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the side's soldiers out of action (dead, disabled, fled); reached = retreat (TAI-009)" }
+        "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the side's soldiers out of action: dead, or left the map (TAC-038); wounded soldiers, disabled limbs included, never count. Reached = retreat (TAI-009)" }
       }
     },
     "unit": {
@@ -87,6 +87,7 @@
         "controller": { "enum": ["player", "ai"], "description": "Per-unit override, e.g. an escorted VIP (TAI-018)" },
         "battleGoal": { "$ref": "#/$defs/battleGoal", "description": "Per-unit goal for an AI-controlled unit, e.g. an allied VIP on the player side; overrides the side's battleGoal entry (TAI-018)" },
         "attributes": { "type": "object", "description": "All eight attributes (strength, endurance, agility, perception, marksmanship, recon, medical, technical); TAC-094 breaks leader ties by their average" },
+        "perks": { "type": "array", "items": { "type": "string" }, "description": "Perk IDs the soldier has (data/management-rules.json perks[].id): player soldiers as recorded by Management (a perk stays once unlocked, MGT-009); AI units filled by the strategic layer by the skill thresholds. TAC applies them (TAC-096) and never derives perks from attributes; absent = no perks" },
         "nerve": { "type": "number" },
         "zoneHp": { "type": "object" },
         "conditions": { "type": "array", "items": { "type": "object" } },
