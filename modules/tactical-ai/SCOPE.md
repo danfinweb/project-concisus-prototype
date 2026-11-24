@@ -125,3 +125,24 @@ Open (found by `/test`, commit `526fda8`; the tests use the assumption shown):
    `reachExit`, `hold`, plus `retreat` for the TAI-009 switch. Should the schema list the enum?
 6. **Hostile neutral side** (spec question 15, TAI-017). It has no `doctrine` or `battleGoal` in the request.
    Not covered by the tests until decided.
+
+Open (found by `/apply-spec TAI-001..016`; `core/` uses the choice shown):
+
+7. **One action per call or a whole activation?** TAI-002 calls the AI "at an activation" and it returns
+   `commands`. But `allowedActions` only holds for the current AP, so a second command's legality is unknown.
+   Core returns one action per call and expects TAC to call again until `endActivation`.
+8. **Which unit to activate.** TAI-002 says the AI picks, but no rule says how. Core scores each offered
+   unit by its stamina share (`actionFit`), with `pass` at its doctrine fit.
+9. **Cover and stance protection.** Exposure needs to know how much `half` and `full` cover, and each stance,
+   protect. Core uses ordinals (none 0, half ½, full 1; upright 0, crouched ½, prone 1), shaped by the
+   doctrine curve `survival.stance`. Should these come from TAC's cover rules (TAC-035) in `/data` instead?
+10. **Squad plan in the goal term.** TAI-009 scores progress "toward the squad's current plan"; the plan's
+    `intent` has no defined content yet, so core scores only the battle goal.
+11. **Command types without a fit rule.** `throwGrenade`, `useItem`, `search`, `pickUp`, `cutLock`, `closeDoor`,
+    `placeCharge`, `restrainVip`, `liftBody`, `putDownBody`, `vault`, `climb`, `turn`, `swapWeapon` and the
+    backpack commands are never chosen. The spec sets no behaviour for them beyond TAI-010's general inputs.
+12. **Doctrine fields core reads** (all data, none set in the design): `considerations` entries
+    `survival` (+ `.exposure`, `.stance`, `.threat`, `.hp`, `.morale`), `battleGoal` (+ `.<goal>`), `actionFit`
+    (+ `.<commandType>` base fits, `.noPenetration`), `requestBonus`, `claimPenalty`, and `roles.byWeaponType`,
+    `roles.fitBonus`, `roles.claimTurns`. `roles` is "reserved" in ai-doctrines 0.5.0. Should these become schema
+    fields?

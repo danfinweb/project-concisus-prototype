@@ -7,6 +7,8 @@
 //
 // tactical-ai has no battle loop of its own (TAC resolves commands), so these sims run decide() over
 // many seeds and read the distribution of choices. Full battles AI vs AI belong to the cross-sim.
+// The Test Lab passes `sim.core` as the first run argument, so every sim exposes the core it imports.
+import * as core from '../core/index.js';
 import { loadData } from '../../../shared/registry.js';
 import { Rng } from '../../../shared/rng.js';
 import { baseView, retreatView, freeze, shootTarget, setRole, TOWARD_EXIT } from './views.js';
@@ -19,7 +21,7 @@ export default {
   module: 'tactical-ai',
   sims: [
     {
-      id: 'tie-spread', spec: ['TAI-007', 'TEC-015'],
+      id: 'tie-spread', core, spec: ['TAI-007', 'TEC-015'],
       name: 'Two identical targets: the seed splits the choice (expect about 50 / 50)',
       async run(core, data, seed, p) {
         await ready();
@@ -37,7 +39,7 @@ export default {
       seeds: 200,
     },
     {
-      id: 'retreat-onset', spec: ['TAI-009'],
+      id: 'retreat-onset', core, spec: ['TAI-009'],
       name: 'Share of activations heading for the exit by soldiers lost (acceptableLoss 0.5 of 4)',
       async run(core, data, seed, p) {
         await ready();
@@ -53,7 +55,7 @@ export default {
       seeds: 50,
     },
     {
-      id: 'action-mix', spec: ['TAI-007', 'TAI-008', 'TAI-010', 'TAI-014'],
+      id: 'action-mix', core, spec: ['TAI-007', 'TAI-008', 'TAI-010', 'TAI-014'],
       name: 'What the active unit does by role and shot quality (behaviour profile per doctrine)',
       async run(core, data, seed, p) {
         await ready();
