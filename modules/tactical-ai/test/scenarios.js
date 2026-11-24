@@ -35,6 +35,16 @@ async function core() {
   }
 }
 
+async function adapter(ctx) {
+  await ctx.loadFixtures([...FIX, 'views']);
+  try {
+    return await import('../adapter/index.js');
+  } catch (e) {
+    throw new Error(`adapter/index.js is not built yet or fails to load (${e.message})`);
+  }
+}
+const samples = (ctx) => Object.fromEntries(['attack', 'choose', 'retry'].map((k) => [k, ctx.registry.get('views', k)]));
+
 const schemas = {};
 async function schema(name) {
   if (!schemas[name]) {
@@ -1008,6 +1018,117 @@ export default {
         const a = c.decide(freeze(baseView()), ctx.rng(1));
         const b = c.decide(freeze(baseView()), ctx.rng(1));
         ctx.assert.equal(b.log.length, a.log.length);
+      },
+    },
+
+    // ---------------------------------------------------------------- Adapter / interfaces (/integrate)
+    {
+      id: 'int-samples-accepted', spec: ['TAI-003', 'TAI-004', 'TAI-005'], name: 'adapter: every sample view in fixtures/views.json is accepted and answered with valid commands',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        const ctl = await a.createController();
+        for (const [name, v] of Object.entries(samples(ctx))) {
+          await assertSchema(ctx.assert, 'tactical_perception_view', v);
+          const out = ctl.decide(v, ctx.rng(17));
+          await assertSchema(ctx.assert, 'tactical_commands', out);
+          assertLegal(ctx.assert, v, out);
+          ctx.log(name, JSON.stringify(out.commands));
+        }
+      },
+    },
+    {
+      id: 'int-same-as-core', spec: ['TAI-001', 'TAI-003'], name: 'adapter: output equals core.decide for the same view and seed',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        const c = await core();
+        const ctl = await a.createController();
+        for (const v of [...Object.values(samples(ctx)), ...VIEWS().map(freeze)]) {
+          ctx.assert.deepEqual(ctl.decide(v, ctx.rng(5)), c.decide(v, ctx.rng(5)));
+        }
+      },
+    },
+    {
+      id: 'int-rejects-bad-view', spec: ['TAI-004', 'TAI-006'], name: 'adapter: a view that breaks the schema fails with an InterfaceError naming the path',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        const ctl = await a.createController();
+        const v = baseView();
+        delete v.squad;
+        v.squadPlan.roles.r1 = 'charge';
+        let err = null;
+        try { ctl.decide(freeze(v), ctx.rng(1)); } catch (e) { err = e; }
+        ctx.assert.ok(err instanceof a.InterfaceError, `got ${err}`);
+        ctx.assert.equal(err.iface, 'tactical_perception_view');
+        ctx.assert.ok(err.errors.some((e) => e.path.includes('squadPlan')), JSON.stringify(err.errors));
+        ctx.assert.ok(err.errors.some((e) => /squad/.test(e.message) || e.path === '/'), JSON.stringify(err.errors));
+      },
+    },
+    {
+      id: 'int-validation-off', spec: ['TAI-003'], name: 'adapter: with validation off it passes the view straight to core',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        const ctl = await a.createController({ validateInput: false, validateOutput: false });
+        const v = baseView();
+        v.squadPlan.roles.r1 = 'charge';
+        const out = ctl.decide(freeze(v), ctx.rng(1));
+        ctx.assert.ok(out.commands.length > 0);
+      },
+    },
+    {
+      id: 'int-versions', spec: ['TAI-001'], name: 'adapter: built for the interface versions in spec/interfaces',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        for (const [name, want] of Object.entries(a.INTERFACES)) {
+          ctx.assert.equal((await schema(name)).version, want, name);
+        }
+        const ctl = await a.createController();
+        ctx.assert.deepEqual(ctl.interfaces, a.INTERFACES);
+        ctx.assert.equal(ctl.name, 'tactical-ai');
+      },
+    },
+    {
+      id: 'int-on-log', spec: ['TAI-016'], name: 'adapter: onLog receives each call\'s decision log',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        const seen = [];
+        const ctl = await a.createController({ onLog: (entries) => seen.push(...entries) });
+        const out1 = ctl.decide(samples(ctx).attack, ctx.rng(1));
+        const out2 = ctl.decide(samples(ctx).choose, ctx.rng(1));
+        ctx.assert.deepEqual(seen, [...out1.log, ...out2.log]);
+      },
+    },
+    {
+      id: 'int-retry-sample', spec: ['TAI-005', 'TAI-016', 'TAI-018'], name: 'adapter: retry sample (allied VIP) avoids the rejected move and logs the rejection',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        const ctl = await a.createController();
+        const v = samples(ctx).retry;
+        const out = ctl.decide(v, ctx.rng(1));
+        const cmd = out.commands[0];
+        ctx.assert.ok(!(cmd.type === 'move' && cmd.path.at(-1).x === 1 && cmd.path.at(-1).y === 0), JSON.stringify(cmd));
+        ctx.assert.deepEqual(out.log[0].rejection, v.rejection);
+        ctx.assert.ok(out.blackboardWrites.every((w) => w.op !== 'setPlan'), 'no leader on this side → no plan');
+      },
+    },
+    {
+      id: 'int-load-tables', spec: ['TAI-015'], name: 'adapter: loadTables loads only the tables that are missing',
+      async run(ctx) {
+        const a = await adapter(ctx);
+        await a.loadTables(new URL('./fixtures', import.meta.url).href);
+        for (const t of a.TABLES) ctx.assert.ok(ctx.registry.loaded().includes(t), t);
+      },
+    },
+    {
+      id: 'int-adapter-imports', spec: ['TAI-001'], name: 'adapter imports only its own core, shared/ and nothing from other modules or tools/',
+      async run(ctx) {
+        await adapter(ctx);
+        const url = new URL('../adapter/index.js', import.meta.url).href;
+        const code = (await (await fetch(url)).text()).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+        for (const m of code.matchAll(/from\s*['"]([^'"]+)['"]/g)) {
+          const target = new URL(m[1], url).href;
+          ctx.assert.ok(target.includes('/modules/tactical-ai/core/') || target.includes('/shared/'), `imports ${m[1]}`);
+        }
+        ctx.assert.ok(!/\bMath\.random\b/.test(code), 'no Math.random');
       },
     },
   ],

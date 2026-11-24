@@ -1,0 +1,99 @@
+{
+  "attack": {
+    "side": "red", "faction": "f-red", "doctrine": "tac-balanced", "turn": 4, "timeOfDay": "night",
+    "activeUnit": "r1",
+    "squad": [
+      { "id": "r1", "position": { "x": 2, "y": 2, "level": 0 }, "level": 0, "facing": 180, "stance": "crouched", "rank": "veteran",
+        "morale": 55, "role": "suppress", "ap": 26, "stamina": 70, "staminaMax": 100,
+        "zoneHp": { "head": { "hp": 35, "max": 35 }, "thorax": { "hp": 60, "max": 85 }, "leftLeg": { "hp": 65, "max": 65 }, "rightLeg": { "hp": 65, "max": 65 } },
+        "limbs": { "leftArm": "healthy", "rightArm": "healthy", "leftLeg": "healthy", "rightLeg": "healthy" },
+        "conditions": [], "suppressed": false, "overwatch": false, "weaponJammed": false, "alerted": true, "reaction": "fire",
+        "carrying": null, "equipment": { "weapon1": { "item": "svd", "rounds": 4 } },
+        "magazines": [{ "id": "r1-m1", "item": "svd-mag10", "rounds": 10, "slot": "vest" }], "outOfAction": false },
+      { "id": "r2", "position": { "x": 4, "y": 2, "level": 0 }, "level": 0, "facing": 180, "stance": "prone", "rank": "regular",
+        "morale": 50, "role": "flank", "ap": 25, "stamina": 60, "staminaMax": 100,
+        "zoneHp": { "head": { "hp": 35, "max": 35 }, "thorax": { "hp": 85, "max": 85 } },
+        "limbs": { "leftArm": "healthy", "rightArm": "healthy", "leftLeg": "healthy", "rightLeg": "healthy" },
+        "conditions": [], "suppressed": false, "overwatch": false, "weaponJammed": false, "alerted": true, "reaction": "takeCover",
+        "carrying": null, "equipment": { "weapon1": { "item": "akm", "rounds": 30 } }, "magazines": [], "outOfAction": false }
+    ],
+    "squadMorale": 52,
+    "squadPlan": { "leader": "r1", "setBy": "r1", "setTurn": 3, "roles": { "r1": "suppress", "r2": "flank" }, "intent": {} },
+    "blackboard": {
+      "requests": [{ "id": "r2-suppress", "type": "suppress", "by": "r2", "target": "b1", "untilTurn": 5 }],
+      "claims": [{ "id": "r2-tile", "unit": "r2", "kind": "tile", "tile": { "x": 5, "y": 4, "level": 0 }, "untilTurn": 4 }]
+    },
+    "rejection": null,
+    "knownEnemies": [
+      { "id": "b1", "position": { "x": 3, "y": 10, "level": 0 }, "level": 0, "seenTurn": 4, "visibleNow": true, "stance": "crouched",
+        "facing": 0, "visibleGear": { "weaponType": "assaultRifle", "helmetClass": 2, "armourClass": 2 } },
+      { "id": "b2", "position": { "x": 7, "y": 11, "level": 0 }, "level": 0, "seenTurn": 2, "visibleNow": false }
+    ],
+    "knownNeutrals": [{ "id": "n1", "faction": "f-civ", "position": { "x": 9, "y": 5, "level": 0 }, "seenTurn": 4, "visibleNow": true, "stance": "upright" }],
+    "noises": [{ "origin": { "x": 7, "y": 11, "level": 0 }, "direction": 160, "distance": 9.8, "turn": 3 }],
+    "map": {
+      "tiles": [
+        { "x": 2, "y": 2, "level": 0, "cost": 1, "impassable": false, "obscuring": false, "cover": { "n": "none", "e": "none", "s": "half", "w": "none" } },
+        { "x": 2, "y": 3, "level": 0, "cost": 1, "impassable": false, "obscuring": true, "cover": { "n": "none", "e": "none", "s": "full", "w": "none" } },
+        { "x": 3, "y": 3, "level": 0, "cost": 2, "impassable": false, "obscuring": false, "cover": { "n": "none", "e": "none", "s": "none", "w": "none" } }
+      ],
+      "exits": [{ "id": "exit-w", "tile": { "x": 0, "y": 2, "level": 0 }, "condition": "none" }],
+      "containers": [{ "id": "c1", "tile": { "x": 3, "y": 3, "level": 0 }, "searched": false }],
+      "bodies": [],
+      "smoke": [{ "tile": { "x": 5, "y": 7, "level": 0 }, "radiusTiles": 2, "untilTurn": 5 }]
+    },
+    "allowedActions": [
+      { "type": "move", "reachable": [
+        { "tile": { "x": 2, "y": 3, "level": 0 }, "apCost": 4, "apLeft": 22 },
+        { "tile": { "x": 3, "y": 3, "level": 0 }, "apCost": 8, "apLeft": 18 } ] },
+      { "type": "shoot", "apCost": 9, "targets": [
+        { "unit": "b1", "hitChance": 0.42, "zoneShares": { "head": 0.1, "thorax": 0.5, "stomach": 0.2, "leftLeg": 0.1, "rightLeg": 0.1 },
+          "likelyZone": "thorax", "penetrates": true, "concealed": true } ] },
+      { "type": "reload", "apCost": 7 },
+      { "type": "changeStance", "apCost": 2 },
+      { "type": "setReaction", "apCost": 0 },
+      { "type": "holdOverwatch", "apCost": 12 },
+      { "type": "search", "apCost": 6 },
+      { "type": "endActivation", "apCost": 0 }
+    ],
+    "battleGoal": { "goal": "attack", "targets": ["b1"], "acceptableLoss": 0.5 },
+    "objectives": []
+  },
+  "choose": {
+    "side": "red", "faction": "f-red", "doctrine": "tac-balanced", "turn": 4, "timeOfDay": "day",
+    "activeUnit": null,
+    "squad": [
+      { "id": "r1", "position": { "x": 2, "y": 2, "level": 0 }, "rank": "veteran", "morale": 55, "stamina": 70, "staminaMax": 100, "outOfAction": false, "role": "suppress" },
+      { "id": "r2", "position": { "x": 4, "y": 2, "level": 0 }, "rank": "regular", "morale": 50, "stamina": 20, "staminaMax": 100, "outOfAction": false, "role": "flank" },
+      { "id": "r3", "position": { "x": 6, "y": 2, "level": 0 }, "rank": "recruit", "morale": 0, "outOfAction": true, "role": null }
+    ],
+    "squadPlan": { "leader": "r1", "setBy": "r1", "setTurn": 3, "roles": { "r1": "suppress", "r2": "flank" }, "intent": {} },
+    "blackboard": { "requests": [], "claims": [] },
+    "rejection": null,
+    "knownEnemies": [],
+    "map": { "tiles": [], "exits": [{ "id": "exit-w", "tile": { "x": 0, "y": 2, "level": 0 }, "condition": "none" }], "containers": [], "bodies": [], "smoke": [] },
+    "allowedActions": [{ "type": "activate", "unit": "r1" }, { "type": "activate", "unit": "r2" }, { "type": "pass" }],
+    "battleGoal": { "goal": "defend", "targets": [], "acceptableLoss": 0.6 },
+    "objectives": []
+  },
+  "retry": {
+    "side": "player", "faction": "player", "doctrine": "tac-balanced", "turn": 7,
+    "activeUnit": "vip",
+    "squad": [
+      { "id": "vip", "position": { "x": 1, "y": 1, "level": 0 }, "stance": "upright", "morale": 40, "ap": 25, "stamina": 50, "staminaMax": 80,
+        "equipment": {}, "magazines": [], "outOfAction": false, "role": null, "reaction": "takeCover" }
+    ],
+    "squadPlan": { "leader": null, "roles": {} },
+    "blackboard": { "requests": [], "claims": [] },
+    "rejection": { "command": { "type": "move", "path": [{ "x": 1, "y": 0, "level": 0 }] }, "reason": "invalidPath" },
+    "knownEnemies": [{ "id": "e1", "position": { "x": 6, "y": 6, "level": 0 }, "level": 0, "seenTurn": 7, "visibleNow": true, "stance": "upright", "facing": 315 }],
+    "map": { "tiles": [], "exits": [{ "id": "exit-n", "tile": { "x": 1, "y": 0, "level": 0 }, "condition": "none" }], "containers": [], "bodies": [], "smoke": [] },
+    "allowedActions": [
+      { "type": "move", "reachable": [{ "tile": { "x": 1, "y": 0, "level": 0 }, "apCost": 2, "apLeft": 23 }, { "tile": { "x": 0, "y": 1, "level": 0 }, "apCost": 2, "apLeft": 23 }] },
+      { "type": "changeStance", "apCost": 2 },
+      { "type": "endActivation", "apCost": 0 }
+    ],
+    "battleGoal": { "goal": "reachExit", "targets": ["exit-n"], "acceptableLoss": 1 },
+    "objectives": []
+  }
+}
