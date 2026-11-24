@@ -1,0 +1,63 @@
+{
+  "c545": { "id": "c545", "kind": "calibre", "name": "5.45x39", "designation": "5.45x39mm", "damage": 40, "projectiles": 1, "recoilModifier": 1.0, "roundWeightG": 10 },
+  "c762r": { "id": "c762r", "kind": "calibre", "name": "7.62x54R", "designation": "7.62x54mmR", "damage": 60, "projectiles": 1, "recoilModifier": 1.25, "roundWeightG": 22 },
+  "c9x18": { "id": "c9x18", "kind": "calibre", "name": "9x18", "designation": "9x18mm", "damage": 25, "projectiles": 1, "recoilModifier": 0.5, "roundWeightG": 10 },
+  "c12ga": { "id": "c12ga", "kind": "calibre", "name": "12 gauge", "designation": "12/70", "damage": 15, "projectiles": 8, "recoilModifier": 1.5, "roundWeightG": 40 },
+
+  "a545fmj": { "id": "a545fmj", "kind": "ammo", "name": "5.45 FMJ", "calibre": "c545", "ammoType": "fmj", "damageModifier": 1.0, "falloff": 0.06, "falloffRangeTiles": 15, "penetrationClass": 3, "subsonic": false, "spreadModifier": 1.0 },
+  "a545ap": { "id": "a545ap", "kind": "ammo", "name": "5.45 AP", "calibre": "c545", "ammoType": "ap", "damageModifier": 0.9, "falloff": 0.06, "falloffRangeTiles": 15, "penetrationClass": 4, "subsonic": false, "spreadModifier": 1.0 },
+  "a545hp": { "id": "a545hp", "kind": "ammo", "name": "5.45 HP", "calibre": "c545", "ammoType": "hp", "damageModifier": 1.1, "falloff": 0.06, "falloffRangeTiles": 15, "penetrationClass": 2, "subsonic": false, "spreadModifier": 1.0, "bleedChanceModifier": 1.5 },
+  "a545tracer": { "id": "a545tracer", "kind": "ammo", "name": "5.45 Tracer", "calibre": "c545", "ammoType": "tracer", "damageModifier": 1.0, "falloff": 0.06, "falloffRangeTiles": 15, "penetrationClass": 3, "subsonic": false, "spreadModifier": 1.0, "tracer": true, "recoilSpreadModifier": 0.85 },
+  "a545sub": { "id": "a545sub", "kind": "ammo", "name": "5.45 Subsonic", "calibre": "c545", "ammoType": "subsonic", "damageModifier": 0.8, "falloff": 0.08, "falloffRangeTiles": 15, "penetrationClass": 2, "subsonic": true, "spreadModifier": 1.1 },
+  "a762": { "id": "a762", "kind": "ammo", "name": "7.62x54R LPS", "calibre": "c762r", "ammoType": "fmj", "damageModifier": 1.0, "falloff": 0.04, "falloffRangeTiles": 20, "penetrationClass": 4, "subsonic": false, "spreadModifier": 1.0 },
+  "a9x18": { "id": "a9x18", "kind": "ammo", "name": "9x18 PM", "calibre": "c9x18", "ammoType": "fmj", "damageModifier": 1.0, "falloff": 0.10, "falloffRangeTiles": 10, "penetrationClass": 1, "subsonic": false, "spreadModifier": 1.0 },
+  "a12buck": { "id": "a12buck", "kind": "ammo", "name": "12 buckshot", "calibre": "c12ga", "ammoType": "buckshot", "damageModifier": 1.0, "falloff": 0.15, "falloffRangeTiles": 10, "penetrationClass": 1, "subsonic": false, "spreadModifier": 1.0 },
+  "a12slug": { "id": "a12slug", "kind": "ammo", "name": "12 slug", "calibre": "c12ga", "ammoType": "slug", "damageModifier": 1.0, "falloff": 0.10, "falloffRangeTiles": 10, "penetrationClass": 2, "subsonic": false, "spreadModifier": 0.5, "damageOverride": 90, "projectilesOverride": 1 },
+
+  "ak74m": { "id": "ak74m", "kind": "weapon", "name": "AK-74M", "weaponType": "assaultRifle", "calibre": "c545", "fireModes": [1, "auto"], "magazineSize": 30, "barrelMultiplier": 1.0, "ergonomics": 50, "baseMoa": 5, "weightKg": 3.4, "recoil": 32, "modSlots": ["muzzle", "stock", "pistolGrip", "optic", "handguard"], "feedType": "boxMagazine" },
+  "aks74u": { "id": "aks74u", "kind": "weapon", "name": "AKS-74U", "weaponType": "smg", "calibre": "c545", "fireModes": [1, 3], "magazineSize": 30, "barrelMultiplier": 0.85, "ergonomics": 75, "baseMoa": 7, "weightKg": 2.7, "recoil": 40, "modSlots": ["muzzle"], "feedType": "boxMagazine" },
+  "svd": { "id": "svd", "kind": "weapon", "name": "SVD", "weaponType": "dmr", "calibre": "c762r", "fireModes": [1], "magazineSize": 10, "barrelMultiplier": 1.1, "ergonomics": 25, "baseMoa": 2, "weightKg": 4.3, "recoil": 40, "modSlots": ["optic"], "feedType": "boxMagazine", "fireApCost": 8 },
+  "pm": { "id": "pm", "kind": "weapon", "name": "PM", "weaponType": "pistol", "calibre": "c9x18", "fireModes": [1], "magazineSize": 8, "barrelMultiplier": 0.9, "ergonomics": 80, "baseMoa": 10, "weightKg": 0.73, "recoil": 20, "modSlots": [], "feedType": "pistol" },
+  "mp133": { "id": "mp133", "kind": "weapon", "name": "MP-133", "weaponType": "shotgun", "calibre": "c12ga", "fireModes": [1], "magazineSize": 6, "barrelMultiplier": 1.0, "ergonomics": 50, "baseMoa": 20, "weightKg": 3.5, "recoil": 60, "modSlots": [], "action": "pump", "feedType": "tube" },
+  "pkm": { "id": "pkm", "kind": "weapon", "name": "PKM", "weaponType": "lmg", "calibre": "c762r", "fireModes": ["auto"], "magazineSize": 100, "barrelMultiplier": 1.0, "ergonomics": 20, "baseMoa": 6, "weightKg": 7.5, "recoil": 45, "modSlots": [], "feedType": "belt" },
+
+  "mag545": { "id": "mag545", "kind": "magazine", "name": "AK-74 magazine", "calibre": "c545", "feedType": "boxMagazine", "capacity": 30, "fits": ["ak74m", "aks74u"], "weightKg": 0.5 },
+  "mag545x45": { "id": "mag545x45", "kind": "magazine", "name": "RPK-74 45-round magazine", "calibre": "c545", "feedType": "boxMagazine", "capacity": 45, "fits": ["ak74m", "aks74u"], "weightKg": 0.7 },
+  "mag9x18": { "id": "mag9x18", "kind": "magazine", "name": "PM magazine", "calibre": "c9x18", "feedType": "pistol", "capacity": 8, "fits": ["pm"], "weightKg": 0.2 },
+  "pkmbelt": { "id": "pkmbelt", "kind": "magazine", "name": "PKM belt", "calibre": "c762r", "feedType": "belt", "capacity": 100, "fits": ["pkm"], "weightKg": 3.0 },
+  "magsvd": { "id": "magsvd", "kind": "magazine", "name": "SVD magazine", "calibre": "c762r", "feedType": "boxMagazine", "capacity": 10, "fits": ["svd"], "weightKg": 0.4 },
+
+  "suppressor545": { "id": "suppressor545", "kind": "mod", "name": "PBS-4", "slot": "muzzle", "fits": ["ak74m", "aks74u"], "suppressor": true, "modifiers": { "recoil": 0.9 }, "weightKg": 0.5 },
+  "flashlight": { "id": "flashlight", "kind": "mod", "name": "Weapon light", "slot": "tactical", "fits": ["ak74m", "aks74u"], "module": "flashlight", "weightKg": 0.2 },
+  "laser": { "id": "laser", "kind": "mod", "name": "Laser module", "slot": "tactical", "fits": ["ak74m", "aks74u"], "module": "laser", "modifiers": { "snapShotSpread": 0.8 }, "weightKg": 0.2 },
+  "pso1": { "id": "pso1", "kind": "mod", "name": "PSO-1", "slot": "optic", "fits": ["ak74m", "svd"], "modifiers": { "shooterSpreadAtRange": 0.5 }, "weightKg": 0.6 },
+
+  "ssh68": { "id": "ssh68", "kind": "helmet", "name": "SSh-68", "armourClass": 2, "durability": 30, "hearingPenalty": false, "weightKg": 1.3 },
+  "altyn": { "id": "altyn", "kind": "helmet", "name": "Altyn", "armourClass": 4, "durability": 60, "hearingPenalty": true, "visionConeDeg": 90, "weightKg": 4.0 },
+  "paca": { "id": "paca", "kind": "bodyArmour", "name": "PACA", "armourClass": 2, "durability": 40, "fillsVestSlot": false, "weightKg": 3.0, "concealable": true },
+  "plate4": { "id": "plate4", "kind": "bodyArmour", "name": "Ceramic plate carrier", "armourClass": 4, "durability": 50, "fillsVestSlot": false, "weightKg": 9.0, "durabilityLossModifier": 1.5 },
+  "heavy6": { "id": "heavy6", "kind": "bodyArmour", "name": "Heavy assault armour", "armourClass": 6, "durability": 80, "fillsVestSlot": true, "weightKg": 20.0, "apPenalty": 5, "staminaPenalty": 0 },
+
+  "chestrig": { "id": "chestrig", "kind": "vest", "name": "Chest rig", "capacityKg": 4, "maxMagazines": 4, "maxGrenades": 2, "maxMedical": 2, "maxOther": 2, "weightKg": 1.0 },
+  "beltPadded": { "id": "beltPadded", "kind": "belt", "name": "Padded belt", "capacityKg": 3, "holsters": 1, "maxMagazines": 3, "maxGrenades": 2, "maxMedical": 2, "maxOther": 1, "weightKg": 0.6 },
+  "daypack": { "id": "daypack", "kind": "backpack", "name": "Day pack", "capacityKg": 15, "weightKg": 1.0 },
+  "rucksack": { "id": "rucksack", "kind": "backpack", "name": "Large rucksack", "capacityKg": 40, "weightKg": 3.0, "noSprint": true },
+  "duffel": { "id": "duffel", "kind": "backpack", "name": "Duffel bag", "capacityKg": 30, "weightKg": 1.5, "extraAccessAp": 2 },
+
+  "bandage": { "id": "bandage", "kind": "medical", "name": "Bandage", "treats": ["lightBleeding"], "apCost": 3, "uses": 1, "weightKg": 0.05 },
+  "tourniquet": { "id": "tourniquet", "kind": "medical", "name": "Tourniquet", "treats": ["heavyBleeding"], "zones": ["leftArm", "rightArm", "leftLeg", "rightLeg"], "apCost": 2, "uses": 1, "causesPain": true, "weightKg": 0.1 },
+  "hemostatic": { "id": "hemostatic", "kind": "medical", "name": "Hemostatic dressing", "treats": ["heavyBleeding"], "apCost": 4, "uses": 1, "weightKg": 0.1 },
+  "splint": { "id": "splint", "kind": "medical", "name": "Splint", "treats": ["fracture"], "apCost": 5, "uses": 1, "weightKg": 0.2 },
+  "painkillers": { "id": "painkillers", "kind": "medical", "name": "Painkillers", "treats": ["pain"], "apCost": 2, "uses": 4, "durationTurns": 10, "weightKg": 0.05 },
+  "ifak": { "id": "ifak", "kind": "medical", "name": "IFAK", "treats": ["hp", "lightBleeding"], "apCost": 6, "uses": null, "hpPool": 60, "hpPerUse": 15, "weightKg": 0.4 },
+  "medkit": { "id": "medkit", "kind": "medical", "name": "Medkit", "treats": ["hp", "lightBleeding", "heavyBleeding"], "apCost": 8, "uses": null, "hpPool": 300, "hpPerUse": 40, "weightKg": 1.2 },
+  "surgicalKit": { "id": "surgicalKit", "kind": "medical", "name": "Surgical kit", "treats": ["limbAtZeroHp"], "apCost": 15, "uses": 3, "restoresToHp": 1, "requiresMedical": 40, "weightKg": 1.0 },
+
+  "f1": { "id": "f1", "kind": "grenade", "name": "F-1", "effect": "frag", "damage": 120, "radiusTiles": 5, "penetrationClass": 2, "durationTurns": null, "loud": true, "weightKg": 0.6 },
+  "rdg2": { "id": "rdg2", "kind": "grenade", "name": "RDG-2", "effect": "smoke", "damage": 0, "radiusTiles": 3, "durationTurns": 3, "blocksSight": true, "loud": false, "weightKg": 0.5 },
+
+  "boltCutters": { "id": "boltCutters", "kind": "opItem", "name": "Bolt cutters", "foundIn": ["industrial"], "opEffect": { "type": "cutLock" }, "weightKg": 2.0 },
+  "demoCharge": { "id": "demoCharge", "kind": "opItem", "name": "Demolition charge", "foundIn": ["military"], "opEffect": { "type": "demolition" }, "weightKg": 1.5 },
+  "poiKey": { "id": "poiKey", "kind": "opItem", "name": "Warehouse key", "foundIn": ["poi"], "perPoi": true, "opEffect": { "type": "poiKey" }, "weightKg": 0.05 },
+  "brick": { "id": "brick", "kind": "barter", "name": "Lead brick (test weight)", "foundIn": ["test"], "barterClass": "general", "valueUsd": 1, "rarity": "common", "weightKg": 10 }
+}

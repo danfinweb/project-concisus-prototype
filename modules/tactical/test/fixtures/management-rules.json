@@ -1,0 +1,16 @@
+{
+  "moraleFleeBelow": 20,
+  "carryCapacity": { "base": 15, "strength": 0.3, "endurance": 0.1 },
+  "leadershipBonus": { "recruit": 0, "regular": 2, "veteran": 4, "elite": 6 },
+  "perkThresholds": [50, 80],
+  "perks": [
+    { "id": "steadyAim", "attribute": "marksmanship", "threshold": 50, "effect": { "shooterSpreadFactor": 0.9, "minAimSteps": 1 } },
+    { "id": "snapShooter", "attribute": "marksmanship", "threshold": 80, "effect": { "snapShotPenaltyMoa": 1.5 } },
+    { "id": "quietStep", "attribute": "recon", "threshold": 50, "effect": { "noticeDistanceFactor": 0.8 } },
+    { "id": "ghost", "attribute": "recon", "threshold": 80, "effect": { "reactionChanceAgainst": -10, "whileStance": ["crouched", "prone"] } },
+    { "id": "fieldMedic", "attribute": "medical", "threshold": 50, "effect": { "medicalApReduction": 1, "medicalApMin": 1 } },
+    { "id": "traumaSurgeon", "attribute": "medical", "threshold": 80, "effect": { "hpRestoreFactor": 1.25, "items": ["ifak", "medkit"], "fobHealFactor": 1.25 } },
+    { "id": "armourer", "attribute": "technical", "threshold": 50, "effect": { "weaponWearFactor": 0.75, "repairFactor": 1.25 } },
+    { "id": "sapper", "attribute": "technical", "threshold": 80, "effect": { "boltCutterAp": 5, "vehicleRepairFactor": 1.25 } }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "grass": { "id": "grass", "moveCost": 0, "tables": ["steppe", "forest"] },
+  "road": { "id": "road", "moveCost": 0, "tables": ["steppe", "forest", "urban"] },
+  "floor": { "id": "floor", "moveCost": 0, "tables": ["steppe", "forest", "urban"] },
+  "field": { "id": "field", "moveCost": 0, "tables": ["steppe"] },
+  "mud": { "id": "mud", "moveCost": 1, "tables": ["steppe", "forest"] },
+  "shallowWater": { "id": "shallowWater", "moveCost": 1, "tables": ["steppe", "forest"] },
+  "rubble": { "id": "rubble", "moveCost": 1, "tables": ["steppe", "forest", "urban"] },
+  "brush": { "id": "brush", "moveCost": 1, "obscuring": true, "tables": ["steppe", "forest"] },
+  "trees": { "id": "trees", "moveCost": 0, "obscuring": true, "tables": ["forest"] },
+  "stairs": { "id": "stairs", "moveCost": 1, "tables": ["steppe", "forest", "urban"] },
+  "rock": { "id": "rock", "moveCost": 0, "impassable": true, "tables": ["steppe", "forest"] },
+  "trunk": { "id": "trunk", "moveCost": 0, "impassable": true, "tables": ["forest"] },
+  "deepWater": { "id": "deepWater", "moveCost": 0, "impassable": true, "tables": ["steppe", "forest"] },
+  "asphaltUrban": { "id": "asphaltUrban", "moveCost": 0, "tables": ["urban"] }
+}

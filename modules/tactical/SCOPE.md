@@ -243,4 +243,30 @@ Found while scoping; report to the root session, do not edit `spec/`. All 62 que
   `units[].perks`) and the Snap shooter cross-reference (TAC-023, TAC-044, TAC-096, MGT-009), per
   `spec/reports/impact-2026-11-24-f.md`.
 
-No new findings in this refresh.
+Found while writing the first `/test` run (all 96 TAC IDs, 2026-11-24). The tests and fixtures use the
+reading given in each item.
+
+1. **Spec names that differ from `items.schema.json`.** TAC-048 reads ammo `falloffShare`, `falloffRange`
+   (schema: `falloff`, `falloffRangeTiles`); TAC-060/061 read ammo `bleedModifier` (schema:
+   `bleedChanceModifier`); TAC-064 names the item field `minMedical` (schema: `requiresMedical`); TAC-071
+   puts `boltCutterCost` in bolt cutters `apCost`, but bolt cutters are an `opItem` with no `apCost` field.
+   Tests use the schema names; the bolt cutter cost (10) has no data field at all.
+2. **TAC-045 "about 95% inside the cone".** With the cone edge at 2σ, 95% holds per axis; for a 2D circular
+   normal only about 86% land within a radius of 2σ. Tests check the per-axis share. Which one is meant?
+3. **When does a placed charge go off?** TAC-072 and TAC-085 say the charge destroys its edge, but no rule
+   gives the trigger (timer, remote, end of the activation). Tests assume it is gone by the end of the
+   placing soldier's activation.
+4. **Body weight when carrying (TAC-074).** "The body and all gear on it count toward the carried weight",
+   but there is no value for a body's own weight. Tests count the gear only.
+5. **Command retries (TAC-005).** "Up to `commandRetries` times" is read as 3 retries after the first
+   rejection, so the 4th rejection ends the activation. Confirm.
+6. **Order of terms in shooter spread.** TAC-096 Steady aim (× 0.9) and the laser's `snapShotSpread` factor
+   (TAC-044, DAT-017) multiply "shooter spread", but it is not said whether before or after the additive
+   penalties (suppression, pain, snap shot). Tests avoid the cases where the order matters.
+7. **Suppression end (TAC-015).** "Ends after one full turn passes with no qualifying event": a soldier
+   suppressed at battle start is read as clear at the end of turn 1.
+8. **Prone firing over half cover (TAC-055/056).** Prone boxes are at most 0.40 m high, so a 1.0 m edge
+   would still hide them when firing; the rule says firing over it exposes them. Which boxes are exposed
+   (raised by how much)? Tests only check that the head is exposed.
+9. **Crouched and prone hitboxes have no numbers in the design** besides heights (TAC-054/055); the test
+   fixture uses its own layout. Content needs a source for `zones.<zone>.hitboxes.crouched|prone`.

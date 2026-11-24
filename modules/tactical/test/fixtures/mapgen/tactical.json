@@ -1,0 +1,33 @@
+{
+  "mapTypes": {
+    "open": { "size": 80, "builtShare": 0.06, "foliageShare": 0.15 },
+    "woods": { "size": 64, "builtShare": 0.03, "foliageShare": 0.50 },
+    "marsh": { "size": 64, "builtShare": 0.02, "foliageShare": 0.30 },
+    "hills": { "size": 64, "builtShare": 0.03, "foliageShare": 0.25 },
+    "mountain": { "size": 48, "builtShare": 0.02, "foliageShare": 0.20 },
+    "town": { "size": 72, "builtShare": 0.07, "foliageShare": 0.14 },
+    "city": { "size": 96, "smallCitySize": 80, "builtShare": 0.16, "foliageShare": 0.10 },
+    "plant": { "size": 96, "builtShare": 0.11, "foliageShare": 0.10 },
+    "crossing": { "size": 64, "builtShare": 0.05, "foliageShare": 0.14 },
+    "shore": { "size": 64, "builtShare": 0.03, "foliageShare": 0.15 }
+  },
+  "zones": { "blendShare": 0.2 },
+  "water": { "deepFromShoreTiles": 4 },
+  "roads": { "widths": { "highway": 5, "road": 3, "track": 2 } },
+  "buildings": {},
+  "largeBuildingKinds": ["apartment", "khrushchyovka", "office", "school", "hospital", "landmark", "warehouse", "plantHall"],
+  "lockedDoorShare": { "poi": 0.25, "house": 0.10 },
+  "parcels": { "shelterbeltWidth": 2, "gapShare": 0.33 },
+  "groundFill": { "classes": ["grass", "brush", "trees", "mud", "rock"] },
+  "details": {},
+  "exitSpacingTiles": 20,
+  "footExitWidth": 6,
+  "deployment": { "playerDepthTiles": 8, "enemyDepthTiles": 10 },
+  "exitCount": { "min": 2, "max": 4 },
+  "exits": [
+    { "id": "foot", "condition": "none" },
+    { "id": "roadFuel", "condition": "fuel" },
+    { "id": "crossingPaid", "condition": "paidCrossing", "params": { "priceUsd": 200 } }
+  ],
+  "validate": { "attempts": 6, "shareTolerance": 0.06 }
+}
