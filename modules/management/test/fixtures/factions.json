@@ -1,0 +1,8 @@
+{
+  "ssv":    { "id": "ssv",    "name": "Socialist State of Veligrad",  "kind": "employer", "disownChance": 0.1 },
+  "vdk":    { "id": "vdk",    "name": "Veligrad Democratic Coalition", "kind": "employer", "disownChance": 0.3 },
+  "varyag": { "id": "varyag", "name": "Varyag Solutions", "kind": "rivalPmc", "disownChance": 0.1 },
+  "aegis":  { "id": "aegis",  "name": "Aegis Group",      "kind": "rivalPmc", "disownChance": 0.1 },
+  "krug":   { "id": "krug",   "name": "The Krug",         "kind": "trader",   "disownChance": 0.1, "resentment": { "priceMarkup": 0.1 } },
+  "player": { "id": "player", "name": "Player PMC",       "kind": "player" }
+}

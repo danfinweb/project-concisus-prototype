@@ -1,0 +1,9 @@
+{
+  "545x39": { "id": "545x39", "kind": "calibre", "name": "5.45x39", "designation": "5.45x39mm", "damage": 40, "projectiles": 1, "recoilModifier": 1, "roundWeightG": 10 },
+  "ak74m": { "id": "ak74m", "kind": "weapon", "name": "AK-74M", "weaponType": "assaultRifle", "calibre": "545x39", "fireModes": [1, "auto"], "magazineSize": 30, "barrelMultiplier": 1, "ergonomics": 50, "baseMoa": 3, "weightKg": 3.4, "recoil": 40, "modSlots": ["muzzle", "stock", "pistolGrip", "optic", "handguard"], "feedType": "boxMagazine", "valueUsd": 800 },
+  "ak74-mag": { "id": "ak74-mag", "kind": "magazine", "name": "AK-74 magazine", "calibre": "545x39", "feedType": "boxMagazine", "capacity": 30, "fits": ["ak74m"], "weightKg": 0.4, "valueUsd": 20 },
+  "tourniquet": { "id": "tourniquet", "kind": "medical", "name": "Tourniquet", "treats": ["heavyBleeding"], "apCost": 2, "weightKg": 0.1, "valueUsd": 30 },
+  "medkit": { "id": "medkit", "kind": "medical", "name": "Medkit", "treats": ["hp"], "apCost": 3, "weightKg": 0.5, "valueUsd": 100 },
+  "small-backpack": { "id": "small-backpack", "kind": "backpack", "name": "Small backpack", "capacityKg": 1, "weightKg": 0.8, "valueUsd": 50 },
+  "gold-chain": { "id": "gold-chain", "kind": "barter", "name": "Gold chain", "weightKg": 0.1, "valueUsd": 1500, "rarity": "rare", "foundIn": ["city"], "barterClass": "valuable" }
+}

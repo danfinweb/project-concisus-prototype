@@ -1,0 +1,6 @@
+{
+  "traders": [
+    { "id": "ssv-city", "faction": "ssv", "locationKind": "city", "stockByStanding": { "basic": ["tourniquet", "medkit", "ak74-mag"], "military": ["ak74m"], "best": ["gold-chain"] } }
+  ],
+  "krugPriceFluctuation": { "dailyMaxChange": 0.1, "maxDeviation": 0.3 }
+}

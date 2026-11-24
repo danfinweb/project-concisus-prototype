@@ -1,0 +1,15 @@
+{
+  "tieMargin": 5,
+  "minValue": 40,
+  "generation": {
+    "strength":     { "40-59": ["Ox", "Mule"], "60-79": ["Bull"], "80-100": ["Titan"] },
+    "endurance":    { "40-59": ["Camel"], "60-79": ["Iron"], "80-100": ["Anvil"] },
+    "agility":      { "40-59": ["Cat"], "60-79": ["Fox"], "80-100": ["Quicksilver"] },
+    "perception":   { "40-59": ["Owl"], "60-79": ["Hawk"], "80-100": ["Eagle"] },
+    "marksmanship": { "40-59": ["Plinker"], "60-79": ["Deadeye", "Sights"], "80-100": ["Reaper"] },
+    "recon":        { "40-59": ["Scout"], "60-79": ["Shadow"], "80-100": ["Phantom"] },
+    "medical":      { "40-59": ["Patch"], "60-79": ["Doc"], "80-100": ["Saint"] },
+    "technical":    { "40-59": ["Wrench"], "60-79": ["Sparks"], "80-100": ["Wizard"] }
+  },
+  "generic": ["Kid", "Pup", "Sparrow", "Bones", "Private"]
+}

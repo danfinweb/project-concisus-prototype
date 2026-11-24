@@ -1,0 +1,12 @@
+{
+  "pools": [
+    { "id": "agency", "tiers": ["recruit", "regular", "veteran", "elite"], "candidates": 4, "refreshHours": 24 },
+    { "id": "local", "tiers": ["recruit", "regular"], "candidates": 2, "refreshHours": 24 }
+  ],
+  "tiers": [
+    { "id": "recruit", "hirePriceUsd": 1000, "feePerOpUsd": 300, "attributeRange": { "min": 20, "max": 45 } },
+    { "id": "regular", "hirePriceUsd": 3000, "feePerOpUsd": 600, "attributeRange": { "min": 35, "max": 60 } },
+    { "id": "veteran", "hirePriceUsd": 8000, "feePerOpUsd": 1200, "attributeRange": { "min": 50, "max": 75 } },
+    { "id": "elite", "hirePriceUsd": 20000, "feePerOpUsd": 2500, "attributeRange": { "min": 65, "max": 90 } }
+  ]
+}

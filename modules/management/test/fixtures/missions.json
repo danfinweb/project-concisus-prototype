@@ -1,0 +1,9 @@
+{
+  "retrieve_deliver":  { "id": "retrieve_deliver",  "payBand": [3000, 8000],   "goals": ["supplyRun", "tradeRoute", "intelNeeds"] },
+  "escort_shipment":   { "id": "escort_shipment",   "payBand": [6000, 12000],  "goals": ["supplyRun", "holdPoi", "escort", "tradeRoute"], "success": { "cargoShare": 0.6 } },
+  "escort_vip":        { "id": "escort_vip",        "payBand": [8000, 15000],  "goals": ["escort"] },
+  "assassinate_vip":   { "id": "assassinate_vip",   "payBand": [10000, 20000], "goals": ["attackPoi", "hunt"] },
+  "capture_vip":       { "id": "capture_vip",       "payBand": [12000, 25000], "goals": ["hunt"] },
+  "capture_territory": { "id": "capture_territory", "payBand": [15000, 30000], "goals": ["attackPoi", "holdPoi"], "success": { "handoverHours": 6 } },
+  "defend_territory":  { "id": "defend_territory",  "payBand": [8000, 18000],  "goals": ["holdPoi"] }
+}
