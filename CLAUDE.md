@@ -26,6 +26,14 @@ chain (design → spec → schema → code and tools). Findings come back up as 
    `Math.random()` is never used in game rules or generation.
 9. Commit after every step. Spec diffs, impact reports and scope checks rely on git history.
 
+## Workflow reminders (user request, 2026-11-24)
+
+`WORKFLOW.md` is the short overview of the workflow. Before acting on a request, check it against
+`WORKFLOW.md` and the rules above. If it does not fit — a command run in the wrong session, a command
+without the spec IDs or pillar it needs, a step skipped (e.g. `/apply-spec` before `/scope` and `/test`,
+`/update-spec` on an uncommitted design), a `design/` refresh without explicit permission, or a request that
+breaks a rule above — say so in one line, name the valid next step, and ask before going on.
+
 ## Stack (user decision, 2026-11-22)
 
 Plain JavaScript ES modules + Three.js through an import map. **No Node.js, no bundler, no npm, no
