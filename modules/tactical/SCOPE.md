@@ -1,6 +1,6 @@
 # Tactical Layer — scope
 
-Refreshed by `/scope` (2026-11-24, spec `e8aa7e7`, design baseline `c1333f3`). Lists everything this module
+Refreshed by `/scope` (2026-11-24, spec `a0210cd`, design baseline `c1333f3`, after the 2026-11-24 cleanup). Lists everything this module
 may read outside its folder.
 
 ## Spec IDs
@@ -174,7 +174,7 @@ sentence of each rule, shortened; the spec section is authoritative.
 | --- | --- |
 | TAC-094 | Each side's squad leader is its highest-ranked soldier on the map (`units[].rank`); while alive, every soldier of the side gets the leader's Leadership bonus on morale reads and reaction chance, never stored |
 | TAC-095 | (draft) Morale is kept per soldier (`units[].morale`); only casualties in line of sight or in the same squad move it (`moraleCasualty`); the battle result reports `soldiers[].morale` and `squadMorale` |
-| TAC-096 | Perks that act in battle (Steady aim, Snap shooter, Quiet step, Ghost, Field medic, Trauma surgeon, Armourer, Sapper) modify the listed TAC rules for the soldier that has them |
+| TAC-096 | Perks that act in battle (Steady aim, Snap shooter, Quiet step, Ghost, Field medic, Trauma surgeon, Armourer, Sapper) modify the listed TAC rules for the soldier that has them; perks come from the request's `units[].perks`, never derived from attributes |
 
 **Also reads** (rules this module applies but does not own)
 
@@ -193,7 +193,7 @@ sentence of each rule, shortened; the spec section is authoritative.
 | DAT-002..DAT-023, DAT-030 | `spec/data.md` | Item fields, slots (incl. holster), access tiers, weight, containers, loot, weapon / fire-mode / condition / mod / module / calibre / ammo / magazine profiles, per-shot inputs |
 | DAT-025, DAT-029 | `spec/data.md` | The squad's vehicle and its storage (loot destination) |
 | ITM-001..ITM-020, ITM-025, ITM-026, ITM-030..ITM-033 | `spec/data.md` | Concrete item kinds: weapons, ammo, armour, pouch limits, containers, medical, operation items, magazines, grenades, mods |
-| TAI-002, TAI-004, TAI-005, TAI-008, TAI-009, TAI-012, TAI-013, TAI-017, TAI-018 | `spec/tactical-ai.md` | Controller invocation, the view TAC builds, the commands TAC validates (with retries), survival and battle goal (effective morale), the blackboard TAC stores, squad leader plan, neutrals, the VIP switch |
+| TAI-002, TAI-004, TAI-005, TAI-008, TAI-009, TAI-012, TAI-013, TAI-014, TAI-016, TAI-017, TAI-018 | `spec/tactical-ai.md` | Controller invocation, the view TAC builds (incl. `rejection` on retries), the commands TAC validates, survival and battle goal (effective morale), the typed blackboard writes TAC stores, squad leader plan, role enum, decision log entries, neutrals, the VIP switch |
 | TEC-008, TEC-012, TEC-015 | `spec/tech.md` | Rendering never drives rules; pure rules core; seeded, reproducible randomness |
 | TEC-022, TEC-023 | `spec/tech.md` | Shot preview and explicit confirm (the core must expose previews) |
 
@@ -201,10 +201,10 @@ sentence of each rule, shortened; the spec section is authoritative.
 
 | Interface | Direction | Version |
 | --- | --- | --- |
-| `spec/interfaces/tactical_map_request.schema.json` | consumes (from strategic) | 0.8.0 (breaking: `units[].rank` enum; new `units[].morale`; `holster` slot) |
-| `spec/interfaces/tactical_commands.schema.json` | consumes (from tactical-ai) | 0.5.0 (`swapWeapon.slot`) |
+| `spec/interfaces/tactical_map_request.schema.json` | consumes (from strategic) | 0.9.0 (`units[].rank` enum, `units[].morale`, `units[].perks`, `holster` slot; `acceptableLoss` = dead or left the map) |
+| `spec/interfaces/tactical_commands.schema.json` | consumes (from tactical-ai) | 0.6.0 (`swapWeapon.slot`; typed `blackboardWrites` and `log`) |
 | `spec/interfaces/battle_result.schema.json` | produces (to strategic, management) | 0.4.0 (`soldiers[].morale`, `squadMorale`, holster) |
-| `spec/interfaces/tactical_perception_view.schema.json` | produces (to tactical-ai) | 0.6.0 (`weaponJammed`, `concealed`, door state; `squad[].rank`, `squad[].morale`) |
+| `spec/interfaces/tactical_perception_view.schema.json` | produces (to tactical-ai) | 0.7.0 (`weaponJammed`, `concealed`, door state; `squad[].rank`, `squad[].morale`; typed `squadPlan`, `blackboard`, `knownNeutrals`, role enum, `allowedActions[].unit`, `rejection`) |
 
 ## Data tables
 
@@ -218,7 +218,7 @@ Read through `shared/registry.js` only.
 | `data/prefabs.json` | `spec/interfaces/data/prefabs.schema.json` | 0.3.0 | Fixed map pieces and props, cover edges |
 | `data/mapgen/tactical.json` | `spec/interfaces/data/mapgen-tactical.schema.json` | 0.4.0 | Map types, generation stages, buildings, exits, checks |
 | `data/presets.json` | `spec/interfaces/data/presets.schema.json` | 0.4.0 | AI soldier stats, morale and loadouts from strength/gear tiers |
-| `data/management-rules.json` | `spec/interfaces/data/management-rules.schema.json` | 0.8.0 | `carryCapacity` (TAC-027); `leadershipBonus` (TAC-094); `perks[]` and `perkThresholds` (TAC-096); `moraleFleeBelow` (TAC-077, optional) |
+| `data/management-rules.json` | `spec/interfaces/data/management-rules.schema.json` | 0.9.0 | `carryCapacity` (TAC-027); `leadershipBonus` (TAC-094); `perks[].effect` (TAC-096); `moraleFleeBelow` (TAC-077, optional) |
 | `data/events.json` | `spec/interfaces/data/events.schema.json` | 0.7.0 | Contamination HP loss (TAC-078, optional) |
 | `data/strategic-terrain.json` | `spec/interfaces/data/strategic-terrain.schema.json` | 0.2.0 | Biome → tactical terrain and prefab tables (TAC-080) |
 
@@ -235,16 +235,12 @@ Read through `shared/registry.js` only.
 ## Open questions
 
 Found while scoping; report to the root session, do not edit `spec/`. All 62 questions in
-`spec/tactical.md` › Open questions are resolved. The four findings of the previous scope (perception view
-state, VIP reactions, command retries, reaction modifiers for actions in place) are fixed in the spec
-(perception view 0.5.0, TAC-005, TAC-020, tactical open question 57).
+`spec/tactical.md` › Open questions are resolved. Earlier scope findings are fixed in the spec:
 
-1. **Perks are not in the tactical map request.** TAC-096 applies perks "for the soldier that has them".
-   MGT-009 says Management records which perks a soldier has, and a perk stays once unlocked even if the
-   skill drifts back below the threshold. `tactical_map_request` 0.8.0 has no `units[].perks`, so TAC can
-   only derive perks from current attributes against `perkThresholds`, which is wrong for a soldier whose
-   skill dropped. Proposed: add `units[].perks` (perk ids) to the request. Build stand-in: derive from
-   attributes.
-2. **Snap shooter cross-reference.** TAC-096 says Snap shooter replaces the snap-shot penalty of TAC-023;
-   the MGT-009 perk table points to TAC-044. Build reading: the perk value replaces `snapShotSpread` where
-   TAC-023 applies it, and enters the spread sum of TAC-044. Confirm and align the reference.
+- 2026-11-24 (first refresh): perception view state, VIP reactions, command retries, reaction modifiers
+  for actions in place (perception view 0.5.0, TAC-005, TAC-020, tactical open question 57).
+- 2026-11-24 (second refresh): perks in the map request (TAC-096, `tactical_map_request` 0.9.0
+  `units[].perks`) and the Snap shooter cross-reference (TAC-023, TAC-044, TAC-096, MGT-009), per
+  `spec/reports/impact-2026-11-24-f.md`.
+
+No new findings in this refresh.
