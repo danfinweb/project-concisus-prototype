@@ -3,24 +3,51 @@
   "$id": "data/mapgen-tactical.schema.json",
   "title": "Tactical map generation rules",
   "description": "Rules for generating a tactical map from the tactical map request (spec TAC-080, TAC-038). Biome → terrain and prefab tables come from STR-095; exit count and exits are specced; map types and stages follow TAC-086..TAC-093.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
     "mapTypes": { "type": "object", "description": "TAC-086: type → {size, builtShare, foliageShare}; draft open 80/0.06/0.15, woods 64/0.03/0.50, marsh 64/0.02/0.30, hills 64/0.03/0.25, mountain 48/0.02/0.20, town 72/0.07/0.14, city 96 (small 80)/0.16/0.10, plant 96/0.11/0.10, crossing 64/0.05/0.14, shore 64/0.03/0.15", "additionalProperties": { "type": "object", "properties": { "size": { "type": "integer" }, "smallCitySize": { "type": "integer" }, "builtShare": { "type": "number" }, "foliageShare": { "type": "number" } } } },
-    "zones": { "type": "object", "description": "TAC-087 stage 1: neighbour blend depth (about 0.2 of map size) and noise" },
-    "water": { "type": "object", "description": "TAC-087 stage 2: shore depth, deepFromShoreTiles 4" },
-    "roads": { "type": "object", "description": "TAC-087 stage 3: widths highway 5, road 3, track 2; fords, bridges, village streets, farm track" },
-    "buildings": { "type": "object", "description": "TAC-088: floor-plan rules (room types and size ranges, apartment layouts, shop ground floors) and placement per map type" },
+    "zones": { "type": "object", "description": "TAC-087 stage 1: neighbour blend depth (about 0.2 of map size) and noise", "properties": {
+      "blendShare": { "type": "number", "minimum": 0, "maximum": 0.5, "description": "band depth from each edge as a share of map size; design about 0.2" } } },
+    "water": { "type": "object", "description": "TAC-087 stage 2: shore depth, deepFromShoreTiles 4", "properties": {
+      "deepFromShoreTiles": { "type": "integer", "minimum": 0, "description": "water farther than this from the shore is deep (impassable); design 4" } } },
+    "roads": { "type": "object", "description": "TAC-087 stage 3: widths highway 5, road 3, track 2; fords, bridges, village streets, farm track", "properties": {
+      "widths": { "type": "object", "description": "road width in tiles by kind", "properties": {
+        "highway": { "type": "integer", "minimum": 1 }, "road": { "type": "integer", "minimum": 1 }, "track": { "type": "integer", "minimum": 1 } } } } },
+    "buildings": { "type": "object", "description": "TAC-088: floor-plan rules (room types and size ranges, apartment layouts, shop ground floors) and placement per map type", "properties": {
+      "kinds": { "type": "object", "description": "building kind → footprint and door rules", "additionalProperties": { "type": "object", "properties": {
+        "w": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 2, "maxItems": 2, "description": "footprint width range in tiles [min, max]" },
+        "h": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 2, "maxItems": 2, "description": "footprint depth range in tiles [min, max]" },
+        "interiorDoor": { "type": "boolean", "description": "has interior walls with doors (never locked, TAC-084)" },
+        "lockClass": { "enum": ["poi", "house"], "description": "lockedDoorShare key for its outer doors" } } } },
+      "byMapType": { "type": "object", "description": "map type → building kinds to draw from; a kind listed twice is drawn twice as often", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+      "wallMaterial": { "type": "string", "description": "TAC-085 edge material of outer walls" },
+      "windowMaterial": { "type": "string", "description": "TAC-085 edge material of windows" },
+      "doorMaterial": { "type": "string", "description": "TAC-085 edge material of doors" },
+      "windowEvery": { "type": "integer", "minimum": 1, "description": "one window per this many wall tiles" },
+      "spacingTiles": { "type": "integer", "minimum": 0, "description": "minimum gap between buildings" },
+      "placementAttempts": { "type": "integer", "minimum": 1, "description": "placement tries per map before placement stops" } } },
     "largeBuildingKinds": { "type": "array", "items": { "type": "string" }, "description": "TAC-088: building kinds with a playable roof (apartment blocks, offices, schools, landmarks, large halls)" },
     "lockedDoorShare": { "type": "object", "description": "TAC-088, draft {poi 0.25, house 0.10}", "properties": { "poi": { "type": "number" }, "house": { "type": "number" } } },
     "prefabs": { "type": "object", "description": "fixed pieces and props; the prefab table per biome is named by STR-095" },
-    "parcels": { "type": "object", "description": "TAC-087 stage 5: shelterbelt grid and gaps, crop fields; tall-crop share (TAC-090, optional)" },
-    "groundFill": { "type": "object", "description": "TAC-087 stage 6: WFC classes, adjacency rules, weights" },
-    "details": { "type": "object", "description": "TAC-087 stage 7: trunks, wrecks, craters, potholes, scatter props, connection" },
+    "parcels": { "type": "object", "description": "TAC-087 stage 5: shelterbelt grid and gaps, crop fields; tall-crop share (TAC-090, optional)", "properties": {
+      "shelterbeltWidth": { "type": "integer", "minimum": 1, "description": "tree-line width in tiles; design 2" },
+      "gapShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "share of tree lines with gaps; design about a third" } } },
+    "groundFill": { "type": "object", "description": "TAC-087 stage 6: WFC classes, adjacency rules, weights", "properties": {
+      "classes": { "type": "array", "items": { "type": "string" }, "description": "WFC terrain classes (design grass, brush, trees, mud, rock)" },
+      "foliage": { "type": "array", "items": { "type": "string" }, "description": "classes counted toward the foliage share" },
+      "rockShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "target share of rock among filled tiles" },
+      "mudShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "target share of mud among filled tiles" },
+      "rockNeighbours": { "type": "array", "items": { "type": "string" }, "description": "classes allowed next to rock (design grass, brush, trees, rock); mud is never next to rock" },
+      "baseByTable": { "type": "object", "description": "tactical terrain table → terrain ID of the base ground class", "additionalProperties": { "type": "string", "x-ref": "terrain" } } } },
+    "details": { "type": "object", "description": "TAC-087 stage 7: trunks, wrecks, craters, potholes, scatter props, connection", "properties": {
+      "connectPockets": { "type": "boolean", "description": "connect every walkable pocket to the main area (footbridge or cleared gap)" } } },
     "exitSpacingTiles": { "type": "integer", "description": "TAC-087, design 20" },
     "footExitWidth": { "type": "integer", "description": "TAC-087, design 6 tiles" },
-    "deployment": { "type": "object", "description": "TAC-087 stage 8: player and enemy zone sizes" },
+    "deployment": { "type": "object", "description": "TAC-087 stage 8: player and enemy zone sizes", "properties": {
+      "playerDepthTiles": { "type": "integer", "minimum": 1, "description": "player zone depth from the approach edge" },
+      "enemyDepthTiles": { "type": "integer", "minimum": 1, "description": "enemy zone depth (from the opposite edge, or radius around the objective)" } } },
     "containers": { "type": "object", "description": "TAC-091 (optional): containers per building kind" },
     "landmarks": { "type": "object", "description": "TAC-092 (optional): landmark kinds, roster sizes, per-map count" },
     "exitCount": { "type": "object", "description": "TAC-080, design 2–4 exits per map", "properties": {

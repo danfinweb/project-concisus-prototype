@@ -5,6 +5,8 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | data/terrain | 0.5.0 | Cleanup 4: `blocksSight` flag (TAC-016) | tactical, tools |
+| 2026-11-24 | data/mapgen-tactical | 0.5.0 | Cleanup 4: typed sub-objects zones, water, roads, buildings, parcels, groundFill, details, deployment (TAC-087, TAC-088) | tactical, tools |
 | 2026-11-24 | strategic_perception_view | 0.10.0 | Cleanup 3: `patronRelations` (the patron's relations, for factions whose patron is on the map); `mapShape` hex uses axial `x`, `y` | strategic, strategic-ai |
 | 2026-11-24 | management_requests | 0.10.0 | Cleanup 3: `dailyRollover.krugMarkets` (Krug market tile IDs whose prices move, MGT-040) | strategic, management |
 | 2026-11-24 | data/recruitment | 0.7.0 | Cleanup 3: `priceFormula` typed `{ spread }` (0–1, not set) | management |
