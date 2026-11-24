@@ -48,7 +48,7 @@ Damage is the base damage per projectile at the muzzle with barrel multiplier 1.
 
 ## Ammunition
 
-Each load multiplies its calibre's damage by the standard modifier of its ammo type: FMJ ×1.0, AP ×0.9, HP ×1.25, Subsonic ×0.8, Tracer ×1.0, Buckshot and Slug ×1.0 (the 12 gauge damage already differs by load). **Falloff** is the share of muzzle damage a load loses over its own falloff range; damage never drops below 10% of muzzle damage. Placeholder ranges by ammo type: FMJ and Tracer 15 tiles, AP 18, HP 12, Subsonic 10, Buckshot and Slug 15. Penetration class is the highest armour class the round defeats (0 = unarmoured targets only); it never changes with distance. Subsonic loads fired through a suppressor are heard only within 6 tiles. For reference: a thorax has 85 base HP, a head 35.
+Each load multiplies its calibre's damage by the standard modifier of its ammo type: FMJ ×1.0, AP ×0.9, HP ×1.25, Subsonic ×0.8, Tracer ×1.0, Buckshot and Slug ×1.0 (the 12 gauge damage already differs by load). **Falloff** is the share of muzzle damage a load loses over its own falloff range; damage never drops below 10% of muzzle damage. Placeholder ranges by ammo type: FMJ and Tracer 15 tiles, AP 18, HP 12, Subsonic 10, Buckshot and Slug 15. Penetration class is the highest armour class the round defeats (0 = unarmoured targets only); it never changes with distance. Subsonic loads fired through a suppressor are heard only within 6 tiles. Tracer loads lower burst recoil spread ×0.85 (draft). For reference: a thorax has 85 base HP, a head 35.
 
 | Calibre | Ammo | Damage modifier | Falloff (% of damage) | Falloff range (tiles) | Penetration class | Subsonic |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -100,7 +100,7 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | Soft armour vest | 2 | 40 | 2.0 | — | Concealable, stops pistol rounds |
 | 6B23 | 4 | 60 | 8.0 | — |  |
 | Plate carrier, steel plates | 4 | 70 | 9.0 | 4 / 4 / 2 / 2 / 1 | Durable, heavy; also fills the vest slot |
-| Plate carrier, ceramic plates | 5 | 55 | 8.0 | 5 / 6 / 2 / 2 / 2 | Loses durability fast; also fills the vest slot |
+| Plate carrier, ceramic plates | 5 | 55 | 8.0 | 5 / 6 / 2 / 2 / 2 | Loses durability fast (wear ×1.5); also fills the vest slot |
 | 6B13 | 5 | 70 | 10.5 | — |  |
 | Heavy assault armour | 6 | 85 | 14.0 | — | Large stamina and AP penalties |
 
@@ -151,7 +151,7 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 
 | Grenade | Weight (kg) | Effect | Radius (tiles) | Duration | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Frag grenade | 0.6 | Damage 100 at the point of impact, falling evenly to 0 at the edge; penetration class 2; solid cover between the blast and a soldier blocks it | 4 | Instant, on landing | Loud: heard across the map |
+| Frag grenade | 0.6 | Damage 100 at the point of impact, falling evenly to 0 at the edge; penetration class 2; full cover between the blast and a soldier blocks it, half cover halves it; the damage is split over the six body zones by their share of the silhouette, each checked against its own armour | 4 | Instant, on landing | Loud: heard across the map |
 | Smoke grenade | 0.5 | Smoke cloud that blocks sight into, out of and through it; no damage | 3 | 4 turns | Quiet |
 
 ## Barter goods

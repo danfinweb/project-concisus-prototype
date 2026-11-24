@@ -12,7 +12,7 @@ Nov 22, 2026 · @Dan
 | Pass | Free | Every soldier not activated in a turn recovers +1 stamina point; reacting does not count as being activated | Defined |
 | Set facing at the end of an activation | Free | — | Defined |
 | Set reaction (Fire, Take cover, Hold) | Free | Chosen during the activation, applied automatically; can be changed any number of times in the activation | Draft |
-| Hold overwatch | 4 AP | Lasts until the soldier's next activation; its Fire reactions use the weapon's current fire mode and get no snap-shot penalty. Without overwatch a Fire reaction is a single snap shot | Draft |
+| Hold overwatch | 4 AP | Lasts until the soldier's next activation, or ends early when the soldier is suppressed or has fewer rounds loaded than the fire mode fires; its Fire reactions use the weapon's current fire mode and get no snap-shot penalty. Without overwatch a Fire reaction is a single snap shot | Draft |
 | Reaction attempt | 1 stamina point | Success: 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%, adjusted for distance, the mover's stance, noise and the reactor's wounds. One attempt per mover per entry into the vision cone. Not possible while suppressed or at 0 stamina points | Defined |
 | Leave the map at an exit | Free | The soldier must be on an exit tile (ending a move there, or already standing there at the start of its activation) and the exit's condition must be met (fuel, a boat at a set turn, a paid crossing) | Draft |
 
@@ -38,11 +38,13 @@ Nov 22, 2026 · @Dan
 | Aim longer | 2 AP per aim step, up to 3 steps | Each step multiplies shooter spread by 0.85 (placeholder; 3 steps ≈ −39%). Marksmanship 75+: 1 AP per step. +1 AP per step with pain | Draft |
 | Reload | Pistol 4, box magazine 5, stripper clip or bolt-action 6, belt-fed 10 AP; tube-fed shotgun 2 AP per shell, any number of shells (partial reload) | Marksmanship 70+ −1 AP; ergonomics 70+ −1 AP, 30 or below +1 AP; magazine from the backpack +4 AP; arm fracture ×1.5. The modifiers apply once per reload, also for a tube | Draft |
 | Swap between weapon 1 and 2 | 3 AP | 2 AP when either weapon is a pistol; Agility 70+ −1 AP | Draft |
-| Throw a grenade | 5 AP | From the vest or belt; from the backpack +4 AP; Strength sets throwing distance. Wounded arm: landing scatter ×1.5; disabled arm (0 HP): scatter ×2; the worse arm counts | Draft |
+| Throw a grenade | 5 AP | From the vest or belt; from the backpack +4 AP; Strength sets throwing distance: 10 + Strength ÷ 10 tiles, rounded down (10–20). The grenade lands at a random point within 1 tile + 1 tile per 10 tiles thrown of the target tile. Wounded arm: landing scatter ×1.5; disabled arm (0 HP): scatter ×2; the worse arm counts | Draft |
+
+Draft: **Clear a jam** costs 4 AP (Technical 50+: 3 AP). A jammed weapon cannot fire until the jam is cleared; jam chance and weapon wear are in the GDD (Armour wear and weapon condition).
 
 ## Medical
 
-Item AP from the [Item list](https://claude.ai/artifact/3ZE9h1z8kMDFDuWB4muJRJ). For all medical items: −1 AP per 40 Medical (never below 1); +2 AP when treating yourself; extra AP when used from the backpack; a squadmate must be on an adjacent tile.
+Item AP from the [Item list](https://claude.ai/artifact/3ZE9h1z8kMDFDuWB4muJRJ). For all medical items: −1 AP per 40 Medical (never below 1; the surcharges that follow are added after that); +2 AP when treating yourself; extra AP when used from the backpack; a squadmate must be on an adjacent tile.
 
 | Action | Base AP | Notes | Status |
 | --- | --- | --- | --- |
@@ -69,6 +71,8 @@ Draft: an item used from the backpack costs +4 AP (the backpack surcharge, the s
 | Place a demolition charge | 8 AP | Technical 50+: 6 AP | Draft |
 | Restrain a VIP (capture mission) | 6 AP | Adjacent tile; only once the VIP surrenders or is wounded | Draft |
 | Carry or drag a body | Lift 4 AP, put down 2 AP; carrying +2 AP per tile, dragging +3 AP per tile | The player chooses carry or drag; lift only from an adjacent tile. A wounded or dead squadmate, an enemy or a restrained VIP can be moved. The body and its gear count toward the carrier's encumbrance: carrying fails if that goes over carry capacity, dragging always works. Carrying: upright, no sprinting or climbing. Dragging: upright or crouched, not prone | Draft |
+
+Draft: **Open a door** — walking through a closed, unlocked door opens it as part of the move, +1 AP on that step. **Close a door** on an adjacent tile edge: 1 AP. A locked door needs bolt cutters, the POI key or a demolition charge (see Tactical map generation in the GDD).
 
 ## AP modifiers on an activation
 
