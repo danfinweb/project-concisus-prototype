@@ -102,7 +102,10 @@ reaction setting `setReaction` with `reaction: takeCover`. The commands schema i
 validation; this table lists the fields each type uses.
 
 TAC validates every command; an illegal command (not enough AP, no line of sight, invalid path) is
-rejected and not resolved.
+rejected and not resolved. The rejection goes back to the controller with its reason, and the controller
+is asked again, up to `commandRetries` times per activation; after that the activation ends (TAC-005).
+Every rejection is logged in the decision log (TAI-016).
+**Values.** `commandRetries` — 3 (draft) → data/tactical-rules.json
 **Source.** design/design.md › AI › Tactical AI › Controller hand-off (3, 4); design/tactical-actions.md (Hold overwatch, Reload, Carry or drag a body, Pick up or loot, Leave the map)
 
 ### [TAI-006] No hidden information, no illegal actions
@@ -135,11 +138,12 @@ so an exposed, wounded or shaken unit prefers safe actions; it never blocks an a
 **Rule.** `battleGoal` (0–1) rates the action's progress toward the side's objective (`battleGoal` in the
 view, TAI-004) and toward the squad's current plan (TAI-013). The battle goal and an acceptable-loss
 threshold come from the strategic layer through the tactical map request (`battleGoal` per AI side); TAC
-passes both in the view. `acceptableLoss` is a share 0–1 of the side's soldiers out of action (dead,
-disabled or fled); once that share is reached, the side's battle goal becomes retreat: its units move to an
-exit and leave the map (TAC-038), and goal progress is scored toward that exit.
+passes both in the view. `acceptableLoss` is a share 0–1 of the side's soldiers out of action — dead, or
+left the map (TAC-038); wounded soldiers, disabled limbs included, never count. Once that share is
+reached, the side's battle goal becomes retreat: its units move to an exit and leave the map (TAC-038),
+and goal progress is scored toward that exit. A retreating side still fires and reacts.
 **Values.** goal weights per goal type — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.battleGoal.<goal>` (the generic `considerations` map, name → {weight, curve}); `acceptableLoss` per battle goal — not set (draft) → set by the strategic layer in the tactical map request.
-**Status.** open (threshold values; what "disabled" means for a whole soldier)
+**Status.** open (threshold values)
 **Source.** design/design.md › AI › Tactical AI › Unit scoring
 
 ### [TAI-010] Action fit
@@ -164,18 +168,17 @@ the blackboard is stored by TAC in the `battle` slice, passed in the view, and c
 ### [TAI-013] Squad leader plan
 **Rule.** The squad leader is the squad's highest-ranked soldier: unit `rank` (integer, higher = senior),
 set per unit by the strategic layer in the tactical map request (`sides[].units[].rank`) and passed in the
-view (`squad[].rank`, TAI-004). It sets the squad
-plan and roles: its activation assigns roles (TAI-014) and posts requests to the blackboard; other units read
-the plan from the view. If the leader dies, the next highest-ranked living soldier becomes leader at its next
-activation and keeps the current plan. Until then the plan
-stays as it was. Ties in rank are not resolved by the design.
-**Status.** open (rank tie-break)
+view (`squad[].rank`, TAI-004). On a tie in rank, the soldier with the highest average of its attribute
+values leads; if that ties too, the first in the request's unit order. It sets the squad plan and roles:
+its activation assigns roles (TAI-014) and posts requests to the blackboard; other units read the plan
+from the view. If the leader dies, the next highest-ranked living soldier (same tie-break) becomes leader
+at its next activation and keeps the current plan. Until then the plan stays as it was.
 **Source.** design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles)
 
 ### [TAI-014] Squad roles
-**Rule.** Enemy squads assign units the roles `flank`, `suppress`, `retreat`, `callReinforcements`. A role
-changes `actionFit` for actions that match it.
-**Status.** open (how reinforcements arrive is not designed)
+**Rule.** Enemy squads assign units the roles `flank`, `suppress`, `retreat`. A role changes `actionFit` for
+actions that match it. The role `callReinforcements` is OPTIONAL (later build): until it is built, no role
+calls reinforcements and a side fights with the units on the map.
 **Source.** design/design.md › AI › Tactical AI; › Tactical Layer (Enemy AI)
 
 ### [TAI-015] Doctrines
@@ -196,11 +199,10 @@ shows them; the AI keeps none.
 
 ### [TAI-017] Neutral side
 **Rule.** Units hostile to neither side (a non-involved faction toward the player per SAI-013, civilians)
-form the neutral side (TAC-001), controlled by `tactical-ai`. The neutral side never activates: its units
-only react — take cover or flee — or turn hostile toward whoever attacks them. They follow their own
-objectives only through these reactions. How `tactical-ai` chooses a neutral unit's reaction without an
-activation is not designed.
-**Status.** open
+form the neutral side (TAC-001), controlled by `tactical-ai`. Until attacked, neutral units never activate
+and `tactical-ai` is not called for them: their reactions follow the fixed TAC rule (TAC-001: civilians
+flee to the nearest exit, armed neutrals take cover). Once a neutral faction turns hostile, its units form
+a third side that `tactical-ai` commands like any AI side, with their own activation after the opponent's.
 **Source.** design/design.md › Tactical Layer › Turn structure; › AI › Tactical AI; › AI › Strategic AI › Faction behaviour
 
 ### [TAI-018] Allied AI units
@@ -208,10 +210,11 @@ activation is not designed.
 convoy vehicles, an escorted VIP) use `tactical-ai` with the player's side as `side`; their `battleGoal`
 comes from the mission (MGT): the strategic layer sets it per unit in the tactical map request
 (`sides[].units[].battleGoal`, which overrides the side's entry in `battleGoal`), so a single AI-controlled
-VIP on the player side has its own goal. TAC passes the active unit's goal in the view's `battleGoal`. The escorted VIP is a lightly armed allied unit controlled by `tactical-ai` by
-default; player control of the VIP is a switchable option (a setting that swaps that unit's controller,
-TAI-003), so both can be tested.
-**Values.** `vipControl` — `ai` (default) or `player` → game/Test Lab setting (not /data).
+VIP on the player side has its own goal. TAC passes the active unit's goal in the view's `battleGoal`. The
+escorted VIP is a lightly armed allied unit controlled by `tactical-ai` by default. Player control of the
+VIP is a switchable option for testing, set in the tactical map request (`vipControl`): with `player`, the
+player moves the VIP as part of the player's activations, and the VIP never reacts.
+**Values.** `vipControl` — `ai` (default) or `player` → tactical map request (set from a game/Test Lab setting; not /data).
 **Source.** design/design.md › AI › Tactical AI › Controller hand-off (2); › Management › Contracts and missions (Escort a VIP)
 
 ## Open questions
@@ -226,8 +229,8 @@ TAI-003), so both can be tested.
    `tactical-ai` controls it (AI › Tactical AI). Which one?
 3. **Resolved (design eb072a2):** yes — units hostile to neither side form a third, neutral side controlled by `tactical-ai`; it never activates, its units only react (take cover, flee) or turn hostile when attacked (TAC-001, TAI-017). How its reactions are chosen is question 11. TAI-017 — TAC allows "never more than two sides on a tactical map", but non-hostile faction units may be on
    the same map. Are they a third, neutral side, and who activates them?
-4. TAI-014 — How "call reinforcements" works (who arrives, from where, when) is not designed.
-5. TAI-005 — Does a rejected command end the activation, or is the controller asked again? Limit on retries?
+4. **Resolved (design 3aac08f):** calling reinforcements is OPTIONAL, later build (TAI-014). TAI-014 — How "call reinforcements" works (who arrives, from where, when) is not designed.
+5. **Resolved (design 3aac08f):** the rejection goes back with its reason, up to 3 retries per activation, then the activation ends (TAI-005). TAI-005 — Does a rejected command end the activation, or is the controller asked again? Limit on retries?
 6. **Resolved (cleanup 2026-11-23):** yes; it is the same `decide(view, rng)` call with `activeUnit: null`,
    answered by an `activate` (or `pass`) command; TAC then calls again for the activated unit (TAI-002). TAI-002 — Does the AI choose which unit to activate (TAC: "each side picks any soldier"), and is that a
    separate call?
@@ -240,15 +243,15 @@ TAI-003), so both can be tested.
 10. **Resolved (cleanup 2026-11-23):** the view carries `squadMorale` (squad-wide, from the request's
     `sides[].morale`), read by survival (TAI-004, TAI-008). TAI-008 — Morale is an input to survival, but the tactical morale model for AI units is not in the
     view yet (TAI-004 lists no morale field). Add one?
-11. TAI-017 — The neutral side never activates, yet `tactical-ai` controls it. How is a neutral unit's
+11. **Resolved (design 3aac08f):** before turning hostile, neutrals react by a fixed TAC rule (TAC-001); afterwards tactical-ai commands them as a third side (TAI-017). TAI-017 — The neutral side never activates, yet `tactical-ai` controls it. How is a neutral unit's
     reaction (take cover or flee) chosen — a fixed TAC rule, a standing setting from battle start, or an AI call
     mid-move (TAI-002 says the AI is not called mid-move)? What triggers it, and what is "flee"?
-12. TAI-009 — "Disabled" in the out-of-action share: TAC has disabled limbs (TAC-059) but no whole-soldier
+12. **Resolved (design 3aac08f):** only dead soldiers and soldiers who left the map count; a retreating side still fires (TAI-009). TAI-009 — "Disabled" in the out-of-action share: TAC has disabled limbs (TAC-059) but no whole-soldier
     disabled state. Does a soldier with a disabled limb count, or only one unable to act (e.g. 0 stamina)? Do
     soldiers who left the map by an exit count as fled? Does a retreating side still fire on the way?
-13. **Resolved (cleanup 2026-11-23)** (part): the rank is the per-unit integer `rank` the strategic layer sets in
+13. **Resolved (design 3aac08f):** rank ties go to the highest average attribute value, then the request's unit order (TAI-013). **Resolved (cleanup 2026-11-23)** (part): the rank is the per-unit integer `rank` the strategic layer sets in
     the tactical map request (TAI-013). Still open: how equal ranks are broken. TAI-013 — Where does an AI soldier's rank come from (tactical map request per unit, e.g. the STR squad
     ranks Elite/Veteran/Regular/Recruit, or a per-soldier rank), and how are equal ranks broken (seeded roll,
     unit order)?
-14. TAI-018 — With `vipControl: player`, does the VIP join the player's activation choice like a squad soldier
+14. **Resolved (design 3aac08f):** the VIP is set by `vipControl` in the tactical map request; with `player` it moves only and never reacts (TAI-018). TAI-018 — With `vipControl: player`, does the VIP join the player's activation choice like a squad soldier
     (stamina, reactions), and does the setting live in game settings or in the tactical map request?

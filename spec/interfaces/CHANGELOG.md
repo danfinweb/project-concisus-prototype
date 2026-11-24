@@ -5,6 +5,9 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | tactical_map_request | 0.7.0 | `vipControl` (`ai` / `player`, TAI-018) | strategic, tactical, tactical-ai |
+| 2026-11-24 | data/tactical-rules | 0.7.0 | `neutralReactRadiusTiles` (TAC-001), `commandRetries` (TAI-005), `encumbranceStrengthDivisor` replaces `encumbranceStrengthReduction` (TAC-027); `burstRounds` removed (burst length is the weapon's own mode) | tools, tactical, tactical-ai |
+| 2026-11-24 | data/management-rules | 0.5.1 | `carryCapacity` fields `base`, `strength`, `endurance` (MGT-029) | tools, management, tactical |
 | 2026-11-24 | tactical_map_request | 0.6.0 | `region.settlement`, `region.crossing`, `region.neighbours`, `region.roads[]`, `region.approachSide` for the map type and stages (TAC-086/TAC-087); exits text: request exits are all placed, generation fills up | strategic, tactical |
 | 2026-11-24 | tactical_commands | 0.4.0 | New command types `closeDoor` (with `edge`, TAC-084) and `clearJam` (TAC-083) | tactical, tactical-ai |
 | 2026-11-24 | data/tactical-rules | 0.6.0 | Sight, spotting, concealment, blinding, reaction modifiers, shooter spread, recoil, cone, preview, stun, pain, bleeding, fracture, armour wear (`armourWear` replaces `durabilityLossPerHit`), grenade distance/scatter/blast, jam and clear-jam, doors, material HP and edge blast; drafted values in descriptions | tools, tactical |

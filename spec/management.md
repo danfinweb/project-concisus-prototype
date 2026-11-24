@@ -231,9 +231,10 @@ Tactical Layer (TAC-057); Management stores only the attribute.
 **Source.** design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Body zones and hitboxes
 
 ### [MGT-029] Carry capacity
-**Rule.** Carry capacity is derived from Strength (main) and Endurance (minor). Formula not designed.
-**Values.** formula — not set (design: Open) → data/management-rules.json
-**Status.** open
+**Rule.** Carry capacity (kg) = `carryCapacity.base` + `carryCapacity.strength` × Strength +
+`carryCapacity.endurance` × Endurance (15–55 kg). Strength is the main attribute, Endurance the minor one.
+TAC-027 applies it (over-encumbrance).
+**Values.** `carryCapacity` — `base` 15, `strength` 0.3, `endurance` 0.1 (draft) → data/management-rules.json
 **Source.** design/design.md › Management › Soldier attributes › Derived values
 
 ### [MGT-030] Other derived values

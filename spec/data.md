@@ -151,11 +151,11 @@ weapon (type defaults apply, TAC-039).
 
 ### [DAT-012] Fire modes
 **Rule.** Each entry of `fireModes` is one shot action: an integer n fires n rounds per trigger action
-(1 = semi-auto, n > 1 = burst; the design's burst is 3 rounds); `"auto"` fires a full-auto burst. Rounds and
+(1 = semi-auto, n > 1 = burst; the burst length is the weapon's own, e.g. 2 or 3); `"auto"` fires a full-auto burst. Rounds and
 AP per shot action come from the selected mode; recoil builds within a burst (TAC). A weapon with one entry
 has no mode switch. AP per shot action = weapon-type default or the weapon's `fireApCost` (DAT-011) + burst
 or auto surcharge ± ergonomics (TAC-039).
-**Values.** `burstRounds` — 3, `autoRounds` — 5, `burstApSurcharge` — 2, `autoApSurcharge` — 4,
+**Values.** `autoRounds` — 5, `burstApSurcharge` — 2, `autoApSurcharge` — 4,
 `fireApByWeaponType` (all draft) → data/tactical-rules.json (owned by TAC, TAC-039).
 **Source.** design/design.md › Data definitions › Weapon profile (draft) › Fire modes; design/tactical-actions.md › Weapons
 
@@ -214,8 +214,8 @@ within `blindRangeTiles` (+`blindSpread` MoA until the end of their next activat
 carrier. `laser`: multiplies shooter spread on snap shots by its mod modifier `snapShotSpread` (TAC-044);
 visible to enemies.
 **Values.** `blindRangeTiles` — 10, `blindSpread` — 4 (draft) → data/tactical-rules.json (TAC-004); laser
-`modifiers.snapShotSpread` per item → data/items.json; reveal range — not set (design: Open).
-**Status.** open (reveal range, per-item laser values)
+`modifiers.snapShotSpread` per item (laser module 0.8, ITM-033) → data/items.json; reveal range — not set (design: Open).
+**Status.** open (reveal range)
 **Source.** design/design.md › Data definitions › Weapon profile (draft) › Tactical modules; design/design.md › Tactical Layer › Turn structure › Sight and spotting (draft), › Hit model › Shooter spread and recoil (draft)
 
 ### [DAT-018] Suppressors and hearing
@@ -518,8 +518,8 @@ gunshot noise). `visionConeDeg` (Altyn with visor: 90) narrows the wearer's visi
 | `concealable` | boolean | — | — | Soft armour vest |
 
 Initial content: design/item-list.md › Body armour (6 items).
-**Values.** ceramic `durabilityLossModifier` — 1.5 (draft) → data/items.json; heavy armour penalties — not
-set (design: "large") → data/items.json.
+**Values.** ceramic `durabilityLossModifier` — 1.5 (draft); heavy assault armour `apPenalty` 5,
+`staminaPenalty` 0 (draft; TAC-027) → data/items.json.
 **Source.** design/item-list.md › Body armour
 
 ### [ITM-012] Armour durability
@@ -636,6 +636,18 @@ Initial content: design/item-list.md › Grenades (2 grenades).
 **Status.** Draft (design: "Draft — placeholder values").
 **Source.** design/item-list.md › Grenades
 
+
+### [ITM-033] Mod items
+**Rule.** Initial weapon mods are `kind: "mod"` records (DAT-016). Optics (`slot: optic`) carry
+`modifiers.shooterSpreadAtRange` (multiplies the range spread, TAC-044); the laser (`slot: tactical`,
+`module: laser`) carries `modifiers.snapShotSpread` (multiplies shooter spread on snap shots) and is
+visible to enemies (DAT-017). Which weapons each mod fits (`fits`) is set in the item editor.
+Initial content: design/item-list.md › Mods (4 mods).
+**Values.** (all draft, placeholder) red dot sight — optic, range spread 0.8, 0.2 kg; 4× scope — optic,
+0.5, 0.5 kg; sniper scope — optic, 0.3, 0.7 kg; laser module — tactical, snap-shot spread 0.8, 0.15 kg →
+data/items.json.
+**Status.** Draft (design: "Draft — placeholder values").
+**Source.** design/item-list.md › Mods
 ## Barter goods
 
 ### [ITM-021] Barter goods
@@ -764,7 +776,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 13. ITM-017 — Meaning of the battle-belt holster (does weapon 2 or a pistol sit there, does it change swap
     AP?). Does the 1 kg pouch rule (ITM-016) and type limits apply to belts? The item list names only vests
     and plate carriers.
-14. **Resolved (design 75e776f):** ceramic wear ×1.5 (ITM-011) (part). Still open: heavy armour penalties, concealable, quiet. ITM-011 — Values for ceramic fast durability loss, heavy assault armour AP/stamina penalties; whether
+14. **Resolved (design 3aac08f):** heavy assault armour −5 AP per activation, no stamina penalty (ITM-011, TAC-027) (part). Still open: concealable, quiet. **Resolved (design 75e776f):** ceramic wear ×1.5 (ITM-011) (part). ITM-011 — Values for ceramic fast durability loss, heavy assault armour AP/stamina penalties; whether
     "concealable" (soft armour) and "quiet" (recon rig) have a rule.
 15. ITM-009 — "Mounts for night vision": no night-vision item exists. "Visor covers the face": no face zone.
 16. **Resolved (design 75e776f):** every hit wears armour: 10% of damage blocked, 5% penetrating, at least 1 (TAC-051). ITM-012 — Durability loss per hit is Open.

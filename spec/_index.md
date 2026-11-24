@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
+Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
 
 ## IDs
 
-405 IDs (first split 2026-11-22, updated from design 75e776f). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+406 IDs (first split 2026-11-22, updated from design 3aac08f). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -171,7 +171,7 @@ Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
 | [TAC-024] | Action cost composition | modules/tactical | design/design.md › Tactical Layer (Action points), › Actions and costs; design/tactical-actions.md (intro: order of cost calculation) |
 | [TAC-025] | Stun (head hit) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › AP modifiers on an activation |
 | [TAC-026] | Pain AP loss | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; › Hit model › Shooter spread and recoil (draft); design/tactical-actions.md › AP modifiers on an activation |
-| [TAC-027] | Over-encumbrance (open) | modules/tactical | design/design.md › Tactical Layer (Action points); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Data definitions › Soldier equipment slots |
+| [TAC-027] | Over-encumbrance | modules/tactical | design/design.md › Tactical Layer (Action points); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Data definitions › Soldier equipment slots |
 | [TAC-028] | Tactical grid and levels | modules/tactical | design/design.md › Tactical Layer (Movement); › Tactical map generation (draft) › Stages (Structures, Levels) |
 | [TAC-029] | Walk one tile | modules/tactical | design/design.md › Tactical Layer (Movement); › Tactical map generation (draft) › Tiles, cover and doors; design/tactical-actions.md › Movement (Walk one tile, Leg wounds) and intro; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; › Medical system › Conditions |
 | [TAC-030] | Move crouched | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement |
@@ -260,7 +260,7 @@ Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
 | [MGT-026] | Action points | modules/management | design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer (Action points) |
 | [MGT-027] | Stamina pool | modules/management | design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Turn structure (Stamina) |
 | [MGT-028] | HP per zone | modules/management | design/design.md › Management › Soldier attributes › Derived values; › Tactical Layer › Body zones and hitboxes |
-| [MGT-029] | Carry capacity (open) | modules/management | design/design.md › Management › Soldier attributes › Derived values |
+| [MGT-029] | Carry capacity | modules/management | design/design.md › Management › Soldier attributes › Derived values |
 | [MGT-030] | Other derived values | modules/management | design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md |
 | [MGT-031] | Nerve (open; effect optional) | modules/management | design/design.md › Management › Soldier attributes › Nerve |
 | [MGT-032] | Inventory model | modules/management | design/design.md › Management › Gear, loot & return |
@@ -328,15 +328,15 @@ Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
 | [TAI-006] | No hidden information, no illegal actions | modules/tactical-ai | design/design.md › AI › Tactical AI (last paragraph) |
 | [TAI-007] | Utility score | modules/tactical-ai | design/design.md › AI (intro, Data); › AI › Tactical AI › Unit scoring |
 | [TAI-008] | Survival | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
-| [TAI-009] | Battle goal (open (threshold values; what "disabled" means for a whole soldier)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
+| [TAI-009] | Battle goal (open (threshold values)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
 | [TAI-010] | Action fit | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › Data definitions › Weapon profile (Weapon type → AI role) |
 | [TAI-011] | Coordination | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring |
 | [TAI-012] | Squad blackboard | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; CLAUDE.md › State ownership |
-| [TAI-013] | Squad leader plan (open (rank tie-break)) | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles) |
-| [TAI-014] | Squad roles (open (how reinforcements arrive is not designed)) | modules/tactical-ai | design/design.md › AI › Tactical AI; › Tactical Layer (Enemy AI) |
+| [TAI-013] | Squad leader plan | modules/tactical-ai | design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles) |
+| [TAI-014] | Squad roles | modules/tactical-ai | design/design.md › AI › Tactical AI; › Tactical Layer (Enemy AI) |
 | [TAI-015] | Doctrines | modules/tactical-ai | design/design.md › AI (Data); CLAUDE.md (data/ai) |
 | [TAI-016] | Decision log | modules/tactical-ai | design/design.md › AI (Logging); › Presentation & tech › Prototype tech stack (Debugging) |
-| [TAI-017] | Neutral side (open) | modules/tactical-ai | design/design.md › Tactical Layer › Turn structure; › AI › Tactical AI; › AI › Strategic AI › Faction behaviour |
+| [TAI-017] | Neutral side | modules/tactical-ai | design/design.md › Tactical Layer › Turn structure; › AI › Tactical AI; › AI › Strategic AI › Faction behaviour |
 | [TAI-018] | Allied AI units | modules/tactical-ai | design/design.md › AI › Tactical AI › Controller hand-off (2); › Management › Contracts and missions (Escort a VIP) |
 | [DAT-001] | Data tables for items and vehicles | /data, tools | design/design.md › Data definitions; design/item-list.md › Weapons (magazines are items), Grenades |
 | [DAT-002] | Common item fields | /data, tools | design/design.md › Data definitions; design/item-list.md |
@@ -390,6 +390,7 @@ Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
 | [ITM-019] | Medical items | /data, tools | design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft) |
 | [ITM-020] | Medical item restrictions | /data, tools | design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft) › Using medical items |
 | [ITM-032] | Grenade items (Draft (design: "Draft — placeholder values")) | /data, tools | design/item-list.md › Grenades |
+| [ITM-033] | Mod items | /data, tools | design/item-list.md › Mods |
 | [ITM-021] | Barter goods | /data, tools | design/item-list.md › Barter goods; › Operation and faction items (hard drive) |
 | [ITM-022] | Trader buy rates | /data, tools | design/item-list.md › Barter goods › Trading rules |
 | [ITM-023] | Daily barter deals | /data, tools | design/item-list.md › Barter goods › Trading rules |

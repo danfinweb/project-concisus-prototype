@@ -3,7 +3,7 @@
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
   "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAI-009, TAI-013, TAI-018.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -62,6 +62,7 @@
       "description": "Per AI side (faction id → goal): the battle goal and acceptable-loss threshold from the strategic layer (TAI-004, TAI-009). A unit's own battleGoal overrides it (TAI-018).",
       "additionalProperties": { "$ref": "#/$defs/battleGoal" }
     },
+    "vipControl": { "enum": ["ai", "player"], "description": "TAI-018: who controls an escorted VIP; player = the player moves it, it never reacts (test option, default ai)" },
     "exits": { "type": "array", "description": "Exits the strategic layer knows of, with their conditions (TAC-038, TAC-080). All are placed; map generation adds plain exits up to 2–4 (TAC-087). id is reported back as battle_result soldiers[].exitId", "items": { "type": "object", "required": ["id"], "properties": {
       "id": { "type": "string" },
       "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] }, "params": { "type": "object" } } } },
