@@ -14,6 +14,9 @@ import { loadData } from '../../../shared/registry.js';
 const FIX = ['management-rules', 'recruitment', 'economy-rules', 'callsigns', 'missions', 'factions', 'events', 'traders', 'items'];
 let loaded;
 const fixtures = () => (loaded ??= loadData(FIX, new URL('./fixtures', import.meta.url).href));
+// The runner may pass no core (it found none to load); fall back to this module's core.
+let ownCore;
+const useCore = async (core) => core ?? (ownCore ??= await import('../core/index.js'));
 const T = (day, hour = 8) => ({ day, hour });
 const A = (v) => ({ strength: v, endurance: v, agility: v, perception: v, marksmanship: v, recon: v, medical: v, technical: v });
 
@@ -23,7 +26,8 @@ export default {
     {
       id: 'candidate-attributes', spec: ['MGT-022', 'MGT-002', 'MGT-003'],
       name: 'Generated candidates per tier: attribute spread and hire price (expect mean ≈ range middle, price ≈ tier price)',
-      async run(core, data, seed, p) {
+      async run(passedCore, data, seed, p) {
+        const core = await useCore(passedCore);
         await fixtures();
         const c = core.generateCandidate({ tier: p.tier, pool: 'agency' }, new Rng(seed));
         const vals = Object.values(c.attributes);
@@ -41,7 +45,8 @@ export default {
     {
       id: 'callsign-spread', spec: ['MGT-013', 'MGT-014', 'MGT-015'],
       name: 'Callsigns for a roster of fresh hires: share from the Generic list and share needing a -N suffix',
-      async run(core, data, seed, p) {
+      async run(passedCore, data, seed, p) {
+        const core = await useCore(passedCore);
         await fixtures();
         const rng = new Rng(seed);
         let st = core.newCampaign({ seed, balanceUsd: 0, fobs: ['fob-a'] });
@@ -64,7 +69,8 @@ export default {
     {
       id: 'krug-price-walk', spec: ['MGT-040'],
       name: 'A Krug price over a campaign year: largest deviation from base (must stay ≤ 0.30) and final ratio',
-      async run(core, data, seed, p) {
+      async run(passedCore, data, seed, p) {
+        const core = await useCore(passedCore);
         await fixtures();
         const rng = new Rng(seed);
         const base = 1000;
@@ -82,7 +88,8 @@ export default {
     {
       id: 'insurance-recovery', spec: ['MGT-036', 'MGT-011'],
       name: 'Insured rifle lost with its carrier: recovered share (expect ≈ 0.5) and cost per op',
-      async run(core, data, seed) {
+      async run(passedCore, data, seed) {
+        const core = await useCore(passedCore);
         await fixtures();
         let st = core.newCampaign({ seed, balanceUsd: 5000, fobs: ['fob-a'] });
         const a = core.addSoldier(st, { rank: 'recruit', attributes: A(30), fobId: 'fob-a', time: T(1), rng: new Rng(seed), equipment: { weapon1: { id: 'i-ak', item: 'ak74m', condition: 80 } } });
@@ -101,7 +108,8 @@ export default {
     {
       id: 'disown-rate', spec: ['MGT-050'],
       name: 'Deniable contracts that go wrong once: disowned share by employer (expect VDK ≈ 0.30, SSV ≈ 0.10)',
-      async run(core, data, seed, p) {
+      async run(passedCore, data, seed, p) {
+        const core = await useCore(passedCore);
         await fixtures();
         const rng = () => new Rng(seed);
         const offer = {
@@ -124,7 +132,8 @@ export default {
     {
       id: 'promotion-pace', spec: ['MGT-023', 'MGT-074', 'MGT-009'],
       name: 'Ops until a recruit at average 40 reaches regular and gains its first perk, by skill uses per op',
-      async run(core, data, seed, p) {
+      async run(passedCore, data, seed, p) {
+        const core = await useCore(passedCore);
         await fixtures();
         const rng = new Rng(seed);
         const c = core.generateCandidate({ tier: 'recruit', pool: 'agency' }, rng);

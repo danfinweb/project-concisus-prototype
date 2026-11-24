@@ -243,3 +243,12 @@ Found while writing the tests (`/test`, 2026-11-24):
    surviving witness, or does one witness attribute it to all?
 10. **Untyped data shapes.** `traders.traders[].stockByStanding` (fixture: `basic` / `military` / `best`) and
     the item instance ID field (fixture: `id`, used by `launchOp` `insuredItems`).
+
+Found while building `core/` (`/apply-spec`, 2026-11-24):
+
+11. **Hire price scaling unset (MGT-003).** `core/` reads `recruitment.priceFormula.spread` (share of the tier
+    price added at the top of the attribute range, taken off at the bottom); without it the price is flat.
+    The test fixture uses a placeholder 0.5 — not a design value.
+12. **Krug price state has no owner yet (MGT-040).** `krugPriceStep` is built and tested, but no state
+    slice holds current Krug prices and no request says which markets and items to move at the
+    `dailyRollover`. Owner and shape needed (Management `unlocks`, or Strategic's market tiles).

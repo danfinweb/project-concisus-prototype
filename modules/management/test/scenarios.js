@@ -387,7 +387,9 @@ const scenarios = [
       await setup(ctx);
       let { state: st, soldier: s } = add(camp(), { attributes: A(30, { marksmanship: 48, medical: 79 }) });
       st = M.addSkillUses(st, s.id, 'marksmanship', 10, T(2)); // 48 → 50 (5 xp each)
-      ctx.assert.deepEqual(M.soldier(st, s.id).perks, ['steadyAim']);
+      ctx.assert.ok(M.soldier(st, s.id).perks.includes('steadyAim'), 'marksmanship 50 perk missing');
+      ctx.assert.ok(!M.soldier(st, s.id).perks.includes('snapShooter'), 'marksmanship 80 perk too early');
+      // Perks for skills already at a threshold when hired: SCOPE open question 6 (not pinned here).
       st = M.addSkillUses(st, s.id, 'medical', 10, T(2)); // 79 → 80 (medium, 10 xp)
       ctx.assert.ok(M.soldier(st, s.id).perks.includes('traumaSurgeon'), 'medical 80 perk missing');
     },

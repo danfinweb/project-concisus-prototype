@@ -8,5 +8,6 @@
     { "id": "regular", "hirePriceUsd": 3000, "feePerOpUsd": 600, "attributeRange": { "min": 35, "max": 60 } },
     { "id": "veteran", "hirePriceUsd": 8000, "feePerOpUsd": 1200, "attributeRange": { "min": 50, "max": 75 } },
     { "id": "elite", "hirePriceUsd": 20000, "feePerOpUsd": 2500, "attributeRange": { "min": 65, "max": 90 } }
-  ]
+  ],
+  "priceFormula": { "spread": 0.5 }
 }
