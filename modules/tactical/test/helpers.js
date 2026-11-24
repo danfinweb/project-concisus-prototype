@@ -58,6 +58,7 @@ export function testMap(rows, extra = {}) {
       '~': 'deepWater', 'w': 'shallowWater', 'f': 'floor', 's': 'stairs', 'u': 'rubble', ...(extra.legend || {}) },
     edges: extra.edges || [],
     ladders: extra.ladders || [],
+    containers: extra.containers || [],
     exits: extra.exits || [{ id: 'x1', tiles: [[0, rows.length - 1]], condition: 'none' }],
   };
 }

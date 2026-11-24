@@ -268,7 +268,8 @@ export default [
     name: 'Take cover moves to the nearest tile within 1 with cover against the mover, else crouches',
     async run(ctx) {
       const c = await setup(ctx);
-      const map = testMap(20, { edges: [{ x: 9, y: 12, side: 'n', cover: 'half', material: 'sandbag', kind: 'sandbag' }, { x: 9, y: 12, side: 'e', cover: 'half', material: 'sandbag', kind: 'sandbag' }] });
+      // (9,12) has a sandbag on its north edge, facing the mover in the north-east.
+      const map = testMap(20, { edges: [{ x: 9, y: 12, side: 'n', cover: 'half', material: 'sandbag', kind: 'sandbag' }] });
       const b = reactionBattle(c, { reaction: 'takeCover', map });
       activate(c, b, 'pmc', 'p1');
       c.act(b, 'pmc', { type: 'move', path: enterPath });

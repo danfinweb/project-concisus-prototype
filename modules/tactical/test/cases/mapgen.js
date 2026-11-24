@@ -120,8 +120,10 @@ export default [
     async run(ctx) {
       const c = await setup(ctx);
       const m = gen(c);
-      const [ex, ey] = m.exits[0].tiles[0];
-      const walled = { ...m, tiles: m.tiles.map((row, y) => row.map((t, x) => (Math.max(Math.abs(x - ex), Math.abs(y - ey)) <= 2 && !(x === ex && y === ey) ? 'rock' : t))) };
+      const exitTiles = m.exits[0].tiles;
+      const isExit = (x, y) => exitTiles.some(([ex, ey]) => ex === x && ey === y);
+      const nearExit = (x, y) => exitTiles.some(([ex, ey]) => Math.max(Math.abs(x - ex), Math.abs(y - ey)) <= 2);
+      const walled = { ...m, tiles: m.tiles.map((row, y) => row.map((t, x) => (nearExit(x, y) && !isExit(x, y) ? 'rock' : t))) };
       const r = c.checkMap(walled);
       ctx.assert.equal(r.required.ok, false);
       ctx.assert.ok(r.required.failed.includes('connected'));

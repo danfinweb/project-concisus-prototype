@@ -2,7 +2,15 @@
 // Each sim: { id, spec: [...], name, run(core, data, seed, params) → { metric: value, … },
 //             params: { name: [values…] }, metrics: ['winner', 'turns', …], seeds: 100 }
 // The runs drive the battle through the same core API as the scenarios (test/CORE-API.md).
-import { soldier, rifle, battle, activate, pass, endAct, seeded, testMap } from './helpers.js';
+import { soldier, rifle, battle as mkBattle, activate as act0, pass as pass0, endAct as end0, seeded, testMap } from './helpers.js';
+import * as tacticalCore from '../core/index.js';
+
+// The Test Lab currently passes core = null to run(); fall back to this module's own core.
+const use = (core) => core || tacticalCore;
+const battle = (core, o) => mkBattle(use(core), o);
+const activate = (core, ...a) => act0(use(core), ...a);
+const pass = (core, ...a) => pass0(use(core), ...a);
+const endAct = (core, ...a) => end0(use(core), ...a);
 
 const mags = (n) => ({ item: 'chestrig', contents: Array.from({ length: n }, (_, i) => ({ id: `m${i}`, item: 'mag545', rounds: 30, ammo: 'a545fmj' })) });
 
@@ -47,7 +55,7 @@ export default {
     {
       id: 'duel-open', spec: ['TAC-005', 'TAC-039', 'TAC-040', 'TAC-044', 'TAC-045', 'TAC-048', 'TAC-050', 'TAC-057', 'TAC-059'],
       name: 'Two average riflemen trade aimed single shots on open ground',
-      run: (core, data, seed, p) => duel(core, seed, { maxTurns: 40, ...p }),
+      run: (core, data, seed, p) => duel(use(core), seed, { maxTurns: 40, ...p }),
       params: { distance: [8, 20, 35], stance: ['upright', 'prone'], aimSteps: [0, 2], armour: [null, 'plate4'] },
       metrics: ['winner', 'turns', 'shots', 'firstMoverWon'],
       seeds: 100,
@@ -55,7 +63,8 @@ export default {
     {
       id: 'preview-vs-real', spec: ['TAC-046', 'TAC-045'],
       name: 'The shot preview\'s hit % matches the real hit rate within a few percent',
-      run(core, data, seed, p) {
+      run(core0, data, seed, p) {
+        const core = use(core0);
         const b = battle(core, { map: testMap(Math.max(20, p.distance + 6)), seed, rng: seeded(seed),
           player: [soldier({ id: 'p1', x: 3, y: 2, facing: 180, equipment: { weapon1: rifle() } })],
           enemy: [soldier({ id: 'e1', x: 3, y: 2 + p.distance, facing: 0, stance: p.stance })] });
@@ -72,7 +81,8 @@ export default {
     {
       id: 'stall-length', spec: ['TAC-013', 'TAC-011'],
       name: 'Two squads out of contact: turns until both sides are back at full stamina under the stall rule',
-      run(core, data, seed, p) {
+      run(core0, data, seed, p) {
+        const core = use(core0);
         const b = battle(core, { map: testMap(60), seed, rng: seeded(seed),
           player: [soldier({ id: 'p1', x: 2, y: 2, stamina: 0 })], enemy: [soldier({ id: 'e1', x: 57, y: 57, stamina: 0, facing: 90 })] });
         let turns = 0;

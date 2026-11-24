@@ -14,12 +14,32 @@
   "zones": { "blendShare": 0.2 },
   "water": { "deepFromShoreTiles": 4 },
   "roads": { "widths": { "highway": 5, "road": 3, "track": 2 } },
-  "buildings": {},
+  "buildings": {
+    "kinds": {
+      "hut": { "w": [4, 5], "h": [4, 5], "lockClass": "house" },
+      "house": { "w": [6, 8], "h": [5, 7], "interiorDoor": true, "lockClass": "house" },
+      "school": { "w": [12, 16], "h": [8, 10], "interiorDoor": true, "lockClass": "house" },
+      "khrushchyovka": { "w": [14, 18], "h": [8, 10], "interiorDoor": true, "lockClass": "house" },
+      "apartment": { "w": [10, 14], "h": [8, 10], "interiorDoor": true, "lockClass": "house" },
+      "office": { "w": [8, 12], "h": [8, 10], "interiorDoor": true, "lockClass": "poi" },
+      "warehouse": { "w": [10, 14], "h": [8, 12], "lockClass": "poi" },
+      "plantHall": { "w": [14, 20], "h": [10, 14], "lockClass": "poi" },
+      "checkpoint": { "w": [4, 5], "h": [4, 5], "lockClass": "poi" },
+      "customs": { "w": [8, 10], "h": [6, 8], "interiorDoor": true, "lockClass": "poi" }
+    },
+    "byMapType": {
+      "open": ["hut", "house"], "woods": ["hut"], "marsh": ["hut"], "hills": ["hut"], "mountain": ["hut"], "shore": ["hut", "house"],
+      "town": ["house", "house", "house", "school"], "city": ["khrushchyovka", "apartment", "office", "house"],
+      "plant": ["plantHall", "warehouse", "office", "checkpoint"], "crossing": ["checkpoint", "customs"]
+    },
+    "wallMaterial": "brick", "windowMaterial": "wood", "doorMaterial": "wood", "windowEvery": 3, "spacingTiles": 2, "placementAttempts": 400
+  },
   "largeBuildingKinds": ["apartment", "khrushchyovka", "office", "school", "hospital", "landmark", "warehouse", "plantHall"],
   "lockedDoorShare": { "poi": 0.25, "house": 0.10 },
   "parcels": { "shelterbeltWidth": 2, "gapShare": 0.33 },
-  "groundFill": { "classes": ["grass", "brush", "trees", "mud", "rock"] },
-  "details": {},
+  "groundFill": { "classes": ["grass", "brush", "trees", "mud", "rock"], "foliage": ["brush", "trees"], "rockShare": 0.01, "mudShare": 0.04,
+    "rockNeighbours": ["grass", "brush", "trees", "rock"], "baseByTable": { "steppe": "grass", "forest": "grass", "urban": "asphaltUrban" } },
+  "details": { "connectPockets": true },
   "exitSpacingTiles": 20,
   "footExitWidth": 6,
   "deployment": { "playerDepthTiles": 8, "enemyDepthTiles": 10 },

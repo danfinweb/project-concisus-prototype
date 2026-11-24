@@ -270,3 +270,27 @@ reading given in each item.
    (raised by how much)? Tests only check that the head is exposed.
 9. **Crouched and prone hitboxes have no numbers in the design** besides heights (TAC-054/055); the test
    fixture uses its own layout. Content needs a source for `zones.<zone>.hitboxes.crouched|prone`.
+
+Found while building `core/` (2026-11-24):
+
+10. **Leadership bonus on reactions: leader included or not?** TAC-094 gives the bonus to "every soldier of
+    the side, the leader included", including its reaction chance; TAC-022 adds it only "while ... the
+    reactor is not the leader". The core follows TAC-094.
+11. **No terrain flag for blocking sight.** The core lets impassable terrain block sight, so deep water also
+    blocks it, which is surely wrong. `terrain.schema.json` needs a `blocksSight` flag (rock, tree trunks).
+12. **Map generation rules with no schema fields.** `mapgen-tactical.schema.json` has only free-form objects
+    for `buildings`, `groundFill` and `details`. The core reads the shape the test fixture defines:
+    `buildings.kinds.<kind> {w, h, interiorDoor, lockClass}`, `buildings.byMapType`, wall, window and door
+    materials, `windowEvery`, `spacingTiles`, `placementAttempts`; `groundFill.foliage`, `rockShare`,
+    `mudShare`, `rockNeighbours`, `baseByTable`; `details.connectPockets`. The real data needs these
+    fields (or the spec should name others).
+13. **Neighbour blending vs. one terrain table.** TAC-087 stage 1 blends edges into the neighbours'
+    terrain, but TAC-080 draws terrain only from the encounter tile's table. The core keeps every tile in
+    the tile's table and uses the neighbour only for the foliage share in the band.
+14. **Paid-crossing exits.** TAC-038 lists `paidCrossing` as an exit condition, but no rule says who pays
+    or how TAC knows it is paid. The core treats it as met.
+15. **Balance (from `duel-open`, not a spec gap):** in a duel the side that shoots first wins 68–100% of the
+    time, and at 8 tiles nearly always in turn 1. Prone soldiers die faster than upright ones, because from
+    the front the head box is the nearest and a 5.45 round (40) kills a 30 HP head without a helmet.
+16. **Tools:** the Test Lab's sim runner passes `core = null` to `run()`; `sim.config.js` falls back to the
+    module's own core for now.

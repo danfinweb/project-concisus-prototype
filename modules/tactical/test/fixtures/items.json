@@ -56,7 +56,7 @@
   "f1": { "id": "f1", "kind": "grenade", "name": "F-1", "effect": "frag", "damage": 120, "radiusTiles": 5, "penetrationClass": 2, "durationTurns": null, "loud": true, "weightKg": 0.6 },
   "rdg2": { "id": "rdg2", "kind": "grenade", "name": "RDG-2", "effect": "smoke", "damage": 0, "radiusTiles": 3, "durationTurns": 3, "blocksSight": true, "loud": false, "weightKg": 0.5 },
 
-  "boltCutters": { "id": "boltCutters", "kind": "opItem", "name": "Bolt cutters", "foundIn": ["industrial"], "opEffect": { "type": "cutLock" }, "weightKg": 2.0 },
+  "boltCutters": { "id": "boltCutters", "kind": "opItem", "name": "Bolt cutters", "foundIn": ["industrial"], "opEffect": { "type": "cutLock" }, "apCost": 10, "weightKg": 2.0 },
   "demoCharge": { "id": "demoCharge", "kind": "opItem", "name": "Demolition charge", "foundIn": ["military"], "opEffect": { "type": "demolition" }, "weightKg": 1.5 },
   "poiKey": { "id": "poiKey", "kind": "opItem", "name": "Warehouse key", "foundIn": ["poi"], "perPoi": true, "opEffect": { "type": "poiKey" }, "weightKg": 0.05 },
   "brick": { "id": "brick", "kind": "barter", "name": "Lead brick (test weight)", "foundIn": ["test"], "barterClass": "general", "valueUsd": 1, "rarity": "common", "weightKg": 10 }

@@ -129,7 +129,7 @@ export default [
       ctx.assert.equal(c.throwRange(soldier({ zoneHp: { rightArm: 0 } })), 15, 'arm wounds do not change range');
       near(ctx.assert, c.scatterRadius(soldier(), 10), 2);
       near(ctx.assert, c.scatterRadius(soldier({ zoneHp: { leftArm: 10 } }), 10), 3);
-      near(ctx.assert, c.scatterRadius(soldier({ zoneHp: { leftArm: 10, rightArm: 0 } }), 10), 4, 'the worse arm counts');
+      near(ctx.assert, c.scatterRadius(soldier({ zoneHp: { leftArm: 10, rightArm: 0 } }), 10), 4, 1e-6, 'the worse arm counts');
     },
   },
   {
@@ -301,7 +301,7 @@ export default [
     async run(ctx) {
       const c = await setup(ctx);
       const row = (s) => testMap(Array.from({ length: 20 }, (_, y) => (y === 5 ? s : '....................')));
-      const mk = (map) => battle(c, { map, player: [soldier({ id: 'p1', x: 5, y: 5, facing: 90 })], enemy: [soldier({ id: 'e1', x: 12, y: 5, facing: 270 })] });
+      const mk = (map) => battle(c, { map, player: [soldier({ id: 'p1', x: 5, y: 5, facing: 90, equipment: { weapon1: W('ak74m') } })], enemy: [soldier({ id: 'e1', x: 12, y: 5, facing: 270 })] });
       ctx.assert.equal(c.isConcealed(mk(row('....................')), 'p1', 'e1'), false);
       ctx.assert.equal(c.isConcealed(mk(row('........b...........')), 'p1', 'e1'), true, 'brush on the line');
       ctx.assert.equal(c.isConcealed(mk(row('............b.......')), 'p1', 'e1'), true, 'target on brush');
