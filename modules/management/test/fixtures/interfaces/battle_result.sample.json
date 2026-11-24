@@ -1,0 +1,31 @@
+{
+  "encounterId": "enc-sample",
+  "outcome": "goalMet",
+  "winnerFaction": "player",
+  "gameTimeHours": 1,
+  "turns": 9,
+  "objectives": [{ "id": "m1", "met": true, "metTurn": 7 }],
+  "soldiers": [
+    {
+      "id": "s1", "status": "leftMap", "exitId": "x-north",
+      "zoneHp": { "head": 35, "thorax": 50, "leftArm": 12, "rightArm": 40, "leftLeg": 40, "rightLeg": 40 },
+      "conditions": [{ "type": "lightBleeding", "zone": "leftArm" }],
+      "stamina": 20,
+      "equipment": { "weapon1": { "id": "i-ak1", "item": "ak74m", "condition": 74 } },
+      "kills": [{ "faction": "vdk", "distanceTiles": 14, "activation": 3 }],
+      "underFire": true,
+      "morale": 66
+    },
+    { "id": "s2", "status": "dead", "morale": 40 }
+  ],
+  "squadMorale": 66,
+  "loot": [{ "item": "gold-chain", "count": 1, "carrier": "s1" }],
+  "casualties": [{ "faction": "vdk", "killed": 3, "wounded": 1 }],
+  "acts": [{ "type": "killSoldier", "faction": "vdk", "count": 3 }],
+  "witnesses": { "vdk": 1 },
+  "playerAttributed": true,
+  "vip": null,
+  "poiControl": null,
+  "vehicle": null,
+  "flags": []
+}

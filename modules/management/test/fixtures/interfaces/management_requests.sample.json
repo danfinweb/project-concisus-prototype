@@ -1,0 +1,30 @@
+{
+  "time": { "day": 2, "hour": 9 },
+  "requests": [
+    {
+      "type": "contractOffer",
+      "offer": {
+        "id": "c-sample", "employer": "ssv", "targetFaction": "vdk", "sourceGoal": "supplyRun",
+        "missions": [
+          { "key": "m1", "missionId": "retrieve_deliver", "location": "r12" },
+          { "key": "m2", "missionId": "escort_shipment", "location": "r14" }
+        ],
+        "deadline": { "day": 6, "hour": 0 },
+        "payInputs": { "distance": 0.4, "danger": 0.6, "urgency": 0.5 },
+        "intelLevel": "lastKnown", "deniable": false,
+        "reputationGate": { "better": false, "sensitive": false },
+        "boardLocation": "fob-a", "counterContractOf": null
+      }
+    },
+    { "type": "acceptContract", "contractId": "c-sample" },
+    { "type": "launchOp", "squad": "sq1", "soldiers": ["s1", "s2"], "fobId": "fob-a", "insuredItems": ["i-ak1"] },
+    { "type": "missionOutcome", "contractId": "c-sample", "missionKey": "m1", "outcome": "success" },
+    { "type": "reputationAct", "act": "joinFight", "faction": "ssv", "attributed": true },
+    { "type": "plantOutput", "plantId": "chem-1", "fobId": "fob-a", "items": [{ "item": "medkit", "count": 5 }] },
+    { "type": "moraleChange", "moraleChanges": [{ "soldier": "s2", "delta": -10 }] },
+    { "type": "priceModifier", "modifierId": "shortage-1", "target": "fuel", "factor": 2 },
+    { "type": "payKrugPass", "faction": "krug", "squad": "sq1", "amountUsd": 200 },
+    { "type": "healingTick", "squad": "sq1", "soldiers": ["s1"], "hours": 1, "atFob": false },
+    { "type": "dailyRollover", "day": 3 }
+  ]
+}

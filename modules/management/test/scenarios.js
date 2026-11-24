@@ -1299,6 +1299,123 @@ const scenarios = [
   },
 ];
 
+// ── Adapter interface tests (/integrate) ───────────────────────────────────────────────────────────
+// The adapter validates every input and output against spec/interfaces/ and keeps the five owned slices
+// in a shared/state.js store.
+let AD, SCH;
+async function adapterSetup(ctx, { balanceUsd = 10000 } = {}) {
+  await setup(ctx);
+  AD ??= await import('../adapter/index.js');
+  SCH ??= await AD.loadSchemas();
+  const { createStore } = await import('../../../shared/state.js');
+  let st = camp({ seed: 42, balanceUsd });
+  st = add(st, { seed: 1, equipment: { weapon1: { id: 'i-ak1', item: 'ak74m', condition: 80 } } }).state; // s1
+  st = add(st, { seed: 2 }).state; // s2
+  const store = createStore(AD.toSlices(st));
+  return { store, ad: AD.createManagementAdapter({ store, schemas: SCH }) };
+}
+const sample = (name) => fetchJson(`./fixtures/interfaces/${name}.sample.json`);
+
+scenarios.push(
+  {
+    id: 'adapter-requests-sample', spec: ['MGT-076', 'MGT-005', 'MGT-036', 'MGT-047'],
+    name: 'Adapter: the sample management_requests batch is accepted and answered with valid results',
+    async run(ctx) {
+      const { store, ad } = await adapterSetup(ctx);
+      const batch = await sample('management_requests');
+      const out = ad.handleRequests(batch); // validates input and output
+      ctx.assert.equal(out.results.length, batch.requests.length);
+      const byType = Object.fromEntries(batch.requests.map((r, i) => [r.type, out.results[i]]));
+      ctx.assert.equal(byType.acceptContract.paymentDue.contractId, 'c-sample');
+      ctx.assert.equal(byType.launchOp.feesUsd, 600);
+      ctx.assert.equal(byType.launchOp.premiumUsd, 80);
+      ctx.assert.equal(byType.healingTick.ok, false, 'blocked by Q52, refused with a reason');
+      ctx.assert.ok(byType.healingTick.error);
+      ctx.assert.equal(store.read('economy').balanceUsd, 10000 - 600 - 80 - 200);
+      ctx.assert.equal(store.read('reputation').ssv, 5 + 5, 'joinFight +5, retrieve_deliver success +5');
+    },
+  },
+  {
+    id: 'adapter-battle-sample', spec: ['MGT-006', 'MGT-008', 'MGT-010', 'MGT-058', 'MGT-064'],
+    name: 'Adapter: the sample battle_result is accepted and lands in the roster and reputation slices',
+    async run(ctx) {
+      const { store, ad } = await adapterSetup(ctx);
+      ad.handleBattleResult(await sample('battle_result'), T(2, 10));
+      const s1 = store.read('roster').soldiers.find((s) => s.id === 's1');
+      ctx.assert.equal(s1.morale, 66);
+      ctx.assert.equal(s1.wounds.zoneHp.leftArm, 12);
+      ctx.assert.equal(s1.equipment.weapon1.condition, 74);
+      ctx.assert.equal(s1.nerve, 1);
+      ctx.assert.equal(store.read('roster').soldiers.find((s) => s.id === 's2').status, 'active', 'dead stays provisional until soldierFate');
+      ctx.assert.equal(store.read('reputation').vdk, -6);
+    },
+  },
+  {
+    id: 'adapter-view-valid', spec: ['MGT-072'],
+    name: 'Adapter: management_view validates on load, after requests and after a battle',
+    async run(ctx) {
+      const { ad } = await adapterSetup(ctx);
+      let v = ad.view(T(1, 0));
+      ctx.assert.deepEqual(v.roster.map((s) => s.id), ['s1', 's2']);
+      ad.handleRequests(await sample('management_requests'));
+      ad.handleBattleResult(await sample('battle_result'), T(2, 10));
+      ad.handleRequests({ time: T(2, 11), requests: [{ type: 'soldierFate', soldiers: ['s2'], fate: 'dead' }] });
+      v = ad.view(T(2, 11));
+      ctx.assert.deepEqual(v.roster.map((s) => s.id), ['s1']);
+      ctx.assert.equal(v.contracts.find((c) => c.id === 'c-sample').status, 'signed');
+      ctx.assert.equal(v.funds.balanceUsd, 10000 - 880);
+    },
+  },
+  {
+    id: 'adapter-rejects-invalid', spec: ['MGT-076'],
+    name: 'Adapter: input that breaks the interface schema is rejected and changes nothing',
+    async run(ctx) {
+      const { store, ad } = await adapterSetup(ctx);
+      const before = store.serialize();
+      let err = null;
+      try { ad.handleRequests({ time: { day: 0, hour: 30 }, requests: [{ type: 'notAType' }] }); } catch (e) { err = e; }
+      ctx.assert.ok(err instanceof AD.InterfaceError, `expected InterfaceError, got ${err}`);
+      err = null;
+      try { ad.handleBattleResult({ encounterId: 'x', outcome: 'won', gameTimeHours: 2, soldiers: [] }, T(1)); } catch (e) { err = e; }
+      ctx.assert.ok(err instanceof AD.InterfaceError);
+      ctx.assert.equal(store.serialize(), before);
+    },
+  },
+  {
+    id: 'adapter-slices-and-replay', spec: ['MGT-072'],
+    name: 'Adapter: writes only Management slices, and the same save plus the same inputs gives the same result',
+    async run(ctx) {
+      const a = await adapterSetup(ctx);
+      const b = await adapterSetup(ctx);
+      const batch = await sample('management_requests');
+      const offers = { time: T(2, 9), requests: Array.from({ length: 12 }, (_, i) => ({ type: 'contractOffer', offer: { ...batch.requests[0].offer, id: `u${i}`, deniable: true } })) };
+      ctx.assert.deepEqual(a.ad.handleRequests(offers), b.ad.handleRequests(offers));
+      ctx.assert.equal(a.store.serialize(), b.store.serialize());
+      for (const k of ['world', 'battle']) ctx.assert.equal(a.store.read(k), null, `${k} touched`);
+      let err = null;
+      try { a.store.write('management', 'world', {}); } catch (e) { err = e; }
+      ctx.assert.ok(err, 'store must refuse a management write to world');
+    },
+  },
+  {
+    id: 'adapter-new-campaign', spec: ['MGT-053', 'MGT-066', 'MGT-072'],
+    name: 'Adapter: a new campaign writes all five slices and returns a valid view',
+    async run(ctx) {
+      await setup(ctx);
+      AD ??= await import('../adapter/index.js');
+      SCH ??= await AD.loadSchemas();
+      const { createStore } = await import('../../../shared/state.js');
+      const store = createStore();
+      const ad = AD.createManagementAdapter({ store, schemas: SCH });
+      const v = ad.newCampaign({ seed: 7, balanceUsd: 20000, fobs: ['fob-start'] });
+      ctx.assert.deepEqual(v.funds, { balanceUsd: 20000, debtsUsd: 0 });
+      ctx.assert.equal(v.reputation.krug.standing, 'neutral');
+      for (const k of ['roster', 'unlocks', 'economy', 'contracts', 'reputation']) ctx.assert.ok(store.read(k), `${k} not written`);
+      ctx.assert.equal(store.read('unlocks').campaignSeed, 7);
+    },
+  },
+);
+
 export default {
   module: 'management',
   scenarios,
