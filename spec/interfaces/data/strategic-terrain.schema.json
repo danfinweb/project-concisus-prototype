@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/strategic-terrain.schema.json",
   "title": "Strategic terrain",
-  "description": "Strategic terrain types (steppe, woods, mountain, water, ...), keyed by ID: vehicle movement hours, visibility class, and the biome that selects the tactical terrain and prefab tables for battles on a tile of this terrain (spec STR-005, STR-006, STR-008, STR-022, STR-023, STR-095). Roads lie on top of a terrain and are not records here (STR-006: strategic-rules roadMoveHours, roadVisibility). On-foot hours: strategic-rules onFootHours.",
-  "version": "0.1.0",
+  "description": "Strategic terrain types (steppe, woods, mountain, water, ...), keyed by ID: vehicle movement hours, visibility class, and the biome that selects the tactical terrain and prefab tables for battles on a tile of this terrain (spec STR-005, STR-006, STR-008, STR-022, STR-023, STR-095). Roads lie on top of a terrain and are not records here (STR-006: strategic-rules roadMoveHours); a road tile takes this terrain's visibility (roads have none of their own). On-foot hours: strategic-rules onFootHours.",
+  "version": "0.2.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/terrain" },
   "$defs": {
@@ -16,7 +16,7 @@
         "passable": { "type": "boolean", "description": "STR-006: false = no squad enters off-road (water: only along a road over a bridge or ford, or by an amphibious vehicle or helicopter)" },
         "moveHours": { "type": ["integer", "null"], "minimum": 1, "description": "STR-006/STR-032: hours for a ground vehicle to enter a tile of this terrain off-road; null = vehicles enter only along a road (mountain) or not at all (water). Design: steppe 2, woods 3" },
         "offRoadRated": { "type": "boolean", "description": "STR-032: the vehicle's off-road rating lowers moveHours here (design: steppe and woods)" },
-        "visibility": { "enum": ["far", "medium", "open", "low", null], "description": "STR-008/STR-024: visibility class used by detection and evasion; null = none (water: design gives none)" },
+        "visibility": { "enum": ["far", "medium", "open", "low", null], "description": "STR-008/STR-024: visibility class used by detection and evasion, also on road tiles of this terrain; null = none (water: design gives none). Design: steppe open, woods low, mountain low" },
         "biome": { "type": "string", "minLength": 1, "description": "STR-095: biome passed to the tactical generator in tactical_map_request.region.biome" },
         "tacticalTerrainTable": { "type": "string", "minLength": 1, "description": "STR-095: names the tactical terrain table the tactical generator draws from for battles on a tile of this terrain (TAC)" },
         "prefabTable": { "type": "string", "minLength": 1, "description": "STR-095: names the prefab table the tactical generator draws from for battles on a tile of this terrain (TAC)" }

@@ -3,16 +3,22 @@
   "$id": "data/missions.schema.json",
   "title": "Missions",
   "description": "Mission types for contracts (spec MGT-042..MGT-048).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
     "required": ["id", "payBand"],
     "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
       "payBand": { "type": "array", "description": "MGT-046: [min, max]" },
       "goals": { "type": "array", "description": "MGT-043: strategic goals this mission serves" },
-      "success": { "type": "object", "description": "MGT-044: success condition parameters" },
+      "success": {
+        "type": "object", "description": "MGT-044: success condition parameters",
+        "properties": {
+          "cargoShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-044: share of the cargo that must be saved, design draft 0.6" },
+          "handoverHours": { "type": "integer", "minimum": 0, "description": "MGT-044: hours a hand-over or hold takes, design draft 6" }
+        }
+      },
       "failure": { "type": "object", "description": "MGT-044 / MGT-048: failure condition parameters" }
     }
   }

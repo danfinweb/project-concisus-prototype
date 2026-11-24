@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_commands.schema.json",
   "title": "Strategic commands",
-  "description": "One command set a faction controller returns for every hour that passes: the same commands a player issues. They resolve together with the player's actions (STR-003). The strategic layer validates and resolves them; a valid offerContract reaches Management as a management_requests contractOffer request (STR-044), not through this interface. Spec: STR-003, STR-020, STR-021, STR-044, STR-070, STR-094, STR-096, SAI-004, SAI-011, SAI-014..SAI-016.",
-  "version": "0.5.0",
+  "description": "One command set a faction controller returns for every hour that passes: the same commands a player issues. They resolve together with the player's actions (STR-003). The strategic layer validates and resolves them; a valid offerContract reaches Management as a management_requests contractOffer request (STR-044), not through this interface. Spec: STR-003, STR-020, STR-021, STR-044, STR-070, STR-094, STR-096, SAI-004, SAI-011, SAI-014..SAI-017.",
+  "version": "0.6.0",
   "x-producer": "modules/strategic-ai",
   "x-consumers": ["modules/strategic"],
   "type": "object",
@@ -17,14 +17,17 @@
     "command": {
       "type": "object", "required": ["type"],
       "properties": {
-        "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "acceptContract", "hireEscort", "pickMeasure", "recruit", "pass"] },
-        "squad": { "type": "string", "description": "setGoal, moveSquad, hold, scout, attack: an own squad" },
+        "type": { "enum": ["setGoal", "moveSquad", "hold", "scout", "attack", "offerContract", "acceptContract", "hireEscort", "answerEscort", "pickMeasure", "recruit", "pass"] },
+        "squad": { "type": "string", "description": "setGoal, moveSquad, hold, scout, attack: an own squad; answerEscort: the Krug squad attached when accepting" },
         "squads": { "type": "array", "items": { "type": "string" }, "description": "acceptContract: squads assigned to the accepted contract (SAI-015)" },
         "contractId": { "type": "string", "description": "acceptContract: the id of the offer taken (an entry of the view's contractOffers)" },
         "goal": { "enum": ["patrol", "supplyRun", "attackPoi", "holdPoi", "escort", "tradeRoute", "hunt"], "description": "setGoal (STR-018)" },
         "target": { "type": "string", "description": "setGoal: region, POI, squad or the player; attack: a foreign squad or POI on the squad's tile; recruit: the held tile where the squad is raised (STR-096)" },
         "toRegion": { "type": "string", "description": "moveSquad: an adjacent tile (STR-005)" },
-        "escortFor": { "type": "string", "description": "hireEscort: the own shipment (convoy squad) a Krug squad escorts (STR-094)" },
+        "escortFor": { "type": "string", "description": "hireEscort: the own shipment (convoy squad, on a Krug-market tile and not yet left) a Krug squad escorts (STR-094)" },
+        "route": { "type": "array", "items": { "type": "string" }, "description": "hireEscort: the convoy's planned tile path to its destination; sets the price (STR-094)" },
+        "requestId": { "type": "string", "description": "answerEscort: the id of an entry of the Krug view's escortRequests (SAI-017)" },
+        "accept": { "type": "boolean", "description": "answerEscort: true accepts (squad then names the Krug squad attached), false refuses" },
         "measure": { "type": "string", "x-ref": "events", "description": "pickMeasure: one of the view's availableMeasures (STR-070)" },
         "contract": { "$ref": "#/$defs/contractOffer", "description": "offerContract: the offer" }
       }
@@ -39,7 +42,7 @@
         "missions": { "type": "array", "items": { "type": "object", "required": ["key", "missionId"], "properties": { "key": { "type": "string", "description": "Per-mission key, unique within the offer (two missions of one type are told apart by it)" }, "missionId": { "type": "string", "x-ref": "missions", "description": "Mission type" }, "targets": { "type": "array" }, "location": { "type": "string" } } } },
         "deadline": { "type": "object", "required": ["day", "hour"], "properties": { "day": { "type": "integer", "minimum": 1 }, "hour": { "type": "integer", "minimum": 0, "maximum": 23 } } },
         "payInputs": { "type": "object", "description": "Distance, danger, urgency (MGT-046)" },
-        "reputationGain": { "type": "integer", "description": "Reputation with the employer on success (MGT-056)" },
+        "reputationGain": { "type": "integer", "description": "Deprecated, optional: MGT-056 now derives the reputation gain per mission from its pay band; kept for compatibility (management_requests holds an identical copy)" },
         "intelLevel": { "enum": ["exact", "lastKnown", "rumour"], "description": "MGT-049" },
         "deniable": { "type": "boolean" },
         "reputationGate": {

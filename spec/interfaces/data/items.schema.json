@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/items.schema.json",
   "title": "Items",
-  "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, ITM-001..ITM-032, DAT-030.",
-  "version": "0.6.0",
+  "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, DAT-030, ITM-001..ITM-034. valueUsd is the full faction-trader price (ITM-034).",
+  "version": "0.7.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -19,7 +19,7 @@
         "kind": { "enum": ["weapon", "mod", "calibre", "ammo", "helmet", "bodyArmour", "vest", "belt", "backpack", "medical", "barter", "opItem", "magazine", "grenade"] },
         "name": { "type": "string", "minLength": 1 },
         "weightKg": { "type": "number", "minimum": 0 },
-        "valueUsd": { "type": "number", "minimum": 0 },
+        "valueUsd": { "type": "number", "minimum": 0, "description": "DAT-002 / ITM-034: full price at a faction trader = full barter value; base price at Krug markets" },
         "rarity": { "$ref": "#/$defs/rarity" },
         "notes": { "type": "string" }
       },
@@ -42,7 +42,7 @@
         "baseMoa": { "type": "number", "exclusiveMinimum": 0 },
         "weightKg": { "type": "number", "exclusiveMinimum": 0 },
         "recoil": { "type": "integer", "minimum": 1, "maximum": 100 },
-        "modSlots": { "type": "array", "items": { "enum": ["muzzle", "stock", "pistolGrip", "magazine", "optic", "handguard"] } },
+        "modSlots": { "type": "array", "items": { "enum": ["muzzle", "stock", "pistolGrip", "optic", "handguard"] }, "description": "DAT-011: no magazine slot (magazines are items, DAT-030)" },
         "action": { "enum": ["pump", "bolt"] },
         "feedType": { "enum": ["pistol", "boxMagazine", "stripperClip", "boltAction", "belt", "tube"], "description": "Selects the reload base AP (TAC-041, DAT-011)" },
         "fireApCost": { "type": "integer", "minimum": 1, "description": "Overrides the weapon-type default fire AP (TAC-039)" }
@@ -52,7 +52,7 @@
     "mod": {
       "properties": {
         "kind": { "const": "mod" },
-        "slot": { "enum": ["muzzle", "stock", "pistolGrip", "magazine", "optic", "handguard", "frontGrip", "tactical"] },
+        "slot": { "enum": ["muzzle", "stock", "pistolGrip", "optic", "handguard", "frontGrip", "tactical"] },
         "fits": { "type": "array", "items": { "$ref": "#/$defs/ref" } },
         "modifiers": { "type": "object", "description": "Allowed keys per slot: see the oneOf below (DAT-016)" },
         "suppressor": { "type": "boolean" },
@@ -64,18 +64,16 @@
         { "description": "DAT-016 muzzle", "properties": { "slot": { "const": "muzzle" }, "modifiers": { "$ref": "#/$defs/modifiersMuzzle" } } },
         { "description": "DAT-016 stock, pistol grip, front grip", "properties": { "slot": { "enum": ["stock", "pistolGrip", "frontGrip"] }, "modifiers": { "$ref": "#/$defs/modifiersGrip" } } },
         { "description": "DAT-016 handguard", "properties": { "slot": { "const": "handguard" }, "modifiers": { "$ref": "#/$defs/modifiersHandguard" } } },
-        { "description": "DAT-016 magazine", "properties": { "slot": { "const": "magazine" }, "modifiers": { "$ref": "#/$defs/modifiersMagazine" } } },
         { "description": "DAT-016 optic", "properties": { "slot": { "const": "optic" }, "modifiers": { "$ref": "#/$defs/modifiersOptic" } } },
-        { "description": "DAT-016 tactical: flashlight no modifiers; laser snapShotSpread (DAT-017)", "properties": { "slot": { "const": "tactical" }, "modifiers": { "$ref": "#/$defs/modifiersTactical" } } }
+        { "description": "DAT-016 tactical: optional small ergonomics modifier (flashlight or laser); laser snapShotSpread (DAT-017)", "properties": { "slot": { "const": "tactical" }, "modifiers": { "$ref": "#/$defs/modifiersTactical" } } }
       ]
     },
     "modifiersMuzzle": { "type": "object", "properties": { "recoil": { "type": "number" }, "flash": { "type": "number" } }, "additionalProperties": false },
     "modifiersGrip": { "type": "object", "properties": { "ergonomics": { "type": "number" }, "recoil": { "type": "number" } }, "additionalProperties": false },
     "modifiersHandguard": { "type": "object", "properties": { "ergonomics": { "type": "number" } }, "additionalProperties": false },
-    "modifiersMagazine": { "type": "object", "properties": { "magazineSize": { "type": "number" }, "reloadAp": { "type": "number" } }, "additionalProperties": false },
     "modifiersOptic": { "type": "object", "properties": { "shooterSpreadAtRange": { "type": "number" } }, "additionalProperties": false },
     "modifiersNone": { "type": "object", "additionalProperties": false },
-    "modifiersTactical": { "type": "object", "properties": { "snapShotSpread": { "type": "number", "description": "laser: multiplies shooter spread on snap shots (TAC-044)" } }, "additionalProperties": false },
+    "modifiersTactical": { "type": "object", "properties": { "ergonomics": { "type": "number", "description": "small per-mod modifier (DAT-016, design decision 2026-11-24)" }, "snapShotSpread": { "type": "number", "description": "laser: multiplies shooter spread on snap shots (TAC-044)" } }, "additionalProperties": false },
     "calibre": {
       "properties": {
         "kind": { "const": "calibre" },
@@ -112,8 +110,7 @@
         "armourClass": { "$ref": "#/$defs/armourClass" },
         "durability": { "type": "number", "exclusiveMinimum": 0 },
         "hearingPenalty": { "type": "boolean" },
-        "visionConeDeg": { "type": "number", "exclusiveMinimum": 0 },
-        "nightVisionMount": { "type": "boolean" }
+        "visionConeDeg": { "type": "number", "exclusiveMinimum": 0 }
       },
       "required": ["armourClass", "durability", "hearingPenalty", "weightKg"]
     },
@@ -149,7 +146,11 @@
       "properties": {
         "kind": { "const": "belt" },
         "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
-        "holsters": { "type": "integer", "minimum": 0 }
+        "holsters": { "type": "integer", "minimum": 0, "description": "ITM-017: each holster holds one sidearm (weaponType pistol)" },
+        "maxMagazines": { "type": "integer", "minimum": 0, "description": "ITM-014 / ITM-017: belt pouch type limits; absent = no count limit for that category" },
+        "maxGrenades": { "type": "integer", "minimum": 0, "description": "ITM-017, design draft 2" },
+        "maxMedical": { "type": "integer", "minimum": 0 },
+        "maxOther": { "type": "integer", "minimum": 0 }
       },
       "required": ["capacityKg", "holsters", "weightKg"]
     },
@@ -207,7 +208,7 @@
       "required": ["weightKg", "foundIn"]
     },
     "magazine": {
-      "description": "DAT-030, ITM-031: magazine or belt; rounds are counted per instance and refilled from loose ammunition",
+      "description": "DAT-030, ITM-031: magazine or belt; an instance counts its rounds and holds one load type; refilled from loose ammunition only between fights",
       "properties": {
         "kind": { "const": "magazine" },
         "calibre": { "$ref": "#/$defs/ref" },

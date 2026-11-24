@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/ai-doctrines.schema.json",
   "title": "AI doctrines",
-  "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, SAI-014..SAI-016, TAI-007..TAI-016). The faction → doctrine link is factions.doctrine (SAI-010); a doctrine does not list its factions.",
-  "version": "0.3.0",
+  "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, SAI-014..SAI-017, TAI-007..TAI-016). The faction → doctrine link is factions.doctrine (SAI-010); a doctrine does not list its factions.",
+  "version": "0.4.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -24,6 +24,7 @@
       "commitmentBonus": { "type": "object", "description": "SAI-008: bonus term for objectives the faction already pursues, as {weight, curve {type, points}} (not set)" },
       "gainTerms": { "type": "object", "description": "SAI-008: ownGain terms rated against the faction's ultimate goal: term name → {weight, curve {type, points}} (not set)" },
       "considerations": { "type": "object", "description": "SAI-006 / TAI-007: name → {weight, curve {type, points}}" },
+      "escortAccept": { "type": "object", "description": "SAI-017 (Krug doctrine): Krug escort request scoring: considerations (price, requester standing, free squads, route danger) and the refusal threshold (not set)" },
       "wGoal": { "type": "number", "description": "TAI-009" },
       "wFit": { "type": "number", "description": "TAI-010" },
       "wCoord": { "type": "number", "description": "TAI-011" },

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/traders.schema.json",
   "title": "Traders",
-  "description": "Trader stock and barter rates (spec MGT-039/MGT-040, ITM-022/ITM-023).",
-  "version": "0.2.0",
+  "description": "Trader stock and barter rates (spec MGT-039/MGT-040, ITM-022/ITM-023, ITM-034). Item prices are items.valueUsd.",
+  "version": "0.3.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -11,10 +11,17 @@
     "cityBarterRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 0.5" },
     "krugBarterRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 0.7" },
     "krugPremiumRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 1.0 for tobacco, alcohol, valuables" },
-    "barterDealsMin": { "type": "integer", "description": "ITM-023, design 1" },
-    "barterDealsMax": { "type": "integer", "description": "ITM-023, design 3" },
-    "barterDealValueRate": { "type": "number", "description": "ITM-023, design 1.0" },
-    "krugPriceFluctuation": { "type": "object", "description": "MGT-040" }
+    "barterDealsMin": { "type": "integer", "minimum": 0, "description": "ITM-023, design 1" },
+    "barterDealsMax": { "type": "integer", "minimum": 0, "description": "ITM-023, design 3" },
+    "barterDealValueRate": { "type": "number", "minimum": 0, "description": "ITM-023, design 1.0" },
+    "krugPriceFluctuation": {
+      "type": "object", "description": "MGT-040, design draft: once per day by up to 10%, never more than 30% from base (valueUsd)",
+      "properties": {
+        "dailyMaxChange": { "type": "number", "minimum": 0, "maximum": 1 },
+        "maxDeviation": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }

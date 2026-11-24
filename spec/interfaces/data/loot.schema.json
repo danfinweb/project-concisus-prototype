@@ -3,13 +3,27 @@
   "$id": "data/loot.schema.json",
   "title": "Loot",
   "description": "Loot roll weights and location tags (spec ITM-024).",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
+  "$defs": {
+    "tag": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" }
+  },
   "properties": {
-    "rarityWeights": { "type": "object", "description": "ITM-024, design common 60 / uncommon 30 / rare 10" },
-    "rareLocations": { "type": "array", "description": "ITM-024: apartments, safes, churches, bodies" },
-    "locationTags": { "type": "array", "description": "ITM-024, full list not designed" }
+    "rarityWeights": {
+      "type": "object", "description": "ITM-024, design common 60 / uncommon 30 / rare 10",
+      "properties": {
+        "common": { "type": "number", "minimum": 0 },
+        "uncommon": { "type": "number", "minimum": 0 },
+        "rare": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "rareLocations": { "type": "array", "items": { "$ref": "#/$defs/tag" }, "description": "ITM-024: apartments, safes, churches, bodies" },
+    "locationTags": {
+      "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/tag" },
+      "description": "ITM-024, design draft: bodies, houses, apartments, shops, offices, warehouses, depots, militaryDepots, garages, farms, industry, powerLines, churches, safes, hospitals, commandPosts, convoys, vehicleWrecks, krugCaches; foundIn 'everywhere' = any tag"
+    }
   },
   "additionalProperties": false
 }

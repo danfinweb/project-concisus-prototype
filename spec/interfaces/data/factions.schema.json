@@ -2,27 +2,66 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/factions.schema.json",
   "title": "Factions",
-  "description": "The armed powers and their starting relations (spec GEN-004..GEN-018, STR-051, SAI-010). Relation range and thresholds are strategic-rules (STR-051), not faction fields.",
-  "version": "0.4.0",
+  "description": "The armed powers and their starting relations (spec GEN-004..GEN-018, STR-051, STR-066, STR-067, STR-096, SAI-010). Relation range and thresholds are strategic-rules (STR-051), not faction fields. A record of kind resistance is the template every resistance group spawned during play uses (doctrine, squadTemplate); groups get their own IDs at creation (STR-067).",
+  "version": "0.5.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
     "required": ["id", "name", "kind"],
     "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
       "name": { "type": "string", "description": "Display name" },
-      "kind": { "enum": ["employer", "rivalPmc", "trader", "player", "influence", "civilian"], "description": "GEN-004" },
+      "kind": { "enum": ["employer", "rivalPmc", "trader", "player", "influence", "civilian", "resistance"], "description": "GEN-004; resistance = template for spawned resistance groups (STR-067)" },
       "leader": { "type": "string", "description": "GEN-008, leader VIP or name" },
-      "leaderEffect": { "type": "object", "description": "GEN-008: values of the leader effect (protocol breach reputation cost, letter frequency, adaptation rate; not set)" },
-      "standingUnlocks": { "type": "object", "description": "GEN-010 (Krug): unlock (marketStock, smugglingRoutes, safeHouses, localRecruits) → standing required (not set)" },
+      "leaderEffect": {
+        "type": "object", "description": "GEN-008: values of the leader effect",
+        "properties": {
+          "protocolBreachReputation": { "type": "integer", "description": "Orlov (SSV): reputation change per protocol breach, design draft -5" },
+          "letterChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "Sokolov (Varyag): chance per player soldier killed by Varyag, design draft 0.25" },
+          "letterMinDays": { "type": "integer", "minimum": 0, "description": "Sokolov (Varyag): at most one letter per this many days, design draft 7" },
+          "adaptation": { "type": "object", "description": "Rook (Aegis): habit adaptation, optional and deferred (no AI memory in the first build iterations)" }
+        },
+        "additionalProperties": false
+      },
+      "standingUnlocks": {
+        "type": "object", "description": "GEN-010 (Krug): minimum Krug reputation per unlock",
+        "properties": {
+          "localRecruits": { "type": "integer", "minimum": -100, "maximum": 100, "description": "design draft 0" },
+          "marketStock": { "type": "integer", "minimum": -100, "maximum": 100, "description": "design draft 20" },
+          "smugglingRoutes": { "type": "integer", "minimum": -100, "maximum": 100, "description": "design draft 35" },
+          "safeHouses": { "type": "integer", "minimum": -100, "maximum": 100, "description": "design draft 50" }
+        },
+        "additionalProperties": false
+      },
       "patron": { "type": "string", "x-ref": "factions", "description": "GEN-005, patron faction or influence" },
-      "startRelations": { "type": "object", "description": "GEN-007 / STR-051: faction id → -100..100" },
+      "startRelations": { "type": "object", "description": "GEN-007 / STR-051: faction id → relation at campaign start, symmetric (design draft table in GEN-007)", "additionalProperties": { "type": "integer", "minimum": -100, "maximum": 100 } },
       "doctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "SAI-010" },
-      "measures": { "type": "array", "description": "STR-070, desperate measures this faction may take" },
+      "rogueDoctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "SAI-002 / SAI-010 (rival PMC records): doctrine used once this PMC has gone rogue (STR-066)" },
+      "squadTemplate": {
+        "type": "object", "description": "STR-096: size and gear tier of a squad this faction raises (not set)",
+        "properties": {
+          "size": { "type": "integer", "minimum": 1 },
+          "gearTier": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      },
+      "measures": { "type": "array", "items": { "type": "string", "x-ref": "events" }, "description": "STR-070, desperate measures this faction may take" },
       "capitalHolder": { "type": "boolean", "description": "STR-007" },
       "deniableChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-050" },
-      "rogueChance": { "type": "object", "description": "GEN-017: daily chance per crisis sign of the patron, capital-rush chance, warning lead days (not set)" },
+      "rogueChance": {
+        "type": "object", "description": "GEN-017 (Varyag and Aegis records): daily rogue chance = base + perSign × patron crisis signs + the bonuses that apply",
+        "properties": {
+          "base": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.01" },
+          "perSign": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.02" },
+          "patronLosingBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "not set" },
+          "unpaidContractsBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "not set" },
+          "nearCapitalBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "not set" },
+          "nearCapitalRange": { "type": "integer", "minimum": 0, "description": "tiles from the capital, design draft 3" }
+        },
+        "additionalProperties": false
+      },
       "disownChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-050" }
-    }
+    },
+    "additionalProperties": false
   }
 }

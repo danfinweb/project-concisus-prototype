@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
+Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 
 ## IDs
 
-406 IDs (first split 2026-11-22, updated from design 3aac08f). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+412 IDs (first split 2026-11-22, updated from design 06e571f). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -39,7 +39,7 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 | [GEN-012] | Campaign end states (open) | all modules | design/design.md › Factions & campaign › Player role; design/strategic-layer.md › Map (draft); design/management.md › Base & meta progression |
 | [GEN-013] | Player coup requirements (open) | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-014] | Coup final operation | all modules | design/design.md › Factions & campaign › Coups |
-| [GEN-015] | Holding the capital (open) | all modules | design/design.md › Factions & campaign › Coups; design/strategic-layer.md › Map (draft) |
+| [GEN-015] | Holding phase (open) | all modules | design/design.md › Factions & campaign › Coups; design/strategic-layer.md › Map (draft) |
 | [GEN-016] | Coup epilogue | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-017] | Rogue PMC chance (open) | all modules | design/design.md › Factions & campaign › Coups › Rogue PMCs |
 | [GEN-018] | Rogue PMC warning signs and aftermath | all modules | design/design.md › Factions & campaign › Coups › Rogue PMCs |
@@ -73,14 +73,15 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 | [STR-093] | Contract payment between modules | modules/strategic | design/strategic-layer.md › Squads and simulation (Faction funds (draft)); design/design.md › Overview › Core loop; design/management.md › Contracts and missions › Contract terms |
 | [STR-094] | Krug escorts (open) | modules/strategic | design/management.md › Contracts and missions › Where contracts come from |
 | [STR-095] | Strategic terrain table | modules/strategic | design/strategic-layer.md › Map |
-| [STR-096] | Raising a squad (open) | modules/strategic | design/strategic-layer.md; design/ai.md › Strategic AI |
+| [STR-096] | Raising a squad | modules/strategic | design/strategic-layer.md; design/ai.md › Strategic AI |
+| [STR-097] | Strategic HP loss on contaminated tiles | modules/strategic | design/world-events.md › Nuclear strike (rare); design/strategic-layer.md › Map (draft) › Points of interest |
 | [STR-027] | Operation lifecycle | modules/strategic | design/design.md › Overview › Core loop; design/management.md › Gear, loot & return |
 | [STR-028] | Launch an op (open) | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-029] | Return to an FOB | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-030] | Lost vehicle (open) | modules/strategic | design/data-definitions.md › Vehicles (draft) (Loss) |
 | [STR-031] | Move one region on foot | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-032] | Move one region by ground vehicle (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) |
-| [STR-033] | Vehicle profile (open) | modules/strategic | design/data-definitions.md › Vehicles (draft) (Profile) |
+| [STR-033] | Vehicle profile (removed) | modules/strategic | design/data-definitions.md › Vehicles (draft) (Profile) |
 | [STR-034] | Fly one region by helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters |
 | [STR-035] | Land a helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters |
 | [STR-036] | Scout (open) | modules/strategic | design/strategic-layer.md (Time); design/strategic-actions.md › Movement and operations |
@@ -304,6 +305,7 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 | [MGT-070] | Economy ledger | modules/management | design/management.md › Contracts and missions › Contract terms; design/design.md › Factions & campaign › Leaders; design/strategic-layer.md › Squads and simulation (Faction funds (draft)) |
 | [MGT-071] | Campaign score (open) | modules/management | design/management.md › Base & meta progression |
 | [MGT-072] | Management view | modules/management | design/management.md |
+| [MGT-073] | Shared economy rules for running costs and income | modules/management | design/management.md › Soldiers & progression (Contracts & morale); design/data-definitions.md › Vehicles (draft) |
 | [SAI-001] | Controller role | modules/strategic-ai | design/ai.md; design/ai.md › Strategic AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [SAI-002] | Invocation | modules/strategic-ai | design/ai.md › Strategic AI › Controller hand-off; › Strategic Layer (Time) |
 | [SAI-003] | Strategic perception view | modules/strategic-ai | design/ai.md › Strategic AI › Controller hand-off; › Faction AI tiers; design/strategic-layer.md › Map (Fog of war); › Squads and simulation (Faction funds (draft)) |
@@ -320,6 +322,7 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 | [SAI-014] | Contract offers | modules/strategic-ai | design/management.md › Contracts and missions › Where contracts come from; design/ai.md › Strategic AI › Faction AI tiers; › Controller hand-off |
 | [SAI-015] | Contract offer evaluation (open) | modules/strategic-ai | design/ai.md › Strategic AI › Faction AI tiers; design/management.md › Contracts and missions › Where contracts come from |
 | [SAI-016] | Desperate measure choice | modules/strategic-ai | design/world-events.md › Desperate measures; design/ai.md › Strategic AI |
+| [SAI-017] | Krug escort evaluation | modules/strategic-ai | design/ai.md › Strategic AI (Faction AI tiers); design/strategic-actions.md; design/strategic-layer.md › Squads and simulation (draft) (Faction funds) |
 | [TAI-001] | Controller role | modules/tactical-ai | design/ai.md › Tactical AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [TAI-002] | Invocation | modules/tactical-ai | design/ai.md › Tactical AI › Controller hand-off; design/tactical-layer.md › Turn structure › Reactions |
 | [TAI-003] | Pluggable controller | modules/tactical-ai | design/ai.md › Tactical AI (last paragraph); design/tactical-layer.md › Turn structure (neutral side); design/management.md › Contracts and missions (Escort a VIP) |
@@ -391,6 +394,7 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 | [ITM-020] | Medical item restrictions | /data, tools | design/item-list.md › Medical items; design/tactical-layer.md › Medical system (draft) › Using medical items |
 | [ITM-032] | Grenade items (Draft (design: "Draft — placeholder values")) | /data, tools | design/item-list.md › Grenades |
 | [ITM-033] | Mod items | /data, tools | design/item-list.md › Mods |
+| [ITM-034] | Trader prices | /data, tools | design/item-list.md › Weapons (Trader prices) |
 | [ITM-021] | Barter goods | /data, tools | design/item-list.md › Barter goods; › Operation and faction items (hard drive) |
 | [ITM-022] | Trader buy rates | /data, tools | design/item-list.md › Barter goods › Trading rules |
 | [ITM-023] | Daily barter deals | /data, tools | design/item-list.md › Barter goods › Trading rules |
@@ -429,5 +433,7 @@ Design baseline: 3aac08f (update, 2026-11-24; previous 75e776f)
 | [TEC-026] | Frame-rate budget | game/, tools/ | design/presentation-tech.md › Browser and mobile constraints (Performance budget) |
 | [TEC-027] | Download budget and streaming | game/, tools/ | design/presentation-tech.md › Browser and mobile constraints (Performance budget) |
 | [TEC-028] | Local saves | game/, tools/ | design/presentation-tech.md › Browser and mobile constraints (Saves); CLAUDE.md › Stack |
-| [TEC-029] | Cloud save (optional) | game/, tools/ | design/presentation-tech.md › Browser and mobile constraints (Saves) |
-| [TEC-030] | Save mode (open) | game/, tools/ | design/presentation-tech.md › Open questions |
+| [TEC-029] | Cloud save (removed) | game/, tools/ | design/presentation-tech.md › Browser and mobile constraints (Saves) |
+| [TEC-030] | Save mode | game/, tools/ | design/presentation-tech.md › Open questions |
+| [TEC-031] | Save file export and import | game/, tools/ | design/presentation-tech.md › UX, tech & scope (Saves) |
+| [TEC-032] | Save versioning and migrations | game/, tools/ | design/presentation-tech.md › UX, tech & scope (Saves) |

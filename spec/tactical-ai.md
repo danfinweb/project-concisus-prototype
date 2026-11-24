@@ -62,7 +62,7 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 
 An AI soldier knows as much about a seen enemy's gear as the player would: weapon type, helmet and armour
 class (as shown in the shot preview), nothing more (no durability, no carried items).
-**Source.** design/ai.md › Tactical AI › Controller hand-off (1); › Unit scoring; › Tactical Layer (Readability, Path preview); design/tactical-layer.md › Turn structure › Gunshot noise
+**Source.** design/ai.md › Tactical AI › Controller hand-off (1), Unit scoring; design/tactical-layer.md › Overview (Readability; Movement: path preview); › Turn structure › Gunshot noise
 
 ### [TAI-005] Tactical command set
 **Rule.** Commands are the ones the player issues; each maps to one tactical action of TAC
@@ -125,7 +125,7 @@ fit (TAI-010), coordination (TAI-011). Survival is a multiplier, not a hard rule
 in 0–1 through its response curve. Behaviour comes from the shared blackboard and units reacting to each
 other, not from scripts. Weights and curves come from the doctrine (TAI-015).
 **Values.** `wGoal`, `wFit`, `wCoord`, curves — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/ai.md (intro, Data); design/ai.md › Tactical AI › Unit scoring
+**Source.** design/ai.md › Overview (Data); › Tactical AI › Unit scoring
 
 ### [TAI-008] Survival
 **Rule.** `survival` (0–1) multiplies the score. Inputs: the unit's exposure, the known threat, its HP and
@@ -179,21 +179,21 @@ at its next activation and keeps the current plan. Until then the plan stays as 
 **Rule.** Enemy squads assign units the roles `flank`, `suppress`, `retreat`. A role changes `actionFit` for
 actions that match it. The role `callReinforcements` is OPTIONAL (later build): until it is built, no role
 calls reinforcements and a side fights with the units on the map.
-**Source.** design/ai.md › Tactical AI; › Tactical Layer (Enemy AI)
+**Source.** design/ai.md › Tactical AI; design/tactical-layer.md › Overview (Enemy AI)
 
 ### [TAI-015] Doctrines
 **Rule.** `data/ai/doctrines.json` holds records with `layer: "tactical"`; the tactical map request sets one
 doctrine ID per side (`sides[].doctrine`) and
 TAC passes it in the view's `doctrine`. All squads of a side use that doctrine. A doctrine sets weights and curves of TAI-007 to TAI-014.
 **Values.** all — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/ai.md (Data); CLAUDE.md (data/ai)
+**Source.** design/ai.md › Overview (Data); CLAUDE.md (data/ai)
 
 ### [TAI-016] Decision log
 **Rule.** Every call returns `log` entries: `turn`, `unit`, the chosen command, and the top-scored options
 with total score and the four consideration scores. TAC, the game debug overlay or the Test Lab stores or
 shows them; the AI keeps none.
 **Values.** `logTopN` — not set (design: Open) → data/ai/doctrines.json.
-**Source.** design/ai.md (Logging); design/presentation-tech.md › Prototype tech stack (Debugging)
+**Source.** design/ai.md › Overview (Logging); design/presentation-tech.md › Prototype tech stack (Debugging)
 
 ## Faction behaviour in battle
 

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "strategic_perception_view.schema.json",
   "title": "Strategic perception view",
-  "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-009, STR-017, STR-020, STR-021, STR-070, STR-092, SAI-002, SAI-003, SAI-005, SAI-015.",
-  "version": "0.5.0",
+  "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-008, STR-009, STR-017, STR-020, STR-021, STR-070, STR-092, STR-094, SAI-002, SAI-003, SAI-005, SAI-015, SAI-017. Views are also built for factions created during play (resistance groups, STR-067, with IDs made at creation; a rogue PMC, STR-066).",
+  "version": "0.6.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/strategic-ai"],
   "type": "object",
@@ -38,6 +38,10 @@
     "contractOffers": { "type": "array", "items": { "type": "object" }, "description": "Other factions' open contract offers this faction may evaluate (SAI-015), each with its id" },
     "events": { "type": "array", "items": { "type": "object" }, "description": "Active events and measures that affect it" },
     "crisisSigns": { "type": "array", "items": { "type": "string" } },
-    "availableMeasures": { "type": "array", "items": { "type": "string", "x-ref": "events" }, "description": "Measures it may pick now with pickMeasure (STR-070)" }
+    "availableMeasures": { "type": "array", "items": { "type": "string", "x-ref": "events" }, "description": "Measures it may pick now with pickMeasure (STR-070)" },
+    "escortRequests": { "type": "array", "description": "Krug view only: pending paid-escort requests to answer with answerEscort (STR-094, SAI-017)", "items": { "type": "object", "required": ["id", "requester", "convoy"], "properties": {
+      "id": { "type": "string" }, "requester": { "type": "string", "description": "Requesting faction, the player included" }, "convoy": { "type": "string", "description": "The convoy squad" }, "region": { "type": "string", "description": "The Krug-market tile it waits on" },
+      "route": { "type": "array", "items": { "type": "string" }, "description": "Planned tile path" }, "priceUsd": { "type": "number", "minimum": 0 },
+      "relation": { "type": "integer", "description": "AI requester: its relation with the Krug (STR-051)" }, "reputation": { "type": "number", "description": "Player requester: the Krug's reputation toward the player" } } } }
   }
 }

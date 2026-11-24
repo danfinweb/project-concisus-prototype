@@ -3,34 +3,57 @@
   "$id": "data/presentation.schema.json",
   "title": "Presentation",
   "description": "Render and UX budgets (spec TEC).",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
-    "charTrianglesMin": { "type": "integer", "description": "TEC-001, design 500" },
-    "charTrianglesMax": { "type": "integer", "description": "TEC-001, design 2000" },
-    "textureMinPx": { "type": "integer", "description": "TEC-002, design 64" },
-    "textureMaxPx": { "type": "integer", "description": "TEC-002, design 256" },
-    "renderHeightMin": { "type": "integer", "description": "TEC-003, design 360" },
-    "renderHeightMax": { "type": "integer", "description": "TEC-003, design 480" },
-    "paletteSize": { "type": "integer", "description": "TEC-004, not set" },
-    "ditherMatrix": { "type": "array", "description": "TEC-004, ordered-dither matrix rows, not set" },
+    "charTrianglesMin": { "type": "integer", "minimum": 1, "description": "TEC-001, design 500" },
+    "charTrianglesMax": { "type": "integer", "minimum": 1, "description": "TEC-001, design 2000" },
+    "textureMinPx": { "type": "integer", "minimum": 1, "description": "TEC-002, design 64" },
+    "textureMaxPx": { "type": "integer", "minimum": 1, "description": "TEC-002, design 256" },
+    "renderHeightMin": { "type": "integer", "minimum": 1, "description": "TEC-003, design 360" },
+    "renderHeightMax": { "type": "integer", "minimum": 1, "description": "TEC-003, design 480" },
+    "colourLevelsPerChannel": { "type": "integer", "minimum": 2, "maximum": 256, "description": "TEC-004, design draft 32 (15-bit colour); replaces paletteSize" },
+    "ditherMatrix": { "type": "array", "minItems": 1, "items": { "type": "array", "minItems": 1, "items": { "type": "number", "minimum": 0 } }, "description": "TEC-004, ordered-dither matrix rows, design draft 4x4 Bayer" },
     "psxQuirks": {
       "type": "object", "description": "TEC-005 (optional)",
       "properties": {
-        "drawDistance": { "type": "number", "exclusiveMinimum": 0, "description": "not set" },
-        "jitterStrength": { "type": "number", "minimum": 0, "description": "not set" }
+        "vertexSnapGrid": {
+          "type": "object", "required": ["width", "height"], "description": "design draft 320x240",
+          "properties": { "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 } },
+          "additionalProperties": false
+        },
+        "fogStartM": { "type": "number", "exclusiveMinimum": 0, "description": "design draft 60 m" }
       },
       "additionalProperties": false
     },
-    "qualityTiers": { "type": "array", "description": "TEC-007: {id phone|desktop, bakedLighting, shadowCasters}" },
+    "qualityTiers": {
+      "type": "array", "description": "TEC-007, design draft phone: baked lighting, 2 shadow casters; desktop: full effects, 8",
+      "items": {
+        "type": "object", "required": ["id"],
+        "properties": {
+          "id": { "enum": ["phone", "desktop"] },
+          "bakedLighting": { "type": "boolean" },
+          "shadowCasters": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
     "tierDetection": { "type": "object", "description": "TEC-007: device detection rule, not set" },
-    "fpsPhone": { "type": "integer", "description": "TEC-026, design 30" },
-    "fpsDesktop": { "type": "integer", "description": "TEC-026, design 60" },
-    "firstLoadMaxMb": { "type": "integer", "description": "TEC-027, design 50" },
-    "tapHoldMs": { "type": "integer", "description": "TEC-022, not set" },
-    "minTapTargetPx": { "type": "integer", "description": "TEC-025, not set" },
-    "minRowHeightPx": { "type": "integer", "description": "TEC-025, not set" }
+    "fpsPhone": { "type": "integer", "minimum": 1, "description": "TEC-026, design 30" },
+    "fpsDesktop": { "type": "integer", "minimum": 1, "description": "TEC-026, design 60" },
+    "referenceDevices": {
+      "type": "object", "description": "TEC-026, design draft phone: Samsung Galaxy A54 or iPhone 12; desktop: Intel Iris Xe laptop at 1080p",
+      "properties": {
+        "phone": { "type": "array", "items": { "type": "string" } },
+        "desktop": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "firstLoadMaxMb": { "type": "integer", "minimum": 1, "description": "TEC-027, design 50" },
+    "tapHoldMs": { "type": "integer", "minimum": 1, "description": "TEC-022, design draft 400" },
+    "minTapTargetPx": { "type": "integer", "minimum": 1, "description": "TEC-025, design draft 48" },
+    "minRowHeightPx": { "type": "integer", "minimum": 1, "description": "TEC-025, not set separately (defaults to minTapTargetPx)" }
   },
   "additionalProperties": false
 }

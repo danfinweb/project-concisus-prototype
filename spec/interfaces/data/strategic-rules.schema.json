@@ -2,23 +2,52 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/strategic-rules.schema.json",
   "title": "Strategic rules",
-  "description": "Global strategic constants (spec STR, GEN-013). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules.",
-  "version": "0.4.0",
-  "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
+  "description": "Global strategic and campaign constants (spec STR, GEN-012..GEN-015). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules. Roads have no visibility of their own (STR-006).",
+  "version": "0.5.0",
+  "$comment": "Named constants. Fields are optional until the content pass fills them with the design drafts listed in the spec.",
   "type": "object",
   "properties": {
-    "capitalHoldDays": { "type": "integer", "minimum": 1, "description": "STR-007, draft 7" },
-    "coup": {
-      "type": "object", "description": "GEN-013: player coup requirements (not set)",
+    "capitalHoldDays": { "type": "integer", "minimum": 1, "description": "STR-007, design draft 7" },
+    "capitalBonusIncomeUsd": { "type": "number", "minimum": 0, "description": "STR-007: the capital holder's bonus income per day, design draft 3000" },
+    "campaign": {
+      "type": "object", "description": "GEN-012: campaign end conditions",
       "properties": {
-        "keyRegions": { "type": "integer", "minimum": 0, "description": "GEN-013 coupKeyRegions" },
-        "minSoldiers": { "type": "integer", "minimum": 0, "description": "GEN-013 coupMinSoldiers" }
+        "victoryTileShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "share of all tiles a faction must control together with the capital, design draft 0.6" },
+        "victoryHoldDays": { "type": "integer", "minimum": 1, "description": "days both must be held without a break, design draft 14" },
+        "endlessWarDay": { "type": "integer", "minimum": 1, "description": "day on which the war locks into endlessWar if no one has won, design draft 120" },
+        "cashOutFundsUsd": { "type": "number", "minimum": 0, "description": "PMC money above which cash-out is offered, design draft 2000000" }
       },
       "additionalProperties": false
     },
-    "krugEscortPrice": { "type": "object", "description": "STR-094, not set" },
-    "krugEscortHireHours": { "type": "integer", "minimum": 0, "description": "STR-094, not set" },
-    "startHour": { "type": "integer", "minimum": 0, "maximum": 23, "description": "STR-001, hour of Day 1, not set" },
+    "coup": {
+      "type": "object", "description": "GEN-013, GEN-015: player coup requirements and holding phase",
+      "properties": {
+        "keyRegions": { "type": "integer", "minimum": 0, "description": "GEN-013, design draft 4" },
+        "minSoldiers": { "type": "integer", "minimum": 0, "description": "GEN-013, design draft 12" },
+        "exhaustedSigns": { "type": "integer", "minimum": 0, "maximum": 10, "description": "GEN-013: crisis signs that make a faction exhausted, design draft 4" },
+        "acceptDays": { "type": "integer", "minimum": 1, "description": "GEN-015: days held after the coup after which a patron accepts, design draft 30" }
+      },
+      "additionalProperties": false
+    },
+    "krugEscortPrice": {
+      "type": "object", "description": "STR-094: price = (baseUsd + perTileUsd × route tiles) × dangerFactor when the route crosses the front or hostile ground",
+      "properties": {
+        "baseUsd": { "type": "number", "minimum": 0, "description": "design draft 200" },
+        "perTileUsd": { "type": "number", "minimum": 0, "description": "design draft 50" },
+        "dangerFactor": { "type": "number", "minimum": 1, "description": "design draft 1.5" }
+      },
+      "additionalProperties": false
+    },
+    "newFactionStartFundsUsd": { "type": "number", "minimum": 0, "description": "STR-092: start funds of a resistance group or rogue PMC when it becomes a faction, design draft 20000" },
+    "raiseSquad": {
+      "type": "object", "description": "STR-096: raising a squad (AI factions)",
+      "properties": {
+        "costPerSoldierUsd": { "type": "number", "minimum": 0, "description": "design draft 2000" },
+        "readyHours": { "type": "integer", "minimum": 0, "description": "hours before the new squad can act, design draft 12" }
+      },
+      "additionalProperties": false
+    },
+    "startHour": { "type": "integer", "minimum": 0, "maximum": 23, "description": "STR-001, hour of Day 1, design default 6 (06:00)" },
     "factionTickOrder": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "STR-003, order in which factions act each hour" },
     "historyDays": { "type": "integer", "minimum": 1, "description": "STR-068, design 7" },
     "roadMoveHours": {
@@ -34,16 +63,8 @@
       "properties": { "default": { "type": "integer", "minimum": 1 } },
       "additionalProperties": { "type": "integer", "minimum": 1 }
     },
-    "roadVisibility": {
-      "type": "object", "description": "STR-006: visibility class per road kind",
-      "properties": {
-        "asphalt": { "enum": ["far", "medium", "open", "low"], "description": "design far" },
-        "dirt": { "enum": ["far", "medium", "open", "low"], "description": "design medium" }
-      },
-      "additionalProperties": false
-    },
     "offroadReduction": {
-      "type": "object", "description": "STR-032: per off-road rating, hours taken off strategic-terrain moveHours, per strategic-terrain ID (design: steppe and woods)",
+      "type": "object", "description": "STR-032: per off-road rating, hours taken off strategic-terrain moveHours, per strategic-terrain ID (design: steppe and woods; not set)",
       "properties": {
         "poor": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
         "good": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
@@ -51,11 +72,20 @@
       },
       "additionalProperties": false
     },
-    "fuelPerRegion": { "type": "integer", "minimum": 0, "description": "STR-032, design implies 1" },
+    "fuelPerRegion": { "type": "integer", "minimum": 0, "description": "STR-032: fuel units per tile moved, flat for every terrain, design draft 1 (1 unit = one 20-litre fuel can)" },
     "heliMoveHours": { "type": "integer", "minimum": 1, "description": "STR-034, design 1 (single value for every helicopter)" },
     "pilotTechnicalMin": { "type": "integer", "minimum": 0, "maximum": 100, "description": "STR-034, design 50 (single value for every helicopter)" },
+    "heliFire": {
+      "type": "object", "description": "STR-034: one roll per hostile military POI on the helicopter's path, exclusive outcomes",
+      "properties": {
+        "damageChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.10" },
+        "downChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.03" }
+      },
+      "additionalProperties": false
+    },
+    "contaminationHpPerHour": { "type": "integer", "minimum": 0, "description": "STR-097: HP lost per soldier per strategic hour on a contaminated or hazard tile, design draft 2" },
     "reconRange": {
-      "type": "object", "description": "STR-008: ranges in regions",
+      "type": "object", "description": "STR-008: ranges in regions (not set)",
       "properties": {
         "squad": { "type": "integer", "minimum": 0 },
         "fob": { "type": "integer", "minimum": 0 },
@@ -64,7 +94,7 @@
       "additionalProperties": false
     },
     "noiseRange": {
-      "type": "object", "description": "STR-008: notice range in regions per vehicle noise class",
+      "type": "object", "description": "STR-008: notice range in tiles per vehicle noise class (design draft: low 1, medium 2, high 3, veryHigh 4, extreme 6)",
       "properties": {
         "low": { "type": "integer", "minimum": 0 },
         "medium": { "type": "integer", "minimum": 0 },
@@ -81,34 +111,63 @@
     "scoutHours": { "type": "integer", "minimum": 0, "description": "STR-036, design 3 (placeholder)" },
     "scoutSuccess": { "type": "object", "description": "STR-036: scout success chance inputs, not set" },
     "actionHours": {
-      "type": "object", "description": "STR-015, STR-024, STR-025, STR-028, STR-035, STR-038, STR-040..STR-042, STR-048: duration in hours per action (not set)",
+      "type": "object", "description": "Duration in hours per strategic action (design drafts in the descriptions)",
       "properties": {
-        "launch": { "type": "integer", "minimum": 0, "description": "STR-028" },
-        "land": { "type": "integer", "minimum": 0, "description": "STR-035" },
-        "enterPoi": { "type": "integer", "minimum": 0, "description": "STR-038" },
-        "station": { "type": "integer", "minimum": 0, "description": "STR-015" },
-        "acceptContract": { "type": "integer", "minimum": 0, "description": "STR-040" },
-        "handOver": { "type": "integer", "minimum": 0, "description": "STR-040" },
-        "handIn": { "type": "integer", "minimum": 0, "description": "STR-040" },
-        "hospital": { "type": "integer", "minimum": 0, "description": "STR-041" },
-        "repair": { "type": "integer", "minimum": 0, "description": "STR-041" },
-        "refuel": { "type": "integer", "minimum": 0, "description": "STR-041" },
-        "buyFob": { "type": "integer", "minimum": 0, "description": "STR-042" },
-        "buyIntel": { "type": "integer", "minimum": 0, "description": "STR-048" },
-        "evade": { "type": "integer", "minimum": 0, "description": "STR-024" },
-        "krugPass": { "type": "integer", "minimum": 0, "description": "STR-025" }
+        "launch": { "type": "integer", "minimum": 0, "description": "STR-028, design draft 0" },
+        "land": { "type": "integer", "minimum": 0, "description": "STR-035, design draft 1" },
+        "enterPoi": { "type": "integer", "minimum": 0, "description": "STR-038, design draft 1" },
+        "station": { "type": "integer", "minimum": 0, "description": "STR-015, design draft 0 (to start)" },
+        "acceptContract": { "type": "integer", "minimum": 0, "description": "STR-040, design draft 0" },
+        "handOver": { "type": "integer", "minimum": 0, "description": "STR-040, design draft 1" },
+        "handIn": { "type": "integer", "minimum": 0, "description": "STR-040, design draft 1" },
+        "hospital": { "type": "integer", "minimum": 0, "description": "STR-041, design draft 4" },
+        "repair": { "type": "integer", "minimum": 0, "description": "STR-041, design draft 4" },
+        "refuel": { "type": "integer", "minimum": 0, "description": "STR-041, design draft 1" },
+        "buyFob": { "type": "integer", "minimum": 0, "description": "STR-042: hours before a bought FOB can be used, design draft 24" },
+        "buyIntel": { "type": "integer", "minimum": 0, "description": "STR-048, design draft 0" },
+        "evade": { "type": "integer", "minimum": 0, "description": "STR-024, design draft 1" },
+        "krugPass": { "type": "integer", "minimum": 0, "description": "STR-025, design draft 0" },
+        "payFaction": { "type": "integer", "minimum": 0, "description": "STR-043: pay compensation or pay off a bounty, design draft 0" },
+        "krugEscort": { "type": "integer", "minimum": 0, "description": "STR-094: hire a Krug escort, design draft 0" }
       },
       "additionalProperties": false
     },
-    "evadeChance": { "type": "object", "description": "STR-024: base, reconWeight, modifier per visibility class (not set)" },
-    "krugPassPrice": { "type": "integer", "minimum": 0, "description": "STR-025, not set" },
-    "autoResolve": { "type": "object", "description": "STR-026: strength and gear weights, terrain modifiers (not set)" },
+    "evadeChance": {
+      "type": "object", "description": "STR-024: chance in percentage points = clamp(basePct + bestRecon / reconDivisor + visibilityBonusPct[class], minPct, maxPct)",
+      "properties": {
+        "basePct": { "type": "number", "description": "design draft 20" },
+        "reconDivisor": { "type": "number", "exclusiveMinimum": 0, "description": "design draft 2" },
+        "visibilityBonusPct": {
+          "type": "object", "description": "terrain visibility class → bonus (design draft: low 20)",
+          "properties": {
+            "far": { "type": "number" }, "medium": { "type": "number" }, "open": { "type": "number" }, "low": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "minPct": { "type": "number", "minimum": 0, "maximum": 100, "description": "design draft 10" },
+        "maxPct": { "type": "number", "minimum": 0, "maximum": 100, "description": "design draft 90" }
+      },
+      "additionalProperties": false
+    },
+    "krugPassPricePerSoldierUsd": { "type": "number", "minimum": 0, "description": "STR-025: price per soldier in the player's squad, design draft 100" },
+    "autoResolve": {
+      "type": "object", "description": "STR-026: off-screen fight resolution (strength = soldiers × gear tier)",
+      "properties": {
+        "defenderFactor": { "type": "number", "minimum": 0, "description": "design draft 1.25" },
+        "defenderTerrains": { "type": "array", "items": { "type": "string", "x-ref": "strategic-terrain" }, "description": "terrains where the defender factor applies (settlement tiles always), design draft woods, mountain" },
+        "loserLoss": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 2, "maxItems": 2, "description": "[min, max] share of soldiers lost, design draft [0.30, 0.60]" },
+        "winnerLoss": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 2, "maxItems": 2, "description": "[min, max] share of soldiers lost, design draft [0.10, 0.30]" },
+        "loyaltyChange": { "type": "object", "description": "not set" },
+        "supplyChange": { "type": "object", "description": "not set" }
+      },
+      "additionalProperties": false
+    },
     "vip": {
       "type": "object", "description": "STR-045..STR-048",
       "properties": {
         "guard": { "type": "object", "description": "STR-046: rank → {squadsMin, squadsMax, rankMix}", "additionalProperties": { "type": "object", "properties": { "squadsMin": { "type": "integer", "minimum": 0 }, "squadsMax": { "type": "integer", "minimum": 0 }, "rankMix": { "type": "object" } }, "additionalProperties": false } },
         "shockRadius": { "type": "object", "description": "STR-047: rank → region distance, or \"all\" (design: major 0, colonel 3, general all)", "additionalProperties": { "type": ["integer", "string"] } },
-        "moraleLoss": { "type": "object", "description": "STR-047: soldier rank → morale loss (design: elite 40, veteran 25, regular 10, recruit 5)", "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "moraleLoss": { "type": "object", "description": "STR-047: soldier rank → morale loss per soldier (design: elite 40, veteran 25, regular 10, recruit 5)", "additionalProperties": { "type": "integer", "minimum": 0 } },
         "intelHours": { "type": "integer", "minimum": 1, "description": "STR-048, design 72" },
         "intelGoods": { "type": "object", "description": "STR-048: VIP rank → barter goods value (design: major 1500, colonel 4000, general 10000, leader 25000)", "additionalProperties": { "type": "number", "minimum": 0 } },
         "intelPrice": { "type": "object", "description": "STR-048: VIP rank → USD (design: major 2000, colonel 5000, general 12000, leader 30000)", "additionalProperties": { "type": "number", "minimum": 0 } },
@@ -138,7 +197,7 @@
         "resistanceGroups": { "type": "integer", "minimum": 0, "description": "design 2" },
         "capitalThreatRange": { "type": "integer", "minimum": 0, "description": "design 2" },
         "keyPlants": { "type": "number", "minimum": 0, "maximum": 1, "description": "design 0.5" },
-        "isolationFactions": { "type": "integer", "minimum": 0, "description": "design 3" },
+        "isolationFactions": { "type": "integer", "minimum": 0, "description": "design 3 (resistance groups do not count)" },
         "isolationRelation": { "type": "integer", "description": "design -50" },
         "playerDefeats": { "type": "integer", "minimum": 0, "description": "design 3" }
       },

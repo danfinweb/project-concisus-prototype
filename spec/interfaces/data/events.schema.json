@@ -2,29 +2,46 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/events.schema.json",
   "title": "World events and measures",
-  "description": "World events, desperate measures and flavour events (spec STR-050..STR-081).",
-  "version": "0.4.0",
+  "description": "World events, desperate measures and flavour events (spec STR-050..STR-081). Event-specific values the spec names (with or without the params. prefix, e.g. offensiveAdvantage, fuelPriceFactor, bountyAt) live in params; how long an event runs (shipmentDays, offensiveDays, ceasefireDays, leakDays, refugeeDays, disputeDays, measure durations) is its duration (STR-050).",
+  "version": "0.5.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
     "required": ["id", "kind"],
     "properties": {
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
-      "kind": { "enum": ["event", "measure", "flavour"], "description": "STR-050" },
+      "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$", "description": "Record ID, equals its key" },
+      "kind": { "enum": ["event", "measure", "flavour"], "description": "STR-050, STR-070, STR-081" },
+      "text": { "type": "string", "description": "STR-081: news-feed text of a flavour entry" },
       "factions": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "STR-070, who may run a measure" },
-      "typicalSigns": { "type": "array", "description": "STR-070" },
-      "trigger": { "type": "object", "description": "STR-050" },
-      "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "STR-050" },
+      "typicalSigns": { "type": "array", "items": { "type": "string" }, "description": "STR-070: crisis sign IDs (STR-069)" },
+      "trigger": { "type": "object", "description": "STR-050; flavour: the tiles or situations the entry is eligible for (STR-081)" },
+      "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "STR-050 per daily check; flavour records: per eligible tile or situation per day, design draft 0.005 (STR-081)" },
       "chanceModifiers": { "type": "array", "description": "STR-050" },
-      "duration": { "type": "object", "description": "STR-050" },
+      "duration": {
+        "type": "object", "description": "STR-050 / STR-070: how long it runs (design drafts in STR-070); any combination: fixed days, a range rolled at start, an end condition, a cap",
+        "properties": {
+          "days": { "type": "integer", "minimum": 0, "description": "fixed length" },
+          "minDays": { "type": "integer", "minimum": 0, "description": "range rolled at start (seeded), lower bound" },
+          "maxDays": { "type": "integer", "minimum": 0, "description": "range upper bound, or the cap of an until-condition (VIP strike: 7)" },
+          "until": { "type": "string", "description": "end condition (e.g. assaultEnds, cleared, teamDone, relationRecovered, supplyRestored)" },
+          "instant": { "type": "boolean", "description": "takes effect at once and does not run (scorched earth, seizing Krug stocks, defection)" },
+          "campaign": { "type": "boolean", "description": "lasts for the rest of the campaign (rogue PMC)" }
+        },
+        "additionalProperties": false
+      },
       "warned": { "type": "boolean", "description": "STR-052" },
-      "warningLeadDays": { "type": "object", "description": "STR-052" },
+      "warningLeadDays": {
+        "type": "object", "description": "STR-052: days rolled in [min, max], design draft 2..3",
+        "properties": { "min": { "type": "integer", "minimum": 0 }, "max": { "type": "integer", "minimum": 0 } },
+        "additionalProperties": false
+      },
       "warningSigns": { "type": "array", "description": "STR-052" },
       "preventedBy": { "type": "object", "description": "STR-053" },
       "effects": { "type": "array", "description": "STR-055..STR-080" },
       "contracts": { "type": "array", "description": "STR-053" },
-      "oncePerCampaign": { "type": "boolean", "description": "STR-080" },
-      "params": { "type": "object", "description": "Event-specific values that STR-043, STR-055..STR-080 name as params.<name> (e.g. compensationPrice, bountyPayoffPrice, defectionJoinChance, areaRadius, sectorRadius, resistanceSquads)" }
-    }
+      "oncePerCampaign": { "type": "boolean", "description": "STR-066, STR-080" },
+      "params": { "type": "object", "description": "Event-specific values that STR-043, STR-055..STR-080 name as params.<name> (e.g. compensationPrice, bountyPayoffPrice, weakGuardSquads, lossDaysMin, lossWindowDays, lostFightsMin, windowDays, sectorRadius, areaRadius, lossesMin, defectionSupply, defectionJoinChance, patronVetoChance, resistanceSquads)" }
+    },
+    "additionalProperties": false
   }
 }
