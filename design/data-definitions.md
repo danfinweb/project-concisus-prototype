@@ -40,11 +40,11 @@ Static content the tools author into `/data`. Every module reads it; none change
 | Recoil | 1–100 | Base kick per shot; multiplied by the calibre's recoil modifier | Spread added per follow-up round; reduced by Marksmanship |
 | Mod slots | List | Muzzle, stock, pistol grip, optic, handguard (with its own sub-slots); the barrel is fixed. There is no magazine slot: magazines are items | Which mods fit |
 
-**State, not profile:** each individual gun also tracks **Condition** (0–100). Wear raises jam chance and spread (see Armour wear and weapon condition in the Tactical Layer); repaired with the Technical attribute.
+**State, not profile:** each individual gun also tracks **Condition** (0–100). Wear raises jam chance and spread (see Armour wear and weapon condition in the Tactical Layer); repaired with the Technical attribute: in the field by a soldier (draft: +2 Condition per hour for every 10 points of Technical) or at a mechanical plant, back to 100 (draft: $20 per Condition point).
 
 **How mods change the profile**
 
-- Muzzle devices: recoil, flash (how far the muzzle flash reveals the shooter). Suppressors: shorten how far shots are heard (see Gunshot noise).
+- Muzzle devices: recoil, ergonomics. Suppressors: shorten how far shots are heard (see Gunshot noise).
 - Stocks and pistol grips: ergonomics, recoil.
 - Handguards: ergonomics and weight, and they decide which sub-slots exist — whether a front grip can be fitted, and one or two tactical module slots.
   - Front grips: ergonomics, recoil.
@@ -93,10 +93,10 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 
 | Parameter | Meaning |
 | --- | --- |
-| Cost | Purchase price; upkeep (fuel, repairs) scales with it (draft: 0.2% of the price per day, plus fuel) |
+| Cost | Purchase price; no upkeep: a vehicle costs only fuel and repairs |
 | Seats | Maximum soldiers in the squad |
 | Storage | One list for everything the vehicle carries, limited by weight (kg): supplies (ammunition, diesel canisters, medical supplies, spare parts) and loot. Soldiers restock from it between engagements; every kilo of supplies is a kilo not free for loot — longer ops or bigger hauls |
-| Fuel range | Regions it can travel on a full tank. The tank is a counter of fuel units: one unit per tile moved, whatever the terrain (draft: 1 unit = 20 litres). Spare fuel travels as diesel canister items (20 l, 18 kg) in storage; each refills 1 unit |
+| Fuel range | Regions it can travel on a full tank. The tank is a counter of fuel units: one unit per tile moved, whatever the terrain (draft: 1 unit = 20 litres). Spare fuel travels as diesel canister items (20 l, 18 kg) in storage; each refills 1 unit of a ground vehicle; canisters cannot refuel helicopters |
 | Off-road | Poor / good / very good: lowers the travel time in steppe and woods |
 | Armour | Protection for passengers in road encounters (armour class) |
 | Noise | How far away factions notice it (draft: Low 1 tile, Medium 2, High 3, Very high 4, Extreme 6) |
@@ -125,7 +125,7 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 
 - **Movement:** ignore terrain — one hour per region over any ground, including mountains, woods and water.
 - **Landing:** on any region and any open tile except water. Hidden cities can only be reached this way.
-- **Seats include the pilot:** one soldier with Technical 50+ (or a hired pilot, paid a fee per op like a soldier) must fly it.
+- **Seats include the pilot:** one roster soldier with Technical 50+ must fly it; a hired pilot is a normal roster soldier, paid the normal fee by rank.
 - **Visibility:** heard and seen from far away; every faction in range notices it, and each hostile military point of interest on its path rolls a chance to damage or down it (draft: 10% damaged, 3% downed per point of interest; data).
-- **Fuel and upkeep:** refuel only at FOBs and oil plants; expensive to run and repair.
-- **Losing one:** a downed helicopter is a crash site, and its crew starts an emergency op to get home on foot.
+- **Fuel and repairs:** refuel only at FOBs and oil plants, never from diesel canisters; expensive to run and repair.
+- **Losing one:** a downed helicopter is a crash site, and its crew starts an emergency op to get home on foot. A damaged helicopter over water crashes the same way; over land it lands and waits for repair at a mechanical plant.
