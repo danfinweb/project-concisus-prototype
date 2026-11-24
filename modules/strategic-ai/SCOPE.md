@@ -126,3 +126,26 @@ relation constants, goal names) are resolved in spec `e8aa7e7`; the four of the 
    how VIP kill or capture and destroy-target missions are judged met between AI squads decides what a
    rival contractor sees in `contracts[].missions[].status`. Nothing to build until it is answered;
    SAI-015 tests use `open`/`done`/`failed` as given by the view.
+
+Found while writing the tests (`/test SAI-001..SAI-017`, 2026-11-24):
+
+3. **`knownSquads` has no `id`.** `attack.target` and `setGoal.target` name "a foreign squad", but
+   `knownSquads` items carry only `faction`, `region`, `estimatedStrength`, `seen`, `knownGoal`. The tests
+   add an `id` (the schema allows extra fields). Spec-internal: add `id` to the view.
+4. **`knownGoal` has no target.** SAI-013 condition 3 needs "the same objective" (goal and target), but
+   `knownGoal` is one string. The tests skip condition 3 (the checker only compares goal names).
+5. **Map shape not in reach.** Adjacency depends on `mapShape` (STR-005, `data/mapgen/strategic.json`),
+   which is neither in the view nor in this SCOPE. The tests assume `square`. Put `mapShape` in the view,
+   or add the table here? Also `knownRegions.road` gives only the kind, not the tiles it continues to, so
+   road travel times cannot be planned exactly (STR-006).
+6. **Recruits available not in the view.** STR-096 rejects a `recruit` when too few recruits are
+   available, but the view does not show the pool, so the AI cannot avoid an illegal `recruit`.
+7. **Contract pay is not computable here.** Under `hardLimit` the AI should not post an offer it cannot
+   pay (SAI-014), but pay comes from MGT-046 (`data/management-rules.json`, not in this SCOPE). Tests use
+   the sum of the missions' `payBand` minimums as a lower bound. Which estimate should the AI use?
+8. **Consideration vocabulary and units.** The doctrine names considerations, but which names the code
+   reads (`cost`, `risk`, `damageToRivals`, `overdraft`, `signOverlap`, `gainTerms` names) and the unit of
+   each input (USD, tiles, 0–1) are in no spec section, and curve `type` values are not listed. Tests use
+   `type: "linear"` (piecewise-linear `points`) and the names above.
+9. **AI and moves in progress.** STR-020 lets a move occupy a squad for `h` ticks, STR-002 allows
+   cancelling. May an AI give a squad in `transit` a new action (cancel), or not? The tests assume not.
