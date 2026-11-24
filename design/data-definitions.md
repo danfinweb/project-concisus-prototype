@@ -15,7 +15,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 | Helmet | Head protection | Armour class for the head zone; heavier helmets can narrow hearing (noise detection) |
 | Body armour | Plates or soft armour | Armour class for the thorax zone; durability wears with each hit |
 | Load-bearing vest | Item list, small weight limit | Quick access: magazines, grenades and medical items used from here at normal AP cost |
-| Battle belt | Item list, small weight limit | Quick access like the vest; typically spare magazines, pistol ammo, a tourniquet |
+| Battle belt | Item list, small weight limit | Quick access like the vest; typically spare magazines, pistol ammo, a tourniquet. Its holster holds a pistol as an extra third weapon beside weapons 1 and 2, counted toward the belt's weight limit |
 | Backpack | Item list, large weight limit | Slow access: using an item from it costs extra AP; holds loot and spare gear; can be dropped in combat to move lighter |
 
 - **Access tiers:** vest and belt are quick, the backpack is slow — what a soldier keeps where matters in a fight.
@@ -25,7 +25,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 
 ## Weapon profile (draft)
 
-**Draft — not final.** Every gun is defined by the profile below; mods change these values directly.
+**Draft — not final.** Every gun is defined by the profile below; mods change these values directly. Each mod lists the weapons it fits; spread and recoil modifiers multiply, ergonomics and weight modifiers add.
 
 | Attribute | Type | Meaning | Drives |
 | --- | --- | --- | --- |
@@ -44,7 +44,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 
 **How mods change the profile**
 
-- Muzzle devices: recoil, flash. Suppressors: shorten how far shots are heard (see Gunshot noise).
+- Muzzle devices: recoil, flash (how far the muzzle flash reveals the shooter). Suppressors: shorten how far shots are heard (see Gunshot noise).
 - Stocks and pistol grips: ergonomics, recoil.
 - Handguards: ergonomics and weight, and they decide which sub-slots exist — whether a front grip can be fitted, and one or two tactical module slots.
   - Front grips: ergonomics, recoil.
@@ -61,7 +61,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 | Designation | Text | Cartridge name, e.g. 5.56×45 | Which weapons and magazines fit |
 | Damage | HP | Base damage per projectile at the muzzle | Muzzle damage, damage at distance, blunt damage |
 | Projectiles | Count | 1 for bullets, several for buckshot | Hits per round (each pellet traced separately) |
-| Recoil modifier | Multiplier | How much the cartridge scales the gun's Recoil (about ×0.6–×1.6) | Effective recoil = gun Recoil × calibre modifier |
+| Recoil modifier | Multiplier | How much the cartridge scales the gun's Recoil (about ×0.5–×1.6) | Effective recoil = gun Recoil × calibre modifier |
 | Round weight | g | Weight per cartridge | Magazine and carried weight |
 
 **Calibres and ammunition in the game:** see the [Item list](https://claude.ai/artifact/3ZE9h1z8kMDFDuWB4muJRJ). For reference: a thorax has 85 base HP, a head 35.
@@ -76,7 +76,7 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 | AP (armour-piercing) | Penetration class +1 to +2, slightly less damage | ×0.9 | 18 tiles | No | ×1.0 | Expensive, rare |
 | HP (hollow point) | More damage, low penetration class | ×1.25 | 12 tiles | No | ×1.0 | Higher bleeding chance |
 | Subsonic | Less damage, lower penetration class | ×0.8 | 10 tiles | Yes | ×1.1 | Near-silent with a suppressor |
-| Tracer | Same as FMJ | ×1.0 | 15 tiles | No | ×1.0 | Less recoil spread in bursts; reveals the shooter |
+| Tracer | Same as FMJ | ×1.0 | 15 tiles | No | ×1.0 | Less recoil spread in bursts |
 | Buckshot (shotgun) | 8 pellets | ×1.0 per pellet | 15 tiles | No | ×1.0 | Strong up close, falls off fast |
 | Slug (shotgun) | One heavy projectile | ×1.0 | 15 tiles | No | ×0.5 | Replaces buckshot |
 
@@ -95,8 +95,8 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 | --- | --- |
 | Cost | Purchase price; upkeep (fuel, repairs) scales with it (draft: 0.2% of the price per day, plus fuel) |
 | Seats | Maximum soldiers in the squad |
-| Storage | One list for everything the vehicle carries, limited by weight (kg): supplies (ammunition, fuel cans, medical supplies, spare parts) and loot. Soldiers restock from it between engagements; every kilo of supplies is a kilo not free for loot — longer ops or bigger hauls |
-| Fuel range | Regions it can travel on a full tank: one fuel unit per tile moved, whatever the terrain (draft: 1 unit = one 20-litre fuel can, 18 kg) |
+| Storage | One list for everything the vehicle carries, limited by weight (kg): supplies (ammunition, diesel canisters, medical supplies, spare parts) and loot. Soldiers restock from it between engagements; every kilo of supplies is a kilo not free for loot — longer ops or bigger hauls |
+| Fuel range | Regions it can travel on a full tank. The tank is a counter of fuel units: one unit per tile moved, whatever the terrain (draft: 1 unit = 20 litres). Spare fuel travels as diesel canister items (20 l, 18 kg) in storage; each refills 1 unit |
 | Off-road | Poor / good / very good: lowers the travel time in steppe and woods |
 | Armour | Protection for passengers in road encounters (armour class) |
 | Noise | How far away factions notice it (draft: Low 1 tile, Medium 2, High 3, Very high 4, Extreme 6) |
@@ -125,7 +125,7 @@ Every ammo item has its own **damage modifier and penetration class** (see the i
 
 - **Movement:** ignore terrain — one hour per region over any ground, including mountains, woods and water.
 - **Landing:** on any region and any open tile except water. Hidden cities can only be reached this way.
-- **Seats include the pilot:** one soldier with Technical 50+ (or a hired pilot on salary) must fly it.
+- **Seats include the pilot:** one soldier with Technical 50+ (or a hired pilot, paid a fee per op like a soldier) must fly it.
 - **Visibility:** heard and seen from far away; every faction in range notices it, and each hostile military point of interest on its path rolls a chance to damage or down it (draft: 10% damaged, 3% downed per point of interest; data).
 - **Fuel and upkeep:** refuel only at FOBs and oil plants; expensive to run and repair.
 - **Losing one:** a downed helicopter is a crash site, and its crew starts an emergency op to get home on foot.

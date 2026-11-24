@@ -8,10 +8,10 @@ Nov 22, 2026 · @Dan
 
 | Action | Where | Time | Other cost | Status |
 | --- | --- | --- | --- | --- |
-| Launch an op (leave an FOB) | Any FOB | 0 hours (draft): the first move starts at once | Squad, loadout and vehicle committed | Draft |
-| Move one region by ground vehicle | Any passable region | Set by the destination tile: 1 hour along a road (asphalt or dirt), 2 on steppe, 3 in woods; mountains by road only; water only at bridges and fords | Fuel: a flat amount per tile moved, whatever the terrain (vehicle fuel range); off-road rating lowers the time in steppe and woods | Defined |
+| Launch an op (leave an FOB) | Any FOB | 0 hours (draft): the first move starts at once | Squad, loadout and vehicle committed; each soldier's fee is paid now (no fee, no launch) | Draft |
+| Move one region by ground vehicle | Any passable region | Set by the destination tile: 1 hour along a road (asphalt or dirt), 2 on steppe, 3 in woods; mountains by road only; water only at bridges and fords | Fuel: a flat amount per tile moved, whatever the terrain (vehicle fuel range), spent on arrival (a cancelled or interrupted move spends none); off-road rating lowers the time in steppe and woods | Defined |
 | Move one region on foot | Any passable region | 2 hours on most ground, 3 in mountains | No vehicle storage: the squad carries, and loots, only what fits in its soldiers' rigs and backpacks | Defined |
-| Fly one region by helicopter | Anywhere | 1 hour, any terrain | Fuel; needs a pilot with Technical 50+ or a hired pilot; noticed by every faction in range; each hostile military point of interest on the path rolls a chance to damage or down it (draft: 10% each) | Defined |
+| Fly one region by helicopter | Anywhere | 1 hour, any terrain | Fuel; needs a pilot with Technical 50+ or a hired pilot (paid a fee per op); noticed by every faction in range; each hostile military point of interest on the path rolls a chance to damage or down it (draft: 10% damaged, 3% downed per point of interest); military points of interest are arms plants, governmental institutions and any tile with a hostile squad; a damaged helicopter must land and be repaired before it flies on | Defined |
 | Land a helicopter | Any open ground except water; the only way into hidden cities | 1 hour (draft) | — | Draft |
 | Enter a point of interest | The region's point of interest | 1 hour (draft) | — | Draft |
 | Scout | Current region | 3 hours (placeholder) | — | Defined |
@@ -27,17 +27,17 @@ Nov 22, 2026 · @Dan
 | Action | Where | Time | Other cost | Status |
 | --- | --- | --- | --- | --- |
 | Trade (buy, sell, barter) | Faction traders in cities, Krug markets | No time | Money or goods; stock depends on reputation; barter deals refresh daily at 00:00 | Defined |
-| Hire soldiers | FOBs; local recruits in towns and Krug markets | No time | Salary by price tier | Defined |
+| Hire soldiers | FOBs; local recruits in towns and Krug markets | No time | Hire price by tier; a fee per op is paid at launch (see Management) | Defined |
 | Buy or sell a vehicle | Large cities, mechanical plants; some only with high standing or through the Krug | No time (trade) | Vehicle price | Defined |
-| Accept a contract | FOB, cities, Krug markets (Krug work) | 0 hours (draft) | Filtered by reputation with the employer; advance paid on signing; if the employer cannot pay the advance, the offer cannot be signed | Draft |
+| Accept a contract | FOB, cities, Krug markets (Krug work) | 0 hours (draft) | Filtered by reputation with the employer; advance paid on signing and kept by the player (a failed contract costs only reputation, never a repayment); if the employer cannot pay the advance, the offer cannot be signed | Draft |
 | Hand over items or a VIP (contract delivery) | The contract's destination | 1 hour (draft) | — | Draft |
 | Hand in faction or operation items | A point of interest held by that faction, or a Krug market | One player action (draft: 1 hour) | Gives money and reputation | Draft |
 | Buy intel on a VIP | Factions hostile to the VIP's side (standing ≥ 20, leader ≥ 50); Krug markets for goods | 0 hours (draft) | Major $2,000, Colonel $5,000, General $12,000, leader $30,000 (Krug: goods of a lower value) | Draft |
 | Hospital treatment | Small and large cities | 4 hours (draft) | Paid | Draft |
 | Vehicle repairs | Mechanical plants | 4 hours (draft) | Paid | Draft |
 | Refuel | Gas stations, oil plants; helicopters only at FOBs and oil plants | 1 hour (draft) | Paid | Draft |
-| Buy a new FOB | Small and large cities | 24 hours (draft) before the new FOB can be used | Price open | Price open |
+| Buy a new FOB | Small and large cities | 24 hours (draft) before the new FOB can be used | Draft: $25,000 in a small city, $50,000 in a large city; no upkeep | Draft |
 | Take over an FOB site | By force, through an op | As the op | — | Open |
-| Pay compensation (Operation dispute) | The hurt faction | 0 hours (draft) | Money, credited to the hurt faction's funds | Price open |
-| Pay off a bounty | The faction that set it | 0 hours (draft) | Money, credited to that faction's funds | Price open |
-| Hire a Krug escort for a shipment | A Krug market tile, before the shipment leaves | 0 hours (draft) | Price by distance and danger (draft: $200 + $50 per tile of the route, ×1.5 if the route crosses the front or hostile ground); the Krug may refuse (low standing, few free squads, a dangerous route) | Draft |
+| Pay compensation (Operation dispute) | The hurt faction | 0 hours (draft) | Money, credited to the hurt faction's funds (draft: $1,000 per soldier of the hurt faction killed, at least $2,000) | Draft |
+| Pay off a bounty | The faction that set it | 0 hours (draft) | Money, credited to that faction's funds (draft: $10,000; $20,000 if reputation with it is −75 or lower) | Draft |
+| Hire a Krug escort for a shipment | A Krug market tile, before the shipment leaves | 0 hours (draft) | Price by distance and danger (draft: $200 + $50 per tile of the route, ×1.5 if the route crosses the front or hostile ground); one Krug escort squad per convoy; if it is not on the convoy's tile it travels there first, which may delay the departure; the Krug may refuse (low standing, few free squads, a dangerous route, or a squad that resents foreign soldiers) | Draft |

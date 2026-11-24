@@ -21,7 +21,7 @@ Late-90s 3D (PlayStation 1 / early PC era) rendered with modern lighting: chunky
 - Volumetric fog and smoke, bloom, day/night and weather.
 - Lighting is mostly atmosphere: at night, sight and spotting ranges drop to a third, unless the soldier has a flashlight equipped, which restores the full day range. No other light level affects spotting; smoke and noise feed the stealth and visibility rules.
 
-**Why it fits the browser:** a low internal resolution and small assets keep downloads and GPU load down, so the style doubles as the mobile performance strategy. Effects scale by quality tier (phones: baked lighting, few shadow casters; desktop: full effects; draft: 2 shadow casters on phones, 8 on desktop).
+**Why it fits the browser:** a low internal resolution and small assets keep downloads and GPU load down, so the style doubles as the mobile performance strategy. Effects scale by quality tier (phones: baked lighting, few shadow casters; desktop: full effects; draft: 2 shadow casters on phones, 8 on desktop). The tier is picked automatically from the device type and a short frame-time test at start; the player can override it in the settings.
 
 ## UX, tech & scope
 

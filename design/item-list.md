@@ -52,7 +52,7 @@ The barrel is part of the weapon, not a mod: each weapon has a fixed barrel leng
 | M249 | $3,500 |
 | PKM | $2,500 |
 
-**Feed type** sets the reload cost (see Tactical actions). **Magazines are items:** each magazine has a calibre, a capacity, a weight and the weapons it fits, and its rounds are counted; it is refilled from loose ammunition only between fights, never in battle, and holds one load type at a time. Magazines of the same pattern are shared: the RPK-74's 40-round magazine and the AK-74M's 30-round magazine fit both weapons. Only the pairs listed in the magazine table below share magazines; the FN FAL and HK G3 do not, although both fire 7.62×51 mm. An extended magazine is its own magazine item with a larger capacity, not a mod. Stripper-clip and bolt-action feeds are kept for later content; no weapon here uses them yet. Belts work the same way for belt-fed weapons; tube-fed shotguns load loose shells.
+**Feed type** sets the reload cost (see Tactical actions). **Magazines are items:** each magazine has a calibre, a capacity, a weight and the weapons it fits, and its rounds are counted; it is refilled from loose ammunition only between fights, never in battle, and holds one load type at a time: refilling it with a different load first returns its rounds to loose ammunition. Magazines of the same pattern are shared: the RPK-74's 40-round magazine and the AK-74M's 30-round magazine fit both weapons. Only the pairs listed in the magazine table below share magazines; the FN FAL and HK G3 do not, although both fire 7.62×51 mm. An extended magazine is its own magazine item with a larger capacity, not a mod. Stripper-clip and bolt-action feeds are kept for later content; no weapon here uses them yet. Belts work the same way for belt-fed weapons; tube-fed shotguns load loose shells.
 
 | Magazine | Fits | Rounds | Empty weight (kg, draft) | Price (draft) |
 | --- | --- | --- | --- | --- |
@@ -126,6 +126,19 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | 12 gauge | Buckshot | ×1.0 | 56% | 15 | 0 | No |
 | 12 gauge | Slug | ×1.0 | 33% | 15 | 2 | No |
 
+**Ammunition prices (draft).** Price per round at a faction trader for FMJ (buckshot for 12 gauge); other loads multiply it: AP ×3, HP ×1.5, Subsonic ×2, Tracer ×1.2, Slug ×1.5.
+
+| Calibre | Price per round (draft) |
+| --- | --- |
+| 9×18 mm | $0.30 |
+| 9×19 mm | $0.40 |
+| 5.45×39 mm | $0.50 |
+| 5.56×45 mm | $0.60 |
+| 7.62×39 mm | $0.50 |
+| 7.62×51 mm | $1.20 |
+| 7.62×54R | $1.00 |
+| 12 gauge | $0.80 |
+
 ## Helmets
 
 | Helmet | Armour class | Durability | Weight (kg) | Notes |
@@ -184,13 +197,13 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 
 ## Battle belts
 
-| Battle belt | Holster | Capacity (kg) | Own weight (kg) |
-| --- | --- | --- | --- |
-| Leather belt | 1 | 1.5 | 0.3 |
-| Padded battle belt | 1 | 3 | 0.7 |
-| Heavy battle belt | 1 | 4.5 | 1.1 |
+| Battle belt | Holster | Capacity (kg) | Max magazines (draft) | Max grenades (draft) | Max medical items (draft) | Max other items (draft) | Own weight (kg) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Leather belt | 1 | 1.5 | 2 | 2 | 1 | 1 | 0.3 |
+| Padded battle belt | 1 | 3 | 3 | 2 | 2 | 1 | 0.7 |
+| Heavy battle belt | 1 | 4.5 | 4 | 2 | 2 | 2 | 1.1 |
 
-The holster holds the sidearm (a pistol). Belt pouches follow the vest rules: only items up to 1 kg, and the same type limits.
+The holster holds a sidearm (a pistol) as an extra third weapon, beside weapons 1 and 2; the holstered pistol counts toward the belt's capacity. Belt pouches follow the vest rules: only items up to 1 kg, and the type limits in the table above.
 
 | Battle belt | Price (draft) |
 | --- | --- |
@@ -256,7 +269,7 @@ The medkit restores 40 HP per use before the Medical multiplier (draft).
 
 ## Mods
 
-**Draft — placeholder values.** A first set of optics and one laser. Optics multiply the range part of shooter spread; a laser multiplies shooter spread on snap shots (see Hit model in the GDD). Which weapons each mod fits is set in the item editor. Tactical mods (laser, flashlight) may also carry small modifiers such as weight or ergonomics, set per mod.
+**Draft — placeholder values.** A first set of optics and one laser. Optics multiply the range part of shooter spread; a laser multiplies shooter spread on snap shots (see Hit model in the GDD). Each mod lists the weapons it fits (set in the item editor). Tactical mods (laser, flashlight) may also carry small modifiers such as weight or ergonomics, set per mod.
 
 | Mod | Slot | Effect | Weight (kg) |
 | --- | --- | --- | --- |
@@ -264,6 +277,13 @@ The medkit restores 40 HP per use before the Medical multiplier (draft).
 | 4× scope | Optic | Range spread ×0.5 | 0.5 |
 | Sniper scope | Optic | Range spread ×0.3 | 0.7 |
 | Laser module | Tactical | Snap-shot spread ×0.8; visible to enemies | 0.15 |
+
+| Mod | Price (draft) |
+| --- | --- |
+| Red dot sight | $250 |
+| 4× scope | $600 |
+| Sniper scope | $1,200 |
+| Laser module | $300 |
 
 ## Barter goods
 
@@ -297,7 +317,7 @@ Civilian items with no use in combat. They are sold for money or traded for gear
 
 **Trading rules**
 
-- City traders buy barter goods at 50% of value; the Krug market pays 70%, and 100% for tobacco, alcohol and valuables (watch, banknotes, icon, ring, chain).
+- City traders buy barter goods at 50% of value; the Krug market pays 70%, and 100% for tobacco, alcohol and valuables (watch, banknotes, icon, ring, chain). Traders buy gear (weapons, magazines, ammunition, armour, vests, belts, backpacks, mods, medical items, grenades and operation items they sell) at 40% of its trader price; the Krug market pays 50% (draft).
 - Each trader offers 1–3 barter deals per day: a gear item for a list of goods, counted at 100% of value (for example an AK-74M for two cartons of cigarettes and a gold chain).
 - Barter deals are the only source of some rare gear at a trader; they are refreshed at the daily tick.
 - Loot rolls use rarity weights common 60 / uncommon 30 / rare 10; rare goods appear only in apartments, safes, churches and on bodies.
@@ -322,6 +342,15 @@ Items that open options during operations or can be handed in to a faction for m
 | Medical supply crate | 15.0 | Hospitals, convoys | Restocks a squad with 4 bandages and 2 tourniquets once | Faction holding a city: +4 reputation; a resistance group: +10 standing with it |
 | Ammunition crate | 20.0 | Depots, convoys | Restocks a squad's loose ammo once | A resistance group: +10 standing, the group lasts 7 days longer |
 | Krug marker | 0.01 | Krug members, Krug caches | — | The Krug: +3 standing; sold to anyone else: −10 Krug standing if a Krug member survives to report it |
+
+Traders sell only these operation items; the others are found, never bought.
+
+| Item | Price (draft) |
+| --- | --- |
+| Demolition charge | $400 |
+| Bolt cutters | $60 |
+| Medical supply crate | $150 |
+| Ammunition crate | $500 |
 
 **Hand-in rules**
 

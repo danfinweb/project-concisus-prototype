@@ -51,7 +51,7 @@ Each soldier has a small stamina pool, counted in stamina points. Spending is tw
 | Reaction attempt | Costs 1 stamina point, success or not |
 | Recovery | +1 stamina point for every turn the soldier is not activated |
 | Exhausted | Below 2 stamina points a soldier cannot be activated; at 0 they cannot react either |
-| Modifiers | Each wounded or disabled leg lowers the maximum by 1 |
+| Modifiers | Each wounded or disabled leg lowers the maximum by 1; a fracture alone does not |
 
 Example: a soldier with 4 stamina points can act twice in a row, or act once and react twice, then needs a few turns off. Rotating the squad keeps everyone close to full; leaning on one soldier drains them fast.
 
