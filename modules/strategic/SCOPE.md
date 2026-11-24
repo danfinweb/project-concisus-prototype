@@ -1,6 +1,6 @@
 # Strategic Layer — scope
 
-Refreshed by `/scope` (2026-11-24, spec baseline `e8aa7e7`, design `c1333f3`). Lists everything this
+Refreshed by `/scope` (2026-11-24, spec baseline `a0210cd` (cleanup), design `c1333f3`). Lists everything this
 module may read outside its folder.
 
 ## Spec IDs
@@ -33,26 +33,26 @@ draft values or a stub and flag it. `(optional)` = later build or switchable fea
 | STR-012 | Krug market tiles are no-fire zones; starting a fight there turns the Krug hostile |
 | STR-013 | (optional) Hidden cities: no road, helicopter only, high-output complex, prototype items |
 | STR-014 | (open) Control of a POI follows its region; per-type `income`, `supplyOutput`, `recruitOutput` drafted; supply shortage when output < soldiers; `supplyDeficitEffect` not set |
-| STR-015 | Stationed PMC squad holds a plant; daily `plantOutput` request to the nearest PMC FOB; `actionHours.station` 0 |
+| STR-015 | Stationed PMC squad holds a plant; daily `plantOutput` (typed `dailyOutput` items and USD, ×STR-011, rounded down) to the nearest PMC FOB; `actionHours.station` 0; extra `income` open (Q56) |
 | STR-016 | FOB map entity `{ id, regionId, owner }`; visibility source; (optional) raids left for later |
 
 **Squads and simulation**
 
 | ID | Summary |
 | --- | --- |
-| STR-017 | Squad `{ id, faction, regionId, vehicleId \| null, soldiers, supplies, fuel, morale, goal, transit }`; on foot = no vehicle storage, loot only in rigs; AI soldier data in `world` |
+| STR-017 | Squad `{ id, faction, regionId, vehicleId \| null, soldiers, supplies, fuel, morale, goal, transit }`; on foot = no vehicle storage, loot only in rigs; player soldier data read from `management_view` `roster`; AI soldiers aggregate (per-soldier data open, Q54) |
 | STR-018 | Non-player squads hold one goal (patrol, supplyRun, attackPoi, holdPoi, escort, tradeRoute, hunt), set only by faction commands |
 | STR-019 | (open) Escalation through SAI commands, validated by normal rules; pacing is SAI |
 | STR-020 | Every hour every faction issues one command set, each squad one action; a move holds the origin tile until its last hour |
-| STR-021 | Controller hand-off for every non-player faction (incl. resistance, rogue PMC): view out, `strategic_commands` in (12 command types); validate like player actions incl. funds, drop invalid with a reason |
+| STR-021 | Controller hand-off for every non-player faction (incl. resistance, rogue PMC): view out, `strategic_commands` in (12 command types); validate like player actions incl. funds, drop invalid with a reason; per squad at most one action and one assignment per set, first in list wins |
 | STR-022 | Encounter detection per tile after movement; hostility from SAI-013 and relations; Krug markets never hostile; player → STR-023, else STR-026 |
 | STR-023 | Tactical engagement: `tactical_map_request` (terrain, biome, settlement, crossing, POI, neighbours, roads, approach side, exits) out, `battle_result` in; duration TAC-003 (1 h) |
 | STR-024 | Evade: `clamp(20 + bestRecon/2 + visibility bonus, 10, 90)` %, seeded; `actionHours.evade` 1 |
 | STR-025 | Pay a Krug squad to pass: $100 × soldiers via `payKrugPass`, credited to Krug funds; 0 h |
 | STR-026 | (open) Off-screen fights: strength = soldiers × gear tier, defender ×1.25 in woods/mountain/settlement, loss shares drafted; loyalty and supply changes not set |
 | STR-092 | (open) AI faction `funds` in `world`; income, costs, start funds from `data/economy-rules.json` (formulas not set); never below 0; `fundsMode` hardLimit / scoreTerm with hidden `overdraft` |
-| STR-093 | Contract pay: MGT names `paymentDue`, Strategic deducts from employer funds, sends `contractPayment` next tick; default fails the contract (`employerDefault`), advance kept; AI–AI contracts settled in `world`; rival takes offer → `contractEnded` `taken` |
-| STR-094 | Krug escorts: Krug escort contracts; paid escort hired on a Krug-market tile before departure, foreign-PMC resentment roll, price base + per tile × danger, Krug answers via `answerEscort`, escort travels to the convoy |
+| STR-093 | Contract pay: MGT names `paymentDue`, Strategic deducts from employer funds, sends `contractPayment` next tick; default fails the contract (`employerDefault`), advance kept; AI–AI contracts judged and settled in `world`, status in both views (tactical-type missions open, Q55); rival takes offer → `contractEnded` `taken` |
+| STR-094 | Krug escorts: Krug escort contracts; paid escort hired on a Krug-market tile before departure, foreign-PMC resentment roll, price base + per tile × danger, Krug answers via `answerEscort`, escort travels to the convoy; player hires by a strategic action, debit `payKrugEscort` |
 | STR-096 | (open) `recruit` raises a squad at a held town/city from `squadTemplate` (not set) and recruits; $2000/soldier, ready after 12 h |
 | STR-098 | (open) Low-risk contract guarantee: daily, post a `retrieve_deliver` offer by SSV/VDK/Krug if none open; `minFrontDistance` not set |
 
@@ -61,7 +61,7 @@ draft values or a stub and flag it. `(optional)` = later build or switchable fea
 | ID | Summary |
 | --- | --- |
 | STR-027 | Op lifecycle: success when ≥ 1 soldier reaches a PMC FOB; missions confirmed at once (`missionOutcome`); lost soldiers MIA/captured/dead to MGT |
-| STR-028 | Launch an op at an FOB, squad/loadout/≤ 1 vehicle locked; `launchOp` request pays fees per op, `ok:false` = no launch; `actionHours.launch` 0 |
+| STR-028 | Launch an op at an FOB, squad/loadout/≤ 1 vehicle locked; `launchOp` request (`squad`, `soldiers` incl. pilot, `fobId`, insured items) pays fees per op, `ok:false` = no launch; `actionHours.launch` 0 |
 | STR-029 | Arrival in a PMC FOB region ends the op; storage and soldiers to MGT (`opReturn`) |
 | STR-030 | (open) Vehicle `leftBehind` stays on the map; destroy/capture/recover rules not set |
 | STR-031 | Move one tile on foot: `onFootHours` (2, mountain 3) or `roadMoveHours.foot`; no fuel |
@@ -86,7 +86,7 @@ draft values or a stub and flag it. `(optional)` = later build or switchable fea
 | --- | --- |
 | STR-045 | VIP `{ id, faction, rank, regionId, guardSquadIds }`; travels with its guard; leader stays in capital or largest city |
 | STR-046 | Guard squads and rank mix per VIP rank; "mostly"/"with" shares not set |
-| STR-047 | VIP death morale shock: radius by VIP rank, loss per soldier by that soldier's rank (Elite 40 … Recruit 5) |
+| STR-047 | VIP death morale shock: radius by VIP rank, loss per soldier by that soldier's rank (Elite 40 … Recruit 5); player soldiers via `moraleChange` per soldier |
 | STR-048 | VIP intel valid 72 h: from scouting, loot, Krug barter or purchase with standing gates; `actionHours.buyIntel` 0 |
 | STR-049 | (open) Leader death dissolves the faction: squads scatter, POIs to `none`, capital contested, contracts end; `scatterShares` not set |
 
@@ -166,8 +166,8 @@ draft values or a stub and flag it. `(optional)` = later build or switchable fea
 | MGT-053..MGT-055, MGT-064 | `spec/management.md` | Reputation value, standing tiers and effects (encounters, gates, events), attribution |
 | MGT-056..MGT-060 | `spec/management.md` | Reputation acts sent as `reputationAct` requests |
 | MGT-066, MGT-068, MGT-069 | `spec/management.md` | FOBs and prices (STR-042), industry deliveries (STR-015), FOB raids (STR-016) |
-| MGT-072 | `spec/management.md` | `management_view` read by Strategic |
-| SAI-002, SAI-003, SAI-013..SAI-017 | `spec/strategic-ai.md` | Who is invoked, view contents, hostility rules (STR-022), contract offers and evaluation, measure choice, Krug escort answers |
+| MGT-072, MGT-076 | `spec/management.md` | `management_view` (incl. `roster`) read by Strategic; how MGT handles each request type and its payload |
+| SAI-002..SAI-004, SAI-013..SAI-017 | `spec/strategic-ai.md` | Who is invoked, view contents, one action per squad, hostility rules (STR-022), contract offers and evaluation, measure choice, Krug escort answers |
 | TAC-003, TAC-027, TAC-080, TAC-086, TAC-087 | `spec/tactical.md` | Battle duration; encumbrance; map from the encounter tile; map types and stages fed by `region` |
 | DAT-024..DAT-029 | `spec/data.md` | Vehicle record, at most one vehicle, features, availability, helicopters, instance state and loss |
 | TEC-012, TEC-015 | `spec/tech.md` | Pure rules core; seeded, reproducible randomness |
@@ -176,12 +176,12 @@ draft values or a stub and flag it. `(optional)` = later build or switchable fea
 
 | Interface | Direction | Version |
 | --- | --- | --- |
-| `spec/interfaces/tactical_map_request.schema.json` | produces (to tactical) | 0.8.0 |
-| `spec/interfaces/strategic_perception_view.schema.json` | produces (to strategic-ai) | 0.7.0 |
-| `spec/interfaces/management_requests.schema.json` | produces (to management; reads its `results`) | 0.7.0 |
+| `spec/interfaces/tactical_map_request.schema.json` | produces (to tactical) | 0.9.0 |
+| `spec/interfaces/strategic_perception_view.schema.json` | produces (to strategic-ai) | 0.8.0 |
+| `spec/interfaces/management_requests.schema.json` | produces (to management; reads its `results`) | 0.8.0 |
 | `spec/interfaces/battle_result.schema.json` | consumes (from tactical) | 0.4.0 |
-| `spec/interfaces/strategic_commands.schema.json` | consumes (from strategic-ai) | 0.6.0 |
-| `spec/interfaces/management_view.schema.json` | consumes (from management: reputation, standing, contracts, funds) | 0.2.0 |
+| `spec/interfaces/strategic_commands.schema.json` | consumes (from strategic-ai) | 0.7.0 |
+| `spec/interfaces/management_view.schema.json` | consumes (from management: roster, reputation, standing, contracts, funds) | 0.3.0 |
 
 Change history: `spec/interfaces/CHANGELOG.md`.
 
@@ -196,7 +196,7 @@ Read through `shared/registry.js` only.
 | `data/economy-rules.json` | `spec/interfaces/data/economy-rules.schema.json` | 0.5.0 | Faction funds: start funds, income, upkeep, salaries, booking interval, `fundsMode` (shared with MGT) |
 | `data/mapgen/strategic.json` | `spec/interfaces/data/mapgen-strategic.schema.json` | 0.4.0 | Generation stages, `mapShape`, width, height, Krug market placement |
 | `data/factions.json` | `spec/interfaces/data/factions.schema.json` | 0.6.0 | Faction IDs, kinds, patrons, start relations, measures, doctrine IDs, `squadTemplate`, rogue chance, Krug `resentment`, `resistance` template |
-| `data/poi.json` | `spec/interfaces/data/poi.schema.json` | 0.6.0 | POI types, settlement, `military`, `krugMarketAllowed`, services, income, supply and recruit output, `dailyOutput`, mineral modifier |
+| `data/poi.json` | `spec/interfaces/data/poi.schema.json` | 0.7.0 | POI types, settlement, `military`, `krugMarketAllowed`, services, income, supply and recruit output, `dailyOutput`, mineral modifier |
 | `data/events.json` | `spec/interfaces/data/events.schema.json` | 0.7.0 | World events, desperate measures, flavour events: triggers, `params`, `duration`, warning signs |
 | `data/vehicles.json` | `spec/interfaces/data/vehicles.schema.json` | 0.4.0 | Seats, storage, fuel range, off-road, noise, features, availability, `requiresPilot` |
 | `data/missions.json` | `spec/interfaces/data/missions.schema.json` | 0.3.0 | Mission IDs in contract offers (STR-044, STR-098) |
@@ -214,8 +214,8 @@ Read through `shared/registry.js` only.
   state, clock, squads of every faction (incl. AI soldier data), FOB entities, abandoned vehicles, VIPs,
   faction funds and `overdraft` (STR-092), relations, faction history, running events and measures,
   warning signs, pending escort requests, intel, news feed.
-- Reads: `roster` (player soldiers for `tactical_map_request`, morale per soldier), and through
-  `management_view` (MGT-072): `reputation` (value and standing: encounter hostility, events, gates,
+- Reads, all through
+  `management_view` (MGT-072): `roster` (player soldiers for `tactical_map_request`: rank, morale, attributes, nerve, wounds, equipment, perks), `reputation` (value and standing: encounter hostility, events, gates,
   views), `contracts` (status, missions, deadlines) and `economy` funds. Changes to Management slices go
   out only as `management_requests`; MGT's `results` come back on them. `unlocks` is not read.
 
@@ -226,28 +226,16 @@ Read through `shared/registry.js` only.
 ## Open questions
 
 Found while scoping; report to the root session, do not edit `spec/`. The open items in
-`spec/strategic.md` › Open questions (now only question 53: repair of a helicopter grounded away from a
-mechanical plant) and every `(open)` value above still apply.
+`spec/strategic.md` › Open questions and every `(open)` value above still apply. The ones that most
+affect `core/`:
 
-The ten questions of the 2026-11-23 scope are settled by the spec updates since (strategic-rules nested
-keys, one owner per constant, `contractOffer` request, camelCase goals, squads on foot, strategic terrain
-table, Krug market flag and front sectors, perception view `transit` and per-faction loyalty, stale
-`acceptableLoss` text).
+- **Q53** — repair of a helicopter grounded away from a mechanical plant (stays grounded until decided).
+- **Q54** — AI soldiers per soldier (rank, HP, morale in `world`) or as aggregates; spec reading today:
+  aggregates, with per-soldier values generated per engagement.
+- **Q55** — how tactical-type missions (VIP kill or capture, destroy target) are met between AI squads.
+- **Q56** — whether a PMC-held plant pays its STR-014 `income` on top of `dailyOutput`.
 
-1. **No request for player morale changes.** STR-047 applies the VIP-death morale shock to player
-   soldiers "through MGT, which holds morale per soldier", but `management_requests` 0.7.0 has no request
-   type that carries a morale change (`healingTick` and `contaminationTick` cover HP only).
-2. **AI soldier data is aggregate, rules are per soldier.** STR-017 keeps AI squads as "strength, gear
-   tier, rank mix", but STR-047 (morale loss by each soldier's rank), STR-097 (HP per soldier per hour) and
-   `tactical_map_request` 0.8.0 (`units[].rank` enum, `units[].morale`) need per-soldier rank, HP and
-   morale for AI squads. Per-soldier records in `world`, or an aggregate rule?
-3. **Player Krug escort hire has no path into Strategic.** STR-094 says the player hires "through the Krug
-   market (MGT, forwarded to Strategic)", but no interface carries a request from MGT to Strategic
-   (`management_view` is state only), and `management_requests` has only `payKrugEscort` (the debit). Is
-   the hire a player strategic action that Strategic resolves, then debits via `payKrugEscort`?
-4. **Plant output fields.** STR-015 sends "per-type `dailyOutput`" from `data/poi.json`, which is an
-   untyped `object` (drafts in MGT-068), while STR-014 drafts `income`/`supplyOutput` per type and STR-011
-   multiplies "income and goods". Which fields make up a PMC plant's `plantOutput` (`items`, `amountUsd`),
-   and can `dailyOutput` get a typed shape so content can be checked?
-5. **Stale `launchOp` text.** `management_requests` 0.7.0 removed `launchOp.hiredPilot`, but the result
-   field `feesUsd` still says "plus a hired pilot's fee"; a pilot is now one of `soldiers` (STR-028).
+No new findings from this scope. The five findings of the earlier 2026-11-24 scope are closed by the
+spec cleanup `a0210cd` (impact report `spec/reports/impact-2026-11-24-f.md`): `moraleChange` request
+(STR-047); AI soldier data moved to Q54; player Krug escort hire as a strategic action (STR-094); typed
+`dailyOutput` (STR-015, with Q56); stale `feesUsd` text fixed.
