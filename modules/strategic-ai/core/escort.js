@@ -1,7 +1,7 @@
 // SAI-017: the Krug scores each pending escort request (STR-094) with the doctrine's escortAccept
 // considerations — price (USD), requester standing (relation, or the player's Krug reputation),
-// free squads (count of own squads without a goal that can reach the convoy) and route danger (share of
-// the route's known tiles with known enemy strength or hostile control) — and accepts when the total is
+// free squads (count of own squads without a goal that can reach the convoy) and route danger (highest
+// threat layer along the route, 0–1, SAI-006) — and accepts when the total is
 // above escortAccept.threshold and a free squad is left. One answer per request, one squad per convoy.
 import { score, logEntry } from './scoring.js';
 
@@ -14,9 +14,7 @@ export function answerEscorts(ctx, maps, doctrine, taken) {
     const free = ctx.ownSquads.filter((s) => !s.transit && !s.goal && !taken.has(s.id)
       && Number.isFinite(ctx.stepsBetween(s.region, req.region)));
     const route = (req.route ?? []).filter((id) => ctx.regions.has(id));
-    const danger = route.length
-      ? route.filter((id) => (maps[id]?.enemyStrength ?? 0) > 0 || ctx.isEnemy(ctx.regions.get(id).controller)).length / route.length
-      : 0;
+    const danger = Math.max(0, ...route.map((id) => maps[id]?.threat ?? 0));
     const accept = score(`accept:${req.id}`, {
       price: req.priceUsd ?? 0,
       standing: req.relation ?? req.reputation ?? 0,
@@ -30,7 +28,7 @@ export function answerEscorts(ctx, maps, doctrine, taken) {
     if (ok) {
       const squad = free.reduce((a, b) => (ctx.stepsBetween(b.region, req.region) < ctx.stepsBetween(a.region, req.region) ? b : a));
       taken.add(squad.id);
-      assigned.set(squad.id, req.region);
+      assigned.set(squad.id, { region: req.region, value: accept.total - threshold });
       commands.push({ type: 'answerEscort', requestId: req.id, accept: true, squad: squad.id });
     } else {
       commands.push({ type: 'answerEscort', requestId: req.id, accept: false });

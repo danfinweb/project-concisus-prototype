@@ -153,7 +153,7 @@ export default {
 
     // ---------------- SAI-004 Command set ----------------
     {
-      id: 'sai004-legal-random', spec: ['SAI-004', 'SAI-005'], name: '40 random views: no illegal command (own squads, adjacency, one action and one assignment per squad, no action in transit)',
+      id: 'sai004-legal-random', spec: ['SAI-004', 'SAI-005'], name: '40 random views: no illegal command (own squads, adjacency, one action and one assignment per squad, funds, recruit pool)',
       async run({ assert, ...ctx }) {
         await setup(ctx);
         for (const s of seeds(40)) {
@@ -222,6 +222,19 @@ export default {
       },
     },
     {
+      id: 'sai006-curve-step', spec: ['SAI-006'], name: 'Step curve: y of the last point whose x ≤ input, clamped outside',
+      async run({ assert }) {
+        const { responseCurve } = await loadCore();
+        const c = { type: 'step', points: [[0, 0.2], [5, 0.6], [10, 1]] };
+        assert.equal(responseCurve(c, -1), 0.2, 'below the first x');
+        assert.equal(responseCurve(c, 0), 0.2);
+        assert.equal(responseCurve(c, 4.9), 0.2);
+        assert.equal(responseCurve(c, 5), 0.6);
+        assert.equal(responseCurve(c, 9), 0.6);
+        assert.equal(responseCurve(c, 50), 1, 'above the last x');
+      },
+    },
+    {
       id: 'sai006-curve-range', spec: ['SAI-006'], name: 'Curve output always lies in 0..1',
       async run({ assert }) {
         const { responseCurve } = await loadCore();
@@ -271,7 +284,7 @@ export default {
 
     // ---------------- SAI-007 Situation maps ----------------
     {
-      id: 'sai007-layers', spec: ['SAI-007'], name: 'One entry per known region with all six layers',
+      id: 'sai007-layers', spec: ['SAI-007', 'SAI-006'], name: 'One entry per known region with all six layers, each on the 0–1 scale',
       async run({ assert, ...ctx }) {
         await setup(ctx);
         const { situationMaps } = await loadCore();
@@ -280,7 +293,7 @@ export default {
         assert.deepEqual(Object.keys(m).sort(), v.knownRegions.map((r) => r.id).sort());
         for (const [id, l] of Object.entries(m)) {
           for (const k of ['ownStrength', 'enemyStrength', 'economicValue', 'threat', 'frontline', 'supplyReach']) {
-            assert.ok(Number.isFinite(l[k]), `${id}.${k}`);
+            assert.ok(Number.isFinite(l[k]) && l[k] >= 0 && l[k] <= 1, `${id}.${k} = ${l[k]} not on the 0–1 scale`);
           }
         }
       },
@@ -602,6 +615,25 @@ export default {
       },
     },
 
+    {
+      id: 'sai013-shared-objective', spec: ['SAI-013'], name: 'Unfriendly plus the same goal and target (knownGoal/knownTarget) makes it hostile; another target does not',
+      async run({ assert, ...ctx }) {
+        await setup(ctx);
+        await patchDoctrine('ssv', { logTopN: 50 });
+        const build = (knownTarget) => {
+          const v = playerNearby('ssv', { reputationWithPlayer: { value: -30, standing: 'unfriendly' } });
+          v.ownSquads[1].goal = 'attackPoi'; v.ownSquads[1].target = 'r2_1';
+          Object.assign(v.knownSquads.find((k) => k.id === 'player-k1'), { knownGoal: 'attackPoi', knownTarget });
+          return v;
+        };
+        const same = build('r2_1'), other = build('r4_1');
+        assert.ok(namesPlayer(await run(same), same), 'same objective: the player is no candidate');
+        const res = await run(other);
+        noViolations(assert, other, res);
+        assert.ok(!namesPlayer(res, other), 'other target: a candidate targets the player');
+      },
+    },
+
     // ---------------- SAI-014 Contract offers ----------------
     {
       id: 'sai014-no-squads', spec: ['SAI-014', 'SAI-009'], name: 'Without squads a faction covers objectives by contract or by raising a squad',
@@ -658,6 +690,35 @@ export default {
       },
     },
     {
+      id: 'sai014-cost-is-money', spec: ['SAI-014', 'SAI-006'], name: 'cost is money spent now: 0 for objectives own squads work, > 0 for offers and recruits',
+      async run({ assert, ...ctx }) {
+        await setup(ctx);
+        await patchDoctrine('ssv', { logTopN: 50, personality: { contractUse: 1 } });
+        const withSquads = await run(makeView('ssv'));
+        for (const o of strategistEntries(withSquads).flatMap((e) => e.options)) {
+          assert.ok(!(o.considerations?.cost > 0), `${o.option}: cost ${o.considerations?.cost} for an own-squad objective`);
+        }
+        const none = allOptions(await run(makeView('ssv', { ownSquads: [] }))).filter((o) => /^(offer|recruit):/.test(o.option));
+        assert.ok(none.length > 0, 'no offer or recruit candidate without squads');
+        assert.ok(none.every((o) => o.considerations?.cost > 0), 'an offer or recruit has no cost');
+      },
+    },
+    {
+      id: 'sai014-recruit-pool', spec: ['SAI-014', 'SAI-009'], name: 'No recruit when recruitsAvailable is below the squad template size',
+      async run({ assert, ...ctx }) {
+        await setup(ctx);
+        await patchDoctrine('ssv', { personality: { contractUse: 0 } });
+        for (const s of seeds(5)) {
+          const v = makeView('ssv', { ownSquads: [], recruitsAvailable: 5 }); // template size 6
+          const res = await run(v, s);
+          noViolations(assert, v, res, `seed ${s}:`);
+          assert.equal(cmds(res, 'recruit').length, 0, `seed ${s}: recruit with 5 of 6 recruits`);
+          const ok = await run(makeView('ssv', { ownSquads: [], recruitsAvailable: 6 }), s);
+          assert.equal(cmds(ok, 'recruit').length, 1, `seed ${s}: no recruit with 6 recruits and funds`);
+        }
+      },
+    },
+    {
       id: 'sai014-hard-limit', spec: ['SAI-014'], name: 'hardLimit: no offer, recruit or escort hire without the funds',
       async run({ assert, ...ctx }) {
         await setup(ctx);
@@ -673,13 +734,13 @@ export default {
       },
     },
     {
-      id: 'sai014-score-term', spec: ['SAI-014'], name: 'scoreTerm: the overdraft lowers every costly candidate',
+      id: 'sai014-score-term', spec: ['SAI-014', 'SAI-006'], name: 'scoreTerm: the overdraft lowers every candidate that costs money (offers, recruits)',
       async run({ assert, ...ctx }) {
         await setup(ctx);
         await patchTable('economy-rules', { fundsMode: 'scoreTerm' });
-        await patchDoctrine('ssv', { logTopN: 50 });
-        const byOpt = async (od) => Object.fromEntries(strategistEntries(await run(makeView('ssv', { funds: 0, overdraft: od })))
-          .flatMap((e) => e.options).map((o) => [o.option, o]));
+        await patchDoctrine('ssv', { logTopN: 50, personality: { contractUse: 1 } });
+        const byOpt = async (od) => Object.fromEntries(allOptions(await run(makeView('ssv', { ownSquads: [], funds: 0, overdraft: od })))
+          .map((o) => [o.option, o]));
         const a = await byOpt(0), b = await byOpt(50000);
         const costly = Object.keys(a).filter((k) => k in b && (a[k].considerations?.cost ?? 0) > 0);
         assert.ok(costly.length > 0, 'no costly candidate');

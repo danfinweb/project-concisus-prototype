@@ -1,12 +1,15 @@
 // Tier 2 — strategist (SAI-008, SAI-012, SAI-013, SAI-015, SAI-016): enumerate candidate objectives over
-// the situation maps and score each as ownGain + damageToRivals − cost − risk + commitmentBonus.
-// Consideration inputs in raw units (the doctrine's curves map them to 0..1):
-//   capital, territory, tradeRoutes, patronStanding, harassment: 0 or 1
-//   income: USD per day of the target POI; contractPay: USD (MGT-046 pay of the offer)
-//   survival: 1 − risk share; damageToRivals: aggression × the target owner's hostility share
-//   cost: steps to the target from the nearest own squad (or own ground); risk: enemy share of the
-//   strength around the target, lowered by riskTolerance; overdraft: USD (scoreTerm only, costly options)
-//   signOverlap: share of a measure's typical signs among the view's crisis signs
+// the situation maps and score each as ownGain + damageToRivals − cost − risk + commitmentBonus, with the
+// SAI-006 vocabulary (names and input units):
+//   cost: money spent now — 0 for objectives own squads work and offers it takes (offers it posts and
+//         recruits are planner candidates, SAI-014); risk: threat layer at the target (0–1)
+//   damageToRivals: larger of the economic value and enemy strength layers at a rival's target (0–1)
+//   gain terms: capital (0/1), territory (tiles), plants (count), income (USD/day), contractPay (USD,
+//   MGT-046), patronStanding (0/1), tradeRoutes (tiles), markets (count), avoidWar (0/1),
+//   survival (1 − threat), harassment (economic value layer of a target the area's controller holds)
+//   signOverlap (measures): share of typical signs in crisisSigns
+// Personality (SAI-010; where it enters is SCOPE open question 4): damageToRivals × aggression ×
+// hostility share; risk ÷ (1 + riskTolerance); contractUse in the planner's posting decision.
 import { data } from './context.js';
 import { score, doctrineLookup } from './scoring.js';
 
@@ -32,8 +35,8 @@ export function strategize(ctx, maps, doctrine) {
   const maxHostility = Math.max(0, ...Object.values(hostility));
   const patron = ctx.faction?.patron;
   const freeSquads = ctx.ownSquads.filter((s) => !s.transit);
-  const ownTiles = ctx.regionList.filter((r) => r.controller === self).map((r) => r.id);
   const lookup = doctrineLookup(doctrine);
+  const ownMarkets = ctx.regionList.filter((r) => r.krugMarket && r.controller === self).map((r) => r.id);
 
   const rivalWeight = (f) => {
     if (!f || f === self) return 0;
@@ -49,35 +52,25 @@ export function strategize(ctx, maps, doctrine) {
     }
     return best;
   };
-  const fromOwnGround = (region) => (ownTiles.length ? ctx.bfs(ownTiles).steps.get(region) ?? Infinity : Infinity);
-  const riskAt = (region, own) => {
-    const t = maps[region]?.threat ?? 0;
-    return t + own > 0 ? t / (t + own) : 0;
-  };
   const pursued = (goal, target) => ctx.ownSquads.some((s) => s.goal === goal && s.target === target);
 
   const candidates = [];
   function add(c) {
-    const region = c.region;
-    const near = nearest(region);
-    const steps = Number.isFinite(near.steps) ? near.steps : fromOwnGround(region);
-    const cost = Number.isFinite(steps) ? steps : 0;
-    const riskShare = riskAt(region, near.squad?.strength ?? 0);
-    const inputs = { ...c.gain };
-    if (c.owner !== undefined) inputs.damageToRivals = ATTACK_GOALS.has(c.goal) || c.kind === 'accept' ? aggression * rivalWeight(c.owner) : 0;
-    if (c.kind !== 'measure') {
-      inputs.cost = cost;
-      inputs.risk = riskShare / (1 + riskTolerance);
-      if (inputs.survival !== undefined) inputs.survival = 1 - riskShare;
-      if (cost > 0 && typeof view.overdraft === 'number') inputs.overdraft = view.overdraft;
-    }
+    const m = maps[c.region] ?? {};
+    const threat = m.threat ?? 0;
+    const inputs = { ...c.gain, survival: 1 - threat };
+    const w = rivalWeight(c.owner);
+    inputs.damageToRivals = w > 0 && (ATTACK_GOALS.has(c.goal) || c.kind === 'accept')
+      ? aggression * w * Math.max(m.economicValue ?? 0, m.enemyStrength ?? 0) : 0;
+    inputs.cost = 0;
+    inputs.risk = threat / (1 + riskTolerance);
     if (c.committed) inputs.commitmentBonus = 1;
-    const scored = score(c.label, inputs, lookup);
-    candidates.push({ ...c, ...scored, squad: near.squad, reachable: Number.isFinite(near.steps) });
+    const near = nearest(c.region);
+    candidates.push({ ...c, ...score(c.label, inputs, lookup), squad: near.squad, reachable: Number.isFinite(near.steps) });
   }
 
-  // Objectives on tiles: hold own POIs, take enemy or unheld ones, patrol threatened own ground,
-  // the Krug's trade routes on market tiles (STR-018 goals).
+  // Objectives on tiles: hold own POIs, take enemy-held or unheld ones, patrol threatened own ground,
+  // the Krug's trade routes to market tiles (STR-018 goals).
   const isTrader = ctx.faction?.kind === 'trader';
   for (const r of ctx.regionList) {
     if (!ctx.passable(r.id)) continue;
@@ -90,17 +83,18 @@ export function strategize(ctx, maps, doctrine) {
     if (own && ((maps[r.id]?.frontline ?? 0) > 0 || (maps[r.id]?.enemyStrength ?? 0) > 0)) goals.push('patrol');
     if (isTrader && r.krugMarket) goals.push('tradeRoute');
     for (const goal of goals) {
-      add({
-        kind: 'objective', goal, target: r.id, region: r.id, label: `${goal}:${r.id}`, owner: r.controller ?? null,
-        committed: pursued(goal, r.id), gain: gainTerms(ctx, maps, goal, r, null),
-      });
+      add({ kind: 'objective', goal, target: r.id, region: r.id, label: `${goal}:${r.id}`, owner: r.controller ?? null,
+        committed: pursued(goal, r.id), gain: gainTerms(ctx, maps, goal, r, null, ownMarkets) });
     }
   }
   // Hunts on known enemy squads (the player's only while hostile, SAI-013).
   for (const s of ctx.knownSquads) {
     if (!s.id || !ctx.isEnemy(s.faction) || !ctx.regions.has(s.region)) continue;
+    const r = ctx.regions.get(s.region);
+    const gain = gainTerms(ctx, maps, 'hunt', r, null, ownMarkets);
+    gain.harassment = r.controller === s.faction ? maps[r.id]?.economicValue ?? 0 : 0;
     add({ kind: 'objective', goal: 'hunt', target: s.id, region: s.region, label: `hunt:${s.id}`, owner: s.faction,
-      committed: pursued('hunt', s.id), gain: gainTerms(ctx, maps, 'hunt', ctx.regions.get(s.region), null) });
+      committed: pursued('hunt', s.id), gain });
   }
   // Contracts this faction took (role contractor, SAI-015): their open missions are objectives it pursues.
   for (const c of view.contracts ?? []) {
@@ -111,7 +105,7 @@ export function strategize(ctx, maps, doctrine) {
       const goal = c.sourceGoal ?? 'attackPoi';
       add({ kind: 'objective', goal, target: m.location ?? region, region, label: `contract:${c.id}:${m.key}:${goal}:${region}`,
         owner: c.targetFaction ?? ctx.regions.get(region)?.controller ?? null, committed: true,
-        gain: { ...gainTerms(ctx, maps, goal, ctx.regions.get(region), c), contractPay: offerPay([m], c.payInputs) } });
+        gain: { ...gainTerms(ctx, maps, goal, ctx.regions.get(region), c, ownMarkets), contractPay: offerPay([m], c.payInputs) } });
     }
   }
   // Offers from the own side (SAI-015): rival PMCs only.
@@ -136,17 +130,29 @@ export function strategize(ctx, maps, doctrine) {
   return candidates;
 }
 
-// ownGain terms per goal, rated against the faction's ultimate goal (SAI-008); the doctrine's gainTerms
-// decide which of them count and how much.
-function gainTerms(ctx, maps, goal, region, contract) {
-  const g = {};
-  const own = region?.controller === ctx.self;
-  g.capital = POI_GOALS.has(goal) && region?.id === ctx.capitalTile ? 1 : 0;
-  g.territory = goal === 'attackPoi' && !own ? 1 : 0;
-  g.income = POI_GOALS.has(goal) ? maps[region?.id]?.economicValue ?? 0 : 0;
-  g.tradeRoutes = goal === 'tradeRoute' || (region?.krugMarket && (goal === 'holdPoi' || goal === 'patrol')) ? 1 : 0;
-  g.harassment = goal === 'hunt' || (goal === 'attackPoi' && region?.controller && ctx.isEnemy(region.controller)) ? 1 : 0;
-  g.patronStanding = contract && ctx.faction?.patron === contract.employer ? 1 : 0;
-  if (goal === 'patrol' || goal === 'holdPoi') g.survival = 0; // filled in from the risk share
+// ownGain terms of one objective (SAI-006 vocabulary); the doctrine's gainTerms decide which count.
+function gainTerms(ctx, maps, goal, region, contract, ownMarkets) {
+  const id = region?.id;
+  const takesOrHolds = POI_GOALS.has(goal);
+  const enemyThere = (maps[id]?.enemyStrength ?? 0) > 0 || (region?.controller && ctx.isEnemy(region.controller));
+  const g = {
+    capital: takesOrHolds && id === ctx.capitalTile ? 1 : 0,
+    territory: takesOrHolds ? 1 : 0,
+    plants: takesOrHolds && data.get('poi', region?.poi)?.category === 'plant' ? 1 : 0,
+    income: takesOrHolds ? data.get('poi', region?.poi)?.income ?? 0 : 0,
+    patronStanding: contract && ctx.faction?.patron === contract.employer ? 1 : 0,
+    markets: region?.krugMarket && (takesOrHolds || goal === 'patrol' || goal === 'tradeRoute') ? 1 : 0,
+    avoidWar: ATTACK_GOALS.has(goal) || enemyThere ? 0 : 1,
+    harassment: goal === 'attackPoi' && region?.controller && ctx.isEnemy(region.controller) ? maps[id]?.economicValue ?? 0 : 0,
+    tradeRoutes: 0,
+  };
+  if (goal === 'tradeRoute') {
+    // Route tiles secured: the path from the nearest own market (or the market itself) to this one.
+    const from = ownMarkets.filter((m) => m !== id);
+    const steps = from.length ? Math.min(...from.map((m) => ctx.stepsBetween(m, id))) : 0;
+    g.tradeRoutes = Number.isFinite(steps) ? steps + 1 : 1;
+  } else if (region?.krugMarket && (goal === 'holdPoi' || goal === 'patrol')) {
+    g.tradeRoutes = 1;
+  }
   return g;
 }

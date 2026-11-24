@@ -6,14 +6,20 @@ export const NEGATIVE = new Set(['cost', 'risk', 'overdraft', 'routeDanger']);
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
-// curve { type: 'linear', points: [[x, y], …] }: piecewise-linear, flat beyond the end points, clamped
-// to 0..1. Curve types other than linear are not defined by the spec yet.
+// curve { type, points: [[x, y], …] } (SAI-006, ai-doctrines $defs/curve), raw input → 0..1:
+//   linear: piecewise-linear through the points; step: y of the last point whose x ≤ input.
+// Both clamp outside the points (below the first x → first y, above the last → last y).
 export function responseCurve(curve, x) {
   const pts = curve?.points;
   if (!Array.isArray(pts) || pts.length === 0) return clamp01(x);
   const type = curve.type ?? 'linear';
-  if (type !== 'linear') throw new Error(`responseCurve: unknown curve type "${type}"`);
   const p = [...pts].sort((a, b) => a[0] - b[0]);
+  if (type === 'step') {
+    let y = p[0][1];
+    for (const [px, py] of p) if (px <= x) y = py;
+    return clamp01(y);
+  }
+  if (type !== 'linear') throw new Error(`responseCurve: unknown curve type "${type}"`);
   if (x <= p[0][0]) return clamp01(p[0][1]);
   for (let i = 1; i < p.length; i++) {
     const [x1, y1] = p[i];

@@ -6,16 +6,14 @@
     "gainTerms": {
       "capital": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "territory": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "income": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "plants": { "weight": 1, "curve": { "type": "step", "points": [[0, 0], [1, 1]] } },
+      "income": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [3000, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "signOverlap": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "logTopN": 3
@@ -27,16 +25,14 @@
     "gainTerms": {
       "capital": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "territory": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "income": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "plants": { "weight": 1, "curve": { "type": "step", "points": [[0, 0], [1, 1]] } },
+      "income": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [3000, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 0.6, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "signOverlap": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "logTopN": 3
@@ -46,17 +42,14 @@
     "personality": { "aggression": 0.9, "riskTolerance": 0.9, "contractUse": 0.2, "hostility": { "aegis": 1, "vdk": 0.5 } },
     "commitmentBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
     "gainTerms": {
-      "contractPay": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "contractPay": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [10000, 1]] } },
       "patronStanding": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } }
     },
     "logTopN": 3
   },
@@ -65,17 +58,14 @@
     "personality": { "aggression": 0.4, "riskTolerance": 0.2, "contractUse": 0.3, "hostility": { "varyag": 1, "ssv": 0.5 } },
     "commitmentBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
     "gainTerms": {
-      "contractPay": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "contractPay": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [10000, 1]] } },
       "patronStanding": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 0.8, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } }
     },
     "logTopN": 3
   },
@@ -84,17 +74,16 @@
     "personality": { "aggression": 0.1, "riskTolerance": 0.2, "contractUse": 0.5, "hostility": {} },
     "commitmentBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
     "gainTerms": {
-      "tradeRoutes": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "income": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "tradeRoutes": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [4, 1]] } },
+      "markets": { "weight": 1, "curve": { "type": "step", "points": [[0, 0], [1, 1]] } },
+      "avoidWar": { "weight": 1, "curve": { "type": "step", "points": [[0, 0], [1, 1]] } },
+      "income": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [3000, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 0.1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "overdraft": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } }
     },
     "escortAccept": {
       "considerations": {
@@ -113,14 +102,12 @@
     "commitmentBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
     "gainTerms": {
       "survival": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "avoidWar": { "weight": 0.5, "curve": { "type": "step", "points": [[0, 0], [1, 1]] } },
       "harassment": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "logTopN": 3
@@ -131,14 +118,11 @@
     "commitmentBonus": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
     "gainTerms": {
       "capital": { "weight": 3, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "income": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
+      "income": { "weight": 2, "curve": { "type": "linear", "points": [[0, 0], [3000, 1]] } }
     },
     "considerations": {
-      "progress": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "onTarget": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "attackOdds": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
       "damageToRivals": { "weight": 1, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
-      "cost": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } },
+      "cost": { "weight": 0.5, "curve": { "type": "linear", "points": [[0, 0], [50000, 1]] } },
       "risk": { "weight": 0.2, "curve": { "type": "linear", "points": [[0, 0], [1, 1]] } }
     },
     "logTopN": 3

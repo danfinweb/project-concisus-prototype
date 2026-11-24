@@ -8,11 +8,20 @@ const get = (table, id) => {
 const all = (table) => { try { return registry.all(table); } catch { return []; } };
 export const data = { get, all };
 
-// Square grid: 4 edge neighbours (STR-005). The hex option needs mapShape, which the view does not carry.
-const SQUARE = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+// STR-005 adjacency by the view's mapShape: square = 4 edge neighbours; hex = 6 neighbours, with x, y read
+// as axial coordinates (the spec does not fix the hex convention; SCOPE open question 5).
+const NEIGHBOURS = {
+  square: [[1, 0], [-1, 0], [0, 1], [0, -1]],
+  hex: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]],
+};
+const DISTANCE = {
+  square: (dx, dy) => Math.abs(dx) + Math.abs(dy),
+  hex: (dx, dy) => (Math.abs(dx) + Math.abs(dy) + Math.abs(dx + dy)) / 2,
+};
 
 export function buildContext(view) {
   const self = view.faction;
+  const shape = NEIGHBOURS[view.mapShape] ? view.mapShape : 'square';
   const regionList = view.knownRegions ?? [];
   const regions = new Map(regionList.map((r) => [r.id, r]));
   const byXY = new Map();
@@ -42,7 +51,7 @@ export function buildContext(view) {
     const r = regions.get(id);
     if (!r || !Number.isInteger(r.x)) return [];
     const out = [];
-    for (const [dx, dy] of SQUARE) {
+    for (const [dx, dy] of NEIGHBOURS[shape]) {
       const n = byXY.get(`${r.x + dx},${r.y + dy}`);
       if (n) out.push(n.id);
     }
@@ -52,7 +61,7 @@ export function buildContext(view) {
     const ra = regions.get(a), rb = regions.get(b);
     if (a === b) return 0;
     if (!ra || !rb || !Number.isInteger(ra.x) || !Number.isInteger(rb.x)) return Infinity;
-    return Math.abs(ra.x - rb.x) + Math.abs(ra.y - rb.y);
+    return DISTANCE[shape](ra.x - rb.x, ra.y - rb.y);
   };
 
   // Breadth-first search from one or more tiles over passable known tiles. Cached per source set.
@@ -84,8 +93,13 @@ export function buildContext(view) {
     while (out[0] !== a) out.unshift(prev.get(out[0]));
     return out;
   }
-  // Travel hours along a path: each entered tile costs its terrain moveHours (STR-006).
-  const pathHours = (p) => (p ?? []).slice(1).reduce((h, id) => h + (terrain(id)?.moveHours ?? 0), 0);
+  // Travel hours along a path (STR-006): a step along a road (roadTo of the tile left) costs
+  // roadMoveHours.vehicle, any other step the entered tile's terrain moveHours.
+  const roadHours = get('strategic-rules', 'roadMoveHours')?.vehicle;
+  const pathHours = (p) => (p ?? []).slice(1).reduce((h, id, i) => {
+    const onRoad = typeof roadHours === 'number' && (regions.get(p[i])?.roadTo ?? []).includes(id);
+    return h + (onRoad ? roadHours : terrain(id)?.moveHours ?? 0);
+  }, 0);
 
   // Where a target sits: a region ID, a known squad's region, or an own squad's region.
   function regionOf(target) {
@@ -102,8 +116,8 @@ export function buildContext(view) {
 }
 
 // SAI-013: hostile toward the player while (1) standing is hostile, (2) it has a mission targeting the
-// player, or (3) standing is unfriendly or worse and it and the player pursue the same objective. For (3)
-// the view's knownGoal carries no target, so a known player goal equal to an own squad's goal counts.
+// player, or (3) standing is unfriendly or worse and it and the player pursue the same objective: a player
+// squad's knownGoal and knownTarget equal one own squad's goal and target.
 export function isHostileToPlayer(view, playerIds) {
   const standing = view.reputationWithPlayer?.standing;
   if (standing === 'hostile') return true;
@@ -112,8 +126,8 @@ export function isHostileToPlayer(view, playerIds) {
     && (c.missions ?? []).some((m) => m.status === 'open' && (m.targets ?? []).some((t) => playerIds.has(t))));
   if (missionOnPlayer) return true;
   if (standing === 'unfriendly') {
-    const goals = new Set((view.ownSquads ?? []).map((s) => s.goal).filter(Boolean));
-    return (view.knownSquads ?? []).some((s) => s.faction === 'player' && s.knownGoal && goals.has(s.knownGoal));
+    return (view.knownSquads ?? []).some((k) => k.faction === 'player' && k.knownGoal
+      && (view.ownSquads ?? []).some((s) => s.goal === k.knownGoal && (s.target ?? null) === (k.knownTarget ?? null)));
   }
   return false;
 }

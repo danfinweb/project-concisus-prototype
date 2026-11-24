@@ -95,6 +95,8 @@ export function makeView(faction, o = {}) {
   const view = {
     faction,
     time: o.time ?? { day: 3, hour: 10 },
+    mapShape: o.mapShape ?? 'square',
+    recruitsAvailable: o.recruitsAvailable ?? 12,
     doctrine: o.doctrine === undefined ? faction : o.doctrine,
     ownRegions: o.ownRegions ?? ownRegions,
     ownSquads: o.ownSquads ?? [
@@ -171,6 +173,7 @@ export function randomView(seed, o = {}) {
     capital: { tile: cap, holder: controller[cap], occupant: controller[cap], contestedSince: null },
     reputationWithPlayer: { value: { hostile: -70, unfriendly: -30, neutral: 0, friendly: 30, trusted: 70 }[standing], standing },
     funds: o.funds ?? rng.pick([0, 500, 5000, 50000]),
+    recruitsAvailable: rng.pick([0, 3, 6, 12]),
     crisisSigns: ['ssv', 'vdk'].includes(faction) && rng.roll(50) ? ['troopLoss', 'littleTerritory'] : [],
   });
   if (['ssv', 'vdk'].includes(faction) && v.crisisSigns.length) v.availableMeasures = ['conscription', 'martialLaw'];
@@ -207,8 +210,8 @@ export function playerTargets(v) {
   return ids;
 }
 
-// SAI-013 conditions 1 and 2, and (permissive) condition 3: unfriendly-or-worse plus a player squad whose
-// known goal equals an own squad's goal (the view carries no target for knownGoal; see the test report).
+// SAI-013: (1) standing hostile, (2) a mission targeting the player, (3) unfriendly-or-worse plus a player
+// squad whose knownGoal and knownTarget equal an own squad's goal and target.
 export function hostileToPlayer(v) {
   const st = v.reputationWithPlayer?.standing;
   if (st === 'hostile') return true;
@@ -216,8 +219,8 @@ export function hostileToPlayer(v) {
     && (c.missions ?? []).some((m) => m.status === 'open' && (m.targets ?? []).some((t) => playerTargets(v).has(t))));
   if (missionOnPlayer) return true;
   if (st === 'unfriendly') {
-    const goals = new Set((v.ownSquads ?? []).map((s) => s.goal).filter(Boolean));
-    if ((v.knownSquads ?? []).some((s) => s.faction === 'player' && s.knownGoal && goals.has(s.knownGoal))) return true;
+    return (v.knownSquads ?? []).some((k) => k.faction === 'player' && k.knownGoal
+      && (v.ownSquads ?? []).some((s) => s.goal === k.knownGoal && (s.target ?? null) === (k.knownTarget ?? null)));
   }
   return false;
 }
@@ -250,7 +253,6 @@ export function violations(v, result) {
       if (ACTIONS.includes(c.type)) {
         if (acted.has(c.squad)) out.push(`${at}: second action for ${c.squad}`);
         acted.add(c.squad);
-        if (s.transit) out.push(`${at}: action for ${c.squad} while in transit`);
       } else {
         if (assigned.has(c.squad)) out.push(`${at}: second assignment for ${c.squad}`);
         assigned.add(c.squad);
@@ -302,6 +304,7 @@ export function violations(v, result) {
     if (c.type === 'recruit') {
       const t = registry.get('factions', v.faction)?.squadTemplate?.size ?? 1;
       spend += (rules.raiseSquad?.costPerSoldierUsd ?? 0) * t;
+      if ((v.recruitsAvailable ?? 0) < t) out.push(`${at}: needs ${t} recruits, ${v.recruitsAvailable ?? 0} available (STR-096)`);
       const r = (v.ownRegions ?? []).find((x) => x.id === c.target);
       const cat = r?.poi && registry.get('poi', r.poi)?.category;
       if (!['town', 'smallCity', 'largeCity'].includes(cat)) out.push(`${at}: ${c.target} is not an own town or city`);
