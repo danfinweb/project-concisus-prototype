@@ -42,10 +42,12 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `faction` | ID of the deciding faction |
 | `time` | Current day and hour |
 | `doctrine` | Doctrine ID to use (SAI-010) |
+| `mapShape` | Grid shape, `square` or `hex`: sets adjacency and distance (STR-005) |
+| `recruitsAvailable` | Its own recruit pool, soldiers a `recruit` can draw (STR-014, STR-096) |
 | `ownRegions` | Regions and points of interest it controls: `id`, `poi`, `krugMarket`, `output`, and on settlement tiles `loyalty` as one value per faction (faction → −100…100, STR-009) |
 | `ownSquads` | Its squads: `id`, `region`, `goal`, `target`, `strength`, `supplies`, `fuel`, `morale`, `vehicle` (null = on foot), `transit` (the move in progress `{ toRegion, hoursLeft }` or null, STR-017) |
-| `knownRegions` | Every region it has seen: `terrain`, `road`, `poi`, `krugMarket`, `controller`, `loyalty` (per faction), `flags` — current if in recon range, else last known state with the time `observed` |
-| `knownSquads` | Foreign squads it knows of (including the player's): `faction`, `region`, `estimatedStrength`, time `seen`, `knownGoal` if intel reveals it |
+| `knownRegions` | Every region it has seen: `id`, `x`, `y`, `terrain`, `road` (kind), `roadTo` (adjacent tiles the road continues to), `roadCrossing` (`bridge`/`ford` on water), `poi`, `krugMarket`, `controller`, `loyalty` (per faction), `flags` — current if in recon range, else last known state with the time `observed` |
+| `knownSquads` | Foreign squads it knows of (including the player's): `id`, `faction`, `region`, `estimatedStrength`, time `seen`, `knownGoal` and its `knownTarget` if intel reveals them |
 | `capital` | The capital tile, its `holder`, `occupant` and `contestedSince` (STR-007) |
 | `vips` | Its own VIPs and the enemy VIPs it holds intel on (STR-045, STR-048): `id`, `faction`, `rank`, `regionId`; own VIPs `guardSquadIds`; enemy VIPs `guardSize`, `observed` and `intelExpires` (after it, last known state) |
 | `relations` | Its relation to every other faction (range and thresholds → see STR-051) |
@@ -58,6 +60,9 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `crisisSigns` | Its true crisis signs from the last daily check (STR-069) |
 | `availableMeasures` | Desperate measures it may start now (STR-070, SAI-016) |
 | `escortRequests` | Krug only: pending paid-escort requests (STR-094), each `id`, `requester`, `convoy` (squad), `region`, `route`, `priceUsd`, and the requester's standing toward the Krug (`relation`, or for the player `reputation`) (SAI-017) |
+
+(cleanup 2026-11-24, view 0.9.0: `mapShape`, `recruitsAvailable`, `knownSquads.id`, `knownTarget`,
+`roadTo`, `roadCrossing` added.)
 
 **Source.** design/ai.md › Strategic AI (Controller hand-off; Faction AI tiers); design/strategic-layer.md › Map (draft) (Fog of war); › Squads and simulation (draft) (Faction funds (draft))
 
@@ -92,6 +97,10 @@ action (or an assignment) in that set is rejected, the earlier one stands and th
 unaffected; for `acceptContract` the whole command is rejected if any of its `squads` is already assigned.
 A squad named in no action command continues its move in progress or stands by (STR-020). (cleanup
 2026-11-24, spec choice: first wins.)
+A squad in `transit` may get a new action, as the player may cancel a move at planning (STR-002, STR-003;
+same rules for every faction, STR-017, STR-020): the action cancels the move first (squad on its origin
+tile, no fuel spent) and then resolves. A `moveSquad` to the transit's own `toRegion` is not a new action:
+the move continues. (cleanup 2026-11-24, spec choice.)
 Valid contract offers are forwarded to Management as a `contractOffer` management request (STR-044).
 Trade and buying gear are not commands: AI squads are supplied by the rules of STR-014 and STR-092.
 **Source.** design/ai.md › Strategic AI (Controller hand-off; Faction AI tiers); design/ai.md › Overview
@@ -109,6 +118,42 @@ the agent, scores each as the weighted combination of its considerations, every 
 through a response curve to 0–1, and picks the highest score (ties broken by `rng`). Behaviour comes from
 the shared situation maps (SAI-007) and from factions reacting to each other, not from scripts. Weights,
 response curves and doctrines are data (SAI-010).
+
+A consideration is `{ weight, curve }`; a curve maps the raw input (in the unit below) to 0–1 and is
+`{ type, points }` with `points` as `[x, y]` pairs sorted by `x`, `y` in 0–1. Curve types (spec choice,
+cleanup 2026-11-24): `linear` (piecewise-linear through the points) and `step` (the `y` of the last point
+whose `x` ≤ the input); both clamp outside the points (below the first `x` → first `y`, above the last →
+last `y`). Schema: `ai-doctrines` `$defs/consideration`, `$defs/curve`.
+
+Situation-map layers (SAI-007) are per-region values on a 0–1 scale (how a layer is normalised is doctrine
+data). Names the code reads and the unit of each input (spec choice, cleanup 2026-11-24); a doctrine may
+leave out a name it does not use (the term then adds 0):
+
+| Name | Where | Used by | Input (unit) |
+| --- | --- | --- | --- |
+| `cost` | `considerations` | SAI-008, SAI-009, SAI-014 | money the candidate spends now: contract pay (SAI-014), `recruit` cost (STR-096), escort price (STR-094); 0 if none (USD) |
+| `risk` | `considerations` | SAI-008, SAI-009 | `threat` layer at the objective's target region (0–1) |
+| `damageToRivals` | `considerations` | SAI-008 | the larger of the `economic value` taken from a rival there and the `enemy strength` the objective removes (layers, 0–1); 0 if it touches no rival |
+| `overdraft` | `considerations` | SAI-014 | the view's `overdraft`, for candidates that cost money (USD) |
+| `signOverlap` | `considerations` | SAI-016 | share of the measure's typical signs that are in `crisisSigns` (0–1) |
+| `commitmentBonus` | own field | SAI-008 | 1 for an objective the faction already pursues (else the term is not applied) |
+| `capital` | `gainTerms` | SAI-008 | 1 if the objective takes or holds the capital tile (STR-007), else 0 |
+| `territory` | `gainTerms` | SAI-008 | tiles the objective takes or holds (tiles) |
+| `plants` | `gainTerms` | SAI-008 | plant POIs (STR-010) the objective takes or holds (count) |
+| `income` | `gainTerms` | SAI-008 | POI income the objective gains or keeps (USD per day, STR-014) |
+| `contractPay` | `gainTerms` | SAI-008, SAI-015 | pay of the offer taken (MGT-046 formula, SAI-014); 0 otherwise (USD) |
+| `patronStanding` | `gainTerms` | SAI-008 | 1 if the objective is its patron's contract or acts against a faction hostile to its patron (STR-051), else 0 |
+| `tradeRoutes` | `gainTerms` | SAI-008 | Krug route tiles the objective secures (tiles) |
+| `markets` | `gainTerms` | SAI-008 | `krugMarket` tiles the objective holds or guards (count) |
+| `avoidWar` | `gainTerms` | SAI-008 | 1 if the objective needs no fight, else 0 |
+| `survival` | `gainTerms` | SAI-008 | 1 − `threat` at the squads' destination (0–1) |
+| `harassment` | `gainTerms` | SAI-008 | `economic value` of a target held by the area's controller (0–1) |
+| `price` | `escortAccept.considerations` | SAI-017 | request `priceUsd` (USD) |
+| `standing` | `escortAccept.considerations` | SAI-017 | requester `relation` toward the Krug (STR-051 range) or, for the player, its Krug `reputation` (MGT-054 range) |
+| `freeSquads` | `escortAccept.considerations` | SAI-017 | own squads without a goal that can reach the convoy (count) |
+| `routeDanger` | `escortAccept.considerations` | SAI-017 | highest `threat` along `route` (0–1) |
+
+Terms enter the SAI-008 sum with its sign: `cost`, `risk` and `overdraft` are subtracted, all others added.
 **Values.** considerations, weights, curves per doctrine — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/ai.md (intro, Data)
 
@@ -135,7 +180,8 @@ player. `ownGain` is rated against the faction's ultimate goal:
 | resistance groups (STR-067) | survive, and harass the controller until it leaves their area |
 | a rogue PMC with no patron (STR-066) | seize and hold the capital or plants |
 
-How each goal turns into gain terms is doctrine data.
+How each goal turns into gain terms is doctrine data: `ownGain` is the weighted sum of the doctrine's
+`gainTerms` (term name → consideration, names and units: SAI-006); `commitmentBonus` is one consideration.
 **Values.** term inputs, curves and weights (`considerations`), `commitmentBonus`, `gainTerms` (ownGain terms per ultimate goal) — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/ai.md › Strategic AI (Faction AI tiers; Faction behaviour); design/strategic-layer.md › Squads and simulation (draft)
 
@@ -196,7 +242,9 @@ goals on the strategic map and in tactical engagements alike unless SAI-013 make
    (thresholds: the standing table of MGT-054 in data/management-rules.json);
 2. it has a mission targeting the player (a hunt, a counter-attack on an FOB);
 3. its standing toward the player is `unfriendly` or worse and it and the player pursue the same
-   objective at the same time (the MGT-054 rule).
+   objective at the same time (the MGT-054 rule). Same objective = same goal and target: a player squad's
+   `knownGoal` and `knownTarget` in `knownSquads` equal one of its own squads' `goal` and `target`
+   (cleanup 2026-11-24, spec choice).
 Otherwise it is non-hostile. The AI may only target the player (goal `hunt`/`attackPoi` against a player
 FOB, `moveSquad` to engage) while hostile. Attacking a non-hostile faction is the player's choice and costs
 reputation (MGT).
@@ -208,7 +256,10 @@ reputation (MGT).
 whose squads are worth more elsewhere (SAI-009), or that it wants deniable. With intel on a rival's goal it
 may post a counter-contract against it (`counterContractOf`). How readily it does so is the doctrine's
 `personality.contractUse` (SAI-010).
-The pay is a cost to its funds (STR-092, STR-093). Funds are a hard limit by default: a faction cannot
+The pay is a cost to its funds (STR-092, STR-093). The AI computes an offer's pay exactly with the MGT-046
+formula from the offer's own `payInputs` and each mission type's `payBand` (data/missions.json): the same
+value Strategic checks against funds under `hardLimit` (STR-092); the advance is part of it (MGT-047).
+(cleanup 2026-11-24, spec choice: rule named, no estimate field.) Funds are a hard limit by default: a faction cannot
 offer a contract or raise a squad (`recruit`, STR-096) it cannot pay for, and STR rejects such a command,
 so the AI should not emit it; in the test mode `fundsMode = scoreTerm` funds only weigh in the score
 (STR-092): funds show 0 once spent, and the view's `overdraft` lowers the score of every candidate that
@@ -253,10 +304,11 @@ free squads (own squads without a goal that could reach the convoy; a squad else
 convoy's tile first and delays its departure, STR-094) and the route's danger (situation maps, SAI-007).
 It attaches at most one squad per convoy. Requests that Krug resentment refused (GEN-010) never reach its
 view. It returns one `answerEscort { requestId, accept, squad }` per request: `accept = true`
-with the Krug squad it attaches when the score is above its refusal threshold, otherwise
+with the Krug squad it attaches when the score is above its refusal threshold (`escortAccept.threshold`),
+otherwise
 `accept = false`. Low standing, few free squads or a dangerous route make a refusal likely. A request it
 does not answer in that hour lapses as refused (STR-094).
-**Values.** considerations, weights and refusal threshold (`escortAccept`) — not set (design: all behaviour
+**Values.** considerations, weights and refusal threshold (`escortAccept.considerations`, `escortAccept.threshold`) — not set (design: all behaviour
 values unset) → data/ai/doctrines.json (Krug doctrine).
 **Source.** design/ai.md › Strategic AI (Faction AI tiers); design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft)); design/strategic-actions.md › Trade, services, contracts and factions
 
@@ -327,3 +379,14 @@ values unset) → data/ai/doctrines.json (Krug doctrine).
 17. **Resolved (cleanup 2026-11-24, commands 0.7.0):** decision log entry `{ time, faction, tier, decision,
     chosen, options[{ option, total, considerations }] }` (SAI-011). SAI-011 — the log entry fields had no
     names.
+18. **Resolved (cleanup 2026-11-24, view 0.9.0, commands 0.8.0, ai-doctrines 0.6.0):** SCOPE findings of
+    the `/test SAI-001..SAI-017` run. `commitmentBonus`, `gainTerms` and `escortAccept` are typed with
+    `$defs/consideration`, the refusal threshold is `escortAccept.threshold` (SAI-008, SAI-017); the view has
+    `knownSquads.id`, `knownTarget`, `mapShape`, `roadTo`/`roadCrossing` and `recruitsAvailable` (SAI-003,
+    SAI-013); offer pay is the exact MGT-046 formula (SAI-014, STR-092); consideration names, input units
+    and curve types `linear`/`step` (SAI-006); an action for a squad in `transit` cancels its move
+    (SAI-004, STR-002, STR-020).
+19. SAI-013 condition 3 — player squads hold no STR-018 goal (goals are for non-player squads), so a player
+    squad's `knownGoal`/`knownTarget` has no source. Needs a design decision: what "the player's objective"
+    is for this check (e.g. the target/location of a signed contract mission revealed by intel, or the tile
+    the player's squad moves toward), and when intel reveals it.

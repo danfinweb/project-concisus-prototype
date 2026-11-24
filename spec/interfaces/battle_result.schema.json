@@ -3,7 +3,7 @@
   "$id": "battle_result.schema.json",
   "title": "Battle result",
   "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, TAC-095, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/strategic", "modules/management"],
   "type": "object",
@@ -27,7 +27,9 @@
           "conditions": { "type": "array", "items": { "type": "object" } },
           "stamina": { "type": "integer" },
           "equipment": { "type": "object", "description": "Slot → item instance after the battle (ammo used, durability, condition); same slots as tactical_map_request, holster included" },
-          "skillUse": { "type": "array", "items": { "type": "object" }, "description": "Skill-use events for growth (MGT-023)" },
+          "skillUse": { "type": "array", "description": "Skill uses for growth, one entry per skill used (MGT-023; shape spec choice, cleanup 2026-11-24)", "items": { "type": "object", "required": ["skill", "uses"], "properties": {
+            "skill": { "enum": ["marksmanship", "recon", "medical", "technical"] },
+            "uses": { "type": "integer", "minimum": 1, "description": "Gaining uses of that skill in this battle; each gives skillGrowth.xpPerUse xp" } }, "additionalProperties": false } },
           "kills": { "type": "array", "items": { "type": "object", "properties": { "faction": { "type": "string" }, "distanceTiles": { "type": "number" }, "activation": { "type": "integer" } } } },
           "deedEvents": { "type": "array", "items": { "type": "object" }, "description": "Optional deeds (MGT-017): rescues, carries under fire, lowest head/thorax HP %" },
           "underFire": { "type": "boolean" },
@@ -41,8 +43,10 @@
     "leftBehind": { "type": "array", "items": { "type": "object" }, "description": "Gear left on the map or on bodies" },
     "casualties": { "type": "array", "description": "Killed and wounded per faction, including AI sides", "items": { "type": "object", "required": ["faction"], "properties": {
       "faction": { "type": "string" }, "killed": { "type": "integer", "minimum": 0 }, "wounded": { "type": "integer", "minimum": 0 }, "captured": { "type": "integer", "minimum": 0 } } } },
-    "acts": { "type": "array", "description": "Reputation-relevant acts: attack on non-hostile, civilian or prisoner kills, cargo destroyed or stolen, VIP captured or killed (MGT-056..MGT-059)", "items": { "type": "object", "required": ["type"], "properties": {
-      "type": { "type": "string" }, "faction": { "type": "string" }, "count": { "type": "integer" } } } },
+    "acts": { "type": "array", "description": "Reputation-relevant acts by the player's side: attack on non-hostile, civilian or prisoner kills, cargo destroyed or stolen, VIP captured or killed (MGT-056..MGT-060). Applied only when witnessed (witnesses, MGT-064)", "items": { "type": "object", "required": ["type"], "properties": {
+      "type": { "enum": ["joinFight", "rescue", "attackNonHostile", "killSoldier", "cargo", "captureVip", "assassinateVip", "krugBreak", "warCrime"], "description": "The act, named by its management-rules repActs key (MGT-060); the battle-side subset of reputationAct act" },
+      "faction": { "type": "string", "x-ref": "factions", "description": "The faction the act directly affects (MGT-060); absent for warCrime (every faction, MGT-059)" },
+      "count": { "type": "integer", "minimum": 1, "description": "How many times in this battle (default 1); killSoldier: soldiers of that faction killed, capped by repActs.killCapPerFight (MGT-058)" } }, "additionalProperties": false } },
     "witnesses": { "type": "object", "description": "faction → surviving witnesses (count); only witnessed acts are attributed (MGT-064)" },
     "playerAttributed": { "type": "boolean" },
     "vip": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "fate": { "enum": ["escaped", "killed", "captured", "restrained"] } } },

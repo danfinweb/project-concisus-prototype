@@ -44,7 +44,10 @@ base hire price, a fee per op and an attribute range. The tiers are also the sol
 
 Hiring happens at an FOB (MGT-066); local recruits also come from Krug standing (GEN-010) and civilian
 loyalty (GEN-006). Every FOB always offers at least one affordable candidate, so a replacement is always
-available. Hiring takes no game time (STR time rules).
+available. Spec reading (cleanup 2026-11-24): "affordable" is a property of the offer, not of the balance —
+each FOB's pool always holds at least one `recruit`-tier candidate whose hire price (MGT-003) is at most
+the `recruit` `hirePriceUsd`; whether the PMC can pay it is MGT-070. Hiring takes no game time (STR time
+rules).
 **Values.** the tier table (design draft) → data/recruitment.json `tiers[]` (`id`, `hirePriceUsd`,
 `feePerOpUsd`, `attributeRange`); tiers per pool, candidates per pool, refresh interval — not set
 (design: not stated) → data/recruitment.json `pools[]`
@@ -154,7 +157,8 @@ iterations; morale persistence itself is not.
 ### [MGT-009] Perks
 **Rule.** Perks unlock when a skill (`marksmanship`, `recon`, `medical`, `technical`) reaches a threshold:
 one perk per skill at `perkThresholds[0]` and one at `perkThresholds[1]` (8 perks in all). A perk, once
-unlocked, stays (spec assumption, also if the skill drifts back, MGT-025). Leadership is not a perk: it
+unlocked, stays (spec assumption, also if the skill drifts back, MGT-025). Perks of a soldier hired with a
+skill already at a threshold: Open questions 53. Leadership is not a perk: it
 comes from rank only (MGT-075). Management records which perks a soldier has (`perks`, MGT-001;
 published in `management_view` `roster`, MGT-072); each effect is applied by the
 owner of the rule it changes (TAC for battle rules, MGT-067 for repairs, TAC recovery for FOB healing):
@@ -295,7 +299,8 @@ skill rises by 1 and that cost is subtracted. The cost depends on the current va
 `skillGrowth.fastBelow`, `xpPerPoint.medium` from `fastBelow` up to `slowAbove`, `xpPerPoint.slow` above
 `slowAbove`. Gaining uses: marksmanship — hitting targets, reloading under fire; recon — moving unseen,
 scouting; medical — treating wounds; technical — repairing, using explosives (modding is no longer a
-Technical use, MGT-034). Uses are reported in battle results (TAC) and op results (STR). Capped at
+Technical use, MGT-034). Uses are reported in battle results (TAC; `battle_result` `soldiers[].skillUse`
+`[{ skill, uses }]`) and op results (STR). Capped at
 `attributeMax`.
 **Values.** `skillGrowth.fastBelow` — 50; `skillGrowth.slowAbove` — 80; `skillGrowth.xpPerUse` — 1;
 `skillGrowth.xpPerPoint` — `fast` 5, `medium` 10, `slow` 20 (design draft; "from 50 to 80" is the medium
@@ -445,7 +450,9 @@ that faction (MGT-055): Hostile — no trade; Unfriendly — basic stock only, a
 Trusted — adds armoured vehicles, helicopters, best stock. Trading takes no game time. Each trader's stock
 lives at its location; bought items go to the stash of the FOB there, or into the buying squad's
 containers and vehicle storage in the field (MGT-066).
-**Values.** stock lists per faction and standing → data/traders.json; `unfriendlyPriceMarkup` — 0.25
+**Values.** stock lists per faction and standing → data/traders.json `traders[]` (`id`, `faction`,
+`locationKind`, `stockByStanding` `{ basic, military, best }`: basic from Unfriendly, military added at
+Friendly, best added at Trusted; item IDs only, vehicles go through `vehicleTrade`); `unfriendlyPriceMarkup` — 0.25
 (design draft: +25%) → data/management-rules.json
 **Source.** design/management.md › Gear, loot & return › Traders; › Reputation › Standing
 
@@ -549,7 +556,10 @@ schema owned with STR)
 
 ### [MGT-045] Bundling missions into an op
 **Rule.** When planning an op (GEN-001) the player selects any missions from any signed contracts; one op
-may carry missions from several contracts. A mission may be in at most one op at a time.
+may carry missions from several contracts. A mission may be in at most one op at a time. Ops and their
+missions are Strategic's (STR-028): Strategic enforces this when an op launches, from the signed contracts
+and open missions in `management_view` (MGT-072); `launchOp` names no missions and Management does not
+check it (cleanup 2026-11-24).
 **Source.** design/management.md › Contracts and missions
 
 ### [MGT-046] Contract pay
@@ -587,7 +597,8 @@ from `management_view` (MGT-072).
 - **Failed contract:** a contract fails when its deadline passes with missions still open (`contractEnded`
   reason `deadline` from Strategic), or when every mission has failed (Management ends it itself,
   `endReason: allFailed`). A contract with at least one successful mission and no open ones is
-  `completed`. A failed contract: no further pay and a reputation loss with the employer (MGT-056); the
+  `completed`. A failed contract: no further pay and a reputation loss with the employer (MGT-056; amount
+  not set, Open questions 55); the
   player keeps the advance and owes nothing — no debt entry, no repayment (the former `repayDebt` request and
   `repayment` result are removed). A failed contract costs only reputation.
 - **Employer default:** a payment due that the employer's funds cannot cover fails the contract at once
@@ -719,7 +730,8 @@ in a Krug market −50 (see also GEN-009).
 
 ### [MGT-059] War crimes
 **Rule.** Killing civilians or prisoners changes reputation by `repActs.warCrime` with every faction, and
-civilian loyalty in that region collapses (applied by STR). Attribution (MGT-064) applies.
+civilian loyalty in that region collapses (applied by STR). Attribution (MGT-064) applies (per faction or
+by any witness: Open questions 54).
 **Values.** `repActs.warCrime` — −20 → data/management-rules.json
 **Source.** design/management.md › Reputation › What changes reputation
 
@@ -730,7 +742,11 @@ that directly affects several factions is a war crime (MGT-059, every faction). 
 they are reported. A `reputationAct` management request names the act by its `repActs` key (`joinFight`,
 `rescue`, `sellSupplies`, `krugKeepDeal`, `contractBroken`, `attackNonHostile`, `killSoldier`, `cargo`,
 `captureVip`, `assassinateVip`, `takeRegion`, `krugBreak`, `warCrime`); mission success and failure arrive as
-`missionOutcome` instead.
+`missionOutcome` instead. Its `faction` is the faction the act directly affects (for `sellSupplies` the
+buyer; absent for `warCrime`, which affects every faction) and its optional `count` says how many times
+(default 1; `killSoldier`: soldiers killed in one fight, so the per-fight cap applies per request). Acts in
+a battle arrive in `battle_result` `acts[]` with the same `type` keys (the battle subset), `faction` and
+`count`, applied only when witnessed (MGT-064). Spec choice of the fields (cleanup 2026-11-24).
 **Source.** design/management.md › Reputation (draft) (structure implied; ordering is a spec decision)
 
 ### [MGT-061] Spill-over to hostile and allied factions (removed)
@@ -879,7 +895,10 @@ published.
 
 ### [MGT-076] Management request handling
 **Rule.** Payload fields (`management_requests`) and what Management does, for the request types whose
-rule lives elsewhere (spec choice of the fields; cleanup 2026-11-24). Every debit follows MGT-070 (`ok:
+rule lives elsewhere and for the location-bound player actions (second table) (spec choice of the fields;
+cleanup 2026-11-24). Types with their own section keep it: `contractOffer`, `acceptContract`,
+`missionOutcome`, `contractEnded`, `contractPayment` (MGT-042…MGT-048), `launchOp` (MGT-005, MGT-036),
+`soldierFate` (MGT-011), `plantOutput`, `dailyRollover` (MGT-068), `reputationAct` (MGT-060). Every debit follows MGT-070 (`ok:
 false` and nothing paid when the balance cannot cover it); on `ok: true` for a payment to a faction,
 Strategic credits that faction's funds (STR-092). Results list one entry per request.
 
@@ -897,9 +916,31 @@ Strategic credits that faction's funds (STR-092). Results list one entry per req
 | `buyIntel` | `faction` (seller), `amountUsd` | debits `economy`; Strategic checks the standing (from `management_view`) and grants the intel on `ok: true` | STR-048 |
 | `handOver` | `squad`, `contractId`, `missionKey`, optional `items` | removes the listed items from the squad's containers and vehicle storage (MGT-032); the mission's success arrives separately as `missionOutcome` | STR-040, MGT-044 |
 
-Amounts are computed by Strategic from its own data (STR prices); Management checks only the balance.
+The amounts above are computed by Strategic from its own data (STR prices); Management checks only the balance.
+
+The location-bound player actions (STR-039…STR-042, STR-029) are priced by Management from its own data
+(cleanup 2026-11-24, spec choice of the fields). Strategic has already checked that the place offers the
+service. Items are item refs `{ item, count, instance }` (`instance` = an item instance ID, DAT-004). "Squad
+storage" = the squad's soldiers' containers and vehicle storage (MGT-032); with `fobId` instead of `squad`
+the FOB's stash is used. A request that cannot be met in full (stock, standing, weight limit, balance)
+changes nothing and returns `ok: false`. The result names `amountUsd` (money moved).
+
+| Type | Payload | Management does | Rule |
+| --- | --- | --- | --- |
+| `hire` | `candidateId`, `fobId` or `location` (local pool) | debits the candidate's hire price and adds it to `roster`; the result names `soldierId` | MGT-002, MGT-003 |
+| `localRecruits` | `location`, `count`, optional `feeDiscount` | adds `count` local candidates to that location's pool (refugee recruits carry `feeDiscount`) | STR-065, GEN-010, MGT-003 |
+| `trade` | `squad` or `fobId`, `location`, optional `trader` (absent = Krug market), `buy`, `sell` | sells `sell` at the buy rates, then buys `buy` from the stock open at the current standing, at the trader or Krug price; one net booking | MGT-039, MGT-040, ITM-022 |
+| `barter` | `squad` or `fobId`, `location`, optional `trader`, `dealId` | takes that daily deal: removes its goods, adds its gear | ITM-023 |
+| `vehicleTrade` | `squad` or `fobId`, `location`, `vehicle` (buy) or `vehicleInstance` (sell) | buys a vehicle of that type (its price and availability, DAT-027) or sells that PMC vehicle | STR-039, DAT-029 |
+| `handIn` | `squad`, `location`, `faction`, `items` | removes the items and applies their hand-in rewards (money, reputation, daily caps) | ITM-027, ITM-028 |
+| `hospital` | `squad`, `soldiers` | debits `hospitalPerWoundUsd` per wound (`wounds.conditions` entry) of the listed soldiers and treats them by TAC recovery (rate: Open questions 52) | STR-041, MGT-067 |
+| `repair` | `squad` or `fobId`, `instances` and/or `vehicleInstance` | debits `repairPerConditionPointUsd` per condition point restored and sets their condition to 100 | STR-041, MGT-067 |
+| `refuel` | `squad`, `vehicleInstance`, `units` | debits `fuelPerUnitUsd` × `units` and adds the units to the vehicle's fuel, at most `fuelRangeRegions` | STR-041, MGT-067, DAT-024 |
+| `buyFob` | `location`, `fobId` (the new FOB, STR-016), `size` | debits `fobPrices[size]` and adds the FOB with an empty stash | STR-042, MGT-066 |
+| `opReturn` | `squad`, `soldiers` (those who arrived), `fobId`, optional `loot`, optional `vehicleInstance` | moves `loot` into that FOB's stash, logs `lootCarriedOut` per carrier (`loot[].carrier`); the soldiers and the vehicle are at that FOB | STR-029, MGT-035, MGT-006 |
+
 Brokering a ceasefire (STR-099) has no cost and sends no request.
-**Source.** design/strategic-actions.md › Trade, services, contracts and factions; design/world-events.md › Events (structure is a spec decision)
+**Source.** design/strategic-actions.md › Trade, services, contracts and factions; › Movement and operations; design/world-events.md › Events (structure is a spec decision)
 
 ## Open questions
 
@@ -1037,3 +1078,14 @@ Brokering a ceasefire (STR-099) has no cost and sends no request.
 52. MGT-010, MGT-076, STR-037 (cleanup 2026-11-24): `healingTick` applies "TAC recovery" (HP per hour from
     the squad's best Medical, faster at an FOB), but spec/tactical.md has no recovery-rate rule and the
     design gives no rate. Needed: the HP per hour (in and out of an FOB) and how it scales with Medical.
+53. MGT-009, MGT-022 (cleanup 2026-11-24): a candidate can be generated with a skill already at or above a
+    perk threshold (50 or 80). Is a soldier hired that way hired with that perk? Options: yes, every perk
+    whose threshold the hired value meets; no, perks unlock only by growth past the threshold after hiring.
+54. MGT-059, MGT-064 (cleanup 2026-11-24): a war crime changes reputation with every faction, but attribution
+    needs a surviving witness of the affected faction. Options: each faction loses `repActs.warCrime` only if
+    one of its own members witnessed it and survived; or one surviving witness of any faction attributes it
+    to all.
+55. MGT-048, MGT-056 (cleanup 2026-11-24): a failed contract costs "a reputation loss with the employer",
+    but no value is set (`contractBroken` covers betrayal only). Options: each mission still open at the
+    deadline fails and costs `repActs.missionFailed`; one new contract-level value (e.g.
+    `repActs.contractFailed`); or both. Same question for `allFailed` (missions already paid their loss).

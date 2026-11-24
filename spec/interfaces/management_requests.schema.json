@@ -3,7 +3,7 @@
   "$id": "management_requests.schema.json",
   "title": "Management requests",
   "description": "Changes to Management-owned slices (roster, economy, contracts, reputation, unlocks) requested by the strategic layer: contract offers, player services at a location, op launches (fees per op), op returns, plant output, the daily rollover and reputation-relevant strategic acts. Management validates and applies each one and returns a result per request; it publishes the resulting state in management_view (MGT-072). Spec: STR-004, STR-015, STR-029, STR-039..STR-044, STR-093, MGT-001, MGT-002..MGT-005, MGT-011, MGT-036, MGT-039..MGT-051, MGT-056..MGT-060, MGT-064, MGT-068, MGT-070, MGT-076 (payload fields and handling per type).",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/management"],
   "type": "object",
@@ -20,7 +20,9 @@
         "error": { "type": "string" },
         "paymentDue": { "type": "object", "properties": { "contractId": { "type": "string" }, "employer": { "type": "string", "x-ref": "factions" }, "amountUsd": { "type": "number", "minimum": 0 } } },
         "feesUsd": { "type": "number", "minimum": 0, "description": "launchOp: the soldiers' fees per op (by rank; a helicopter pilot is one of the soldiers), paid at launch (MGT-005)" },
-        "premiumUsd": { "type": "number", "minimum": 0, "description": "launchOp: insurance premium for insuredItems (MGT-036)" }
+        "premiumUsd": { "type": "number", "minimum": 0, "description": "launchOp: insurance premium for insuredItems (MGT-036)" },
+        "amountUsd": { "type": "number", "description": "hire, trade, barter, vehicleTrade, hospital, repair, refuel, buyFob, handIn: money moved, debit negative, credit positive (MGT-076)" },
+        "soldierId": { "type": "string", "description": "hire: the new roster soldier's id (MGT-001)" }
       } }
     }
   },
@@ -38,9 +40,22 @@
         "offer": { "$ref": "#/$defs/contractOffer", "description": "contractOffer: the offer to store in contracts with status offered (STR-044, MGT-041, MGT-042)" },
         "reason": { "enum": ["completed", "deadline", "employerDefault", "factionDissolved", "taken"], "description": "contractEnded; employerDefault = advance kept, no debt (MGT-048); taken = a rival PMC took the unsigned offer, which leaves the board (MGT-052)" },
         "employer": { "type": "string", "x-ref": "factions", "description": "contractPayment: the faction whose funds paid (STR-093)" },
-        "location": { "type": "string", "description": "Region or POI where it happens" },
+        "location": { "type": "string", "description": "Region or POI where it happens (hire and localRecruits: the town or Krug market of a local pool; trade, barter, vehicleTrade, handIn, hospital, repair, refuel, buyFob: where the service is used)" },
         "squad": { "type": "string" },
-        "faction": { "type": "string", "x-ref": "factions", "description": "payCompensation, payOffBounty, payKrugPass (krug), payKrugEscort (krug): the receiving faction; buyIntel: the seller (MGT-076)" },
+        "faction": { "type": "string", "x-ref": "factions", "description": "payCompensation, payOffBounty, payKrugPass (krug), payKrugEscort (krug): the receiving faction; buyIntel: the seller; reputationAct: the faction the act directly affects, absent for warCrime (every faction; sellSupplies: the buyer); handIn: the faction the items are handed to (MGT-060, MGT-076)" },
+        "count": { "type": "integer", "minimum": 1, "description": "reputationAct: how many times (default 1; killSoldier: soldiers killed in one fight, capped by repActs.killCapPerFight); localRecruits: candidates added (MGT-058, MGT-076)" },
+        "candidateId": { "type": "string", "description": "hire: the candidate taken from the hiring pool at fobId or location (MGT-002, MGT-076)" },
+        "feeDiscount": { "type": "number", "minimum": 0, "maximum": 1, "description": "localRecruits: feeDiscount of the added candidates (refugee recruits, STR-065 params.recruitFeeDiscount); absent = 0 (MGT-001, MGT-003)" },
+        "trader": { "type": "string", "description": "trade, barter: traders[].id of the faction trader; absent = the Krug market at location (MGT-039, MGT-040)" },
+        "buy": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "trade: items bought (MGT-039, MGT-040)" },
+        "sell": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "trade: items sold, from the stash at fobId or the squad's containers and vehicle storage (ITM-022)" },
+        "dealId": { "type": "string", "description": "barter: the daily barter deal taken (ITM-023; deal IDs are Management's)" },
+        "vehicle": { "type": "string", "x-ref": "vehicles", "description": "vehicleTrade: the vehicle type bought (MGT-076)" },
+        "vehicleInstance": { "type": "string", "description": "vehicleTrade: the PMC vehicle sold; repair, refuel: the vehicle serviced; opReturn: the squad's vehicle (DAT-004, MGT-076)" },
+        "instances": { "type": "array", "items": { "type": "string" }, "description": "repair: item instance IDs of the weapons repaired (DAT-004, DAT-014, MGT-067)" },
+        "units": { "type": "integer", "minimum": 1, "description": "refuel: fuel units bought (DAT-024, MGT-067)" },
+        "size": { "enum": ["smallCity", "largeCity"], "description": "buyFob: city size, the management-rules fobPrices key (MGT-066)" },
+        "loot": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "opReturn: what the squad's containers and vehicle storage hold on arrival beyond the soldiers' equipment; carrier = soldier or vehicle instance (MGT-035)" },
         "soldiers": { "type": "array", "items": { "type": "string" } },
         "hpLost": { "type": "integer", "minimum": 0, "description": "contaminationTick: HP lost by each listed soldier this tick (STR-097, MGT-076)" },
         "moraleChanges": { "type": "array", "description": "moraleChange: per-soldier morale change, applied then clamped to 0..100 (STR-047, MGT-076)", "items": { "type": "object", "required": ["soldier", "delta"], "properties": { "soldier": { "type": "string" }, "delta": { "type": "number" } }, "additionalProperties": false } },
@@ -50,7 +65,7 @@
         "regions": { "type": "array", "items": { "type": "string" }, "description": "priceModifier: tiles where it applies; absent = everywhere (MGT-076)" },
         "insuredItems": { "type": "array", "items": { "type": "string" }, "description": "launchOp: item instance IDs insured for this op (MGT-036)" },
         "fate": { "enum": ["mia", "captured", "dead", "returned"], "description": "soldierFate: the status of the listed soldiers who did not reach an FOB, rolled by Strategic from who holds the battle tile (MGT-011); returned = an MIA or captured soldier comes back (active again, at fobId); battle_result leftMap stays active (MGT-001)" },
-        "items": { "type": "array", "items": { "type": "object", "properties": { "item": { "type": "string", "x-ref": "items" }, "count": { "type": "integer" } } } },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/itemRef" }, "description": "plantOutput: items delivered; handOver, handIn: items handed over (MGT-076)" },
         "contractId": { "type": "string" },
         "missionId": { "type": "string" },
         "missionKey": { "type": "string", "description": "missionOutcome: the contractOffer missions[].key of the mission (MGT-042, MGT-044)" },
@@ -66,6 +81,18 @@
         "atFob": { "type": "boolean" },
         "params": { "type": "object" }
       }
+    },
+    "itemRef": {
+      "description": "Items in a request (spec choice, cleanup 2026-11-24): instance = one specific item instance (DAT-004 instance id; count 1); without it, count items of that definition",
+      "type": "object", "required": ["item"],
+      "properties": {
+        "item": { "type": "string", "x-ref": "items" },
+        "count": { "type": "integer", "minimum": 1, "description": "Default 1" },
+        "instance": { "type": "string", "description": "Item instance ID (DAT-004)" },
+        "condition": { "type": "number", "description": "opReturn loot: as in battle_result loot" },
+        "carrier": { "type": "string", "description": "opReturn loot: the soldier or vehicle instance carrying it" }
+      },
+      "additionalProperties": false
     },
     "contractOffer": {
       "description": "Local copy of strategic_commands.schema.json $defs/contractOffer (0.6.0); keep the two identical (no cross-file refs, shared/schema.js).",

@@ -21,7 +21,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 
 ## IDs
 
-421 IDs (first split 2026-11-22, updated from design c1333f3, cleanup 2026-11-24). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+421 IDs (first split 2026-11-22, updated from design c1333f3, cleanups 2026-11-24). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |

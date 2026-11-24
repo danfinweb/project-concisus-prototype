@@ -66,7 +66,11 @@ values live in the owning state slice and reference the definition by `id`: a gu
 its fitted mods, its loaded magazine and loaded rounds; a magazine's rounds (count and load, DAT-030); an armour piece's current durability; a medical item's remaining uses or
 HP; the issuing faction or point of interest of per-faction items (ITM-025); a vehicle's fuel, storage
 contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `battle` (TAC) in a fight,
-`world` (STR) for items and vehicles left on the map.
+`world` (STR) for items and vehicles left on the map. Every item instance is an object with `id` (the
+instance ID, unique per campaign, never reused; named by `launchOp` `insuredItems`, `repair` `instances`,
+item refs `instance` and `tactical_commands` item fields), `item` (the definition's `id`, x-ref items) and
+its instance values; a vehicle instance likewise has `id` and `vehicle` (x-ref vehicles). Spec choice
+(cleanup 2026-11-24).
 **Source.** design/data-definitions.md (intro); › Weapon profile › State, not profile; design/item-list.md › Weapons (magazine rounds are counted)
 
 ## Soldier equipment slots

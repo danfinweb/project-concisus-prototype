@@ -3,11 +3,31 @@
   "$id": "data/traders.schema.json",
   "title": "Traders",
   "description": "Trader stock and barter rates (spec MGT-039/MGT-040, ITM-022/ITM-023, ITM-034). Item prices are items.valueUsd.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
-    "traders": { "type": "array", "description": "MGT-039: {id, faction, locationKind, stockByStanding}" },
+    "traders": {
+      "type": "array", "description": "MGT-039: faction traders (Krug markets are not listed here, MGT-040)",
+      "items": {
+        "type": "object", "required": ["id", "faction", "locationKind", "stockByStanding"],
+        "properties": {
+          "id": { "type": "string" },
+          "faction": { "type": "string", "x-ref": "factions", "description": "The employer faction that runs the trader; its standing with the player gates the stock (MGT-039)" },
+          "locationKind": { "type": "string", "description": "POI type where this trader sells, e.g. city (STR-010 POI types)" },
+          "stockByStanding": {
+            "type": "object", "description": "MGT-039 stock tiers: basic = Unfriendly (with unfriendlyPriceMarkup) and Neutral; military = added at Friendly; best = added at Trusted; Hostile = no trade. Item IDs only: armoured vehicles and helicopters are vehicles (vehicleTrade, MGT-076), not listed here",
+            "properties": {
+              "basic": { "type": "array", "items": { "type": "string", "x-ref": "items" } },
+              "military": { "type": "array", "items": { "type": "string", "x-ref": "items" } },
+              "best": { "type": "array", "items": { "type": "string", "x-ref": "items" } }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "cityBarterRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 0.5" },
     "krugBarterRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 0.7" },
     "krugPremiumRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 1.0 for tobacco, alcohol, valuables" },

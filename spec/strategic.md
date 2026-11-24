@@ -30,7 +30,8 @@ arrival (STR-032). `d = 0` actions (trade, hire, vehicle trade)
 resolve at once and pass no time, so no faction acts (STR-003 does not run). An action with `d > 1`
 (travel, standing by, healing) can be interrupted only by what touches the squad: an encounter it is part
 of (STR-022), an attack on it, or an event on its own tile; events elsewhere never interrupt it. The player
-may also cancel it at a planning phase (STR-003). The hours already spent count (progress made stays,
+may also cancel it at a planning phase (STR-003); an AI faction cancels it by giving the squad a new action
+in its command set (SAI-004; cleanup 2026-11-24). The hours already spent count (progress made stays,
 healing gained is kept), and the rest of the action is dropped. A move that is interrupted or cancelled
 before its last hour leaves the squad on its origin tile and spends no fuel.
 **Source.** design/strategic-layer.md › Overview (Time); › Squads and simulation (draft) (Strategic turn); design/strategic-actions.md (intro)
@@ -331,7 +332,8 @@ holds for every faction squad, the player's included: the player's command set i
 the planning phase, the AI factions' come from their controllers (STR-021). A move taking `h` hours
 occupies the squad for `h` ticks; the squad stays on its origin tile for the first `h − 1` ticks and is
 on the destination tile in the last one (STR-022), arriving at its end unless interrupted or cancelled
-(STR-002). All squads'
+(STR-002; an AI faction cancels by a new action for the squad, a `moveSquad` to the same `toRegion`
+continues it, SAI-004). All squads'
 actions of one hour resolve together (STR-003, step 2).
 **Source.** design/design.md › Overview › Vision & pitch (pillar 4); design/strategic-layer.md › Overview (Time); › Squads and simulation (draft) (Strategic turn)
 
@@ -340,8 +342,9 @@ actions of one hour resolve together (STR-003, step 2).
 (each tick, STR-003), every non-player faction — `ssv`, `vdk`, `varyag`, `aegis`, `krug`, every
 resistance group and a rogue PMC (SAI-002); never the civilian population or the off-map influences —
 receives a `strategic_perception_view` (its fog-of-war view,
-STR-008, including its own funds and, under `fundsMode = scoreTerm`, its overdraft, STR-092, and the
-contracts it is part of, as employer or contractor, STR-093) and returns `strategic_commands`. Commands and how
+STR-008, including its own funds and, under `fundsMode = scoreTerm`, its overdraft, STR-092, the
+contracts it is part of, as employer or contractor, STR-093, its own recruit pool `recruitsAvailable`,
+STR-096, and the map's `mapShape`, STR-005; fields: SAI-003) and returns `strategic_commands`. Commands and how
 Strategic resolves each:
 
 | Command | Resolves as |
@@ -457,7 +460,9 @@ live in one shared rules table, `data/economy-rules.json`, which MGT also uses f
 (STR-069). Each faction's own funds appear in its perception view (STR-021); other factions' funds do not.
 Funds never go below zero. `fundsMode` decides how they limit a faction:
 - `hardLimit` (default): Strategic rejects an `offerContract` unless the faction's current funds cover the
-  offer's full contract pay (all missions and the advance), and a `recruit` (raising a squad, STR-096) it
+  offer's full contract pay (all missions and the advance; computed with the MGT-046 formula from the
+  offer's `payInputs` and data/missions.json `payBand`, the same value the AI computes, SAI-014; cleanup
+  2026-11-24), and a `recruit` (raising a squad, STR-096) it
   cannot pay for (STR-021).
 - `scoreTerm` (switchable option for testing): such commands are not rejected for funds; funds only weigh
   in the AI's scoring (SAI-014). A spend the funds cannot cover sets them to 0 and adds the rest to the
@@ -542,7 +547,8 @@ has not signed, the offer leaves the player's board: Strategic sends `contractEn
 **Rule.** An AI faction raises a new squad with the command `recruit { target }` (STR-021): `target` is a
 town or city tile (POI category `town`, `smallCity`, `largeCity`, the capital included) the faction
 controls. The squad's size and gear tier come from the faction's `squadTemplate` (data/factions.json);
-its soldiers are drawn from the recruits the faction's POIs have produced (`recruitOutput`, STR-014). It
+its soldiers are drawn from the recruits the faction's POIs have produced (`recruitOutput`, STR-014; the
+pool's size is in its perception view as `recruitsAvailable`, SAI-003, cleanup 2026-11-24). It
 costs `raiseSquad.costPerSoldierUsd` × squad size from the faction's funds, paid when the command
 resolves; under `fundsMode = hardLimit` Strategic rejects a `recruit` the faction cannot pay for, or for
 which too few recruits are available (STR-092). The new squad appears on that tile at the end of the tick
@@ -594,7 +600,10 @@ the squad's first move starts at once in the same planning phase. Each soldier's
 helicopter pilot is one of the soldiers, STR-034) is paid at launch: Strategic sends a `launchOp`
 management request (`squad`, `soldiers`, `fobId` = the FOB the op starts from, optional `insuredItems`;
 MGT-005, MGT-036); if MGT returns `ok: false` the PMC
-cannot pay and the op does not launch (no fee, no launch). Amounts and booking: MGT.
+cannot pay and the op does not launch (no fee, no launch). Amounts and booking: MGT. When the op launches,
+Strategic records which open missions of signed contracts the op carries (from `management_view`
+`contracts`) and refuses a launch that names a mission already carried by another op still under way; a
+mission is released when its op ends (STR-027). Management does not check this (MGT-045).
 **Values.** `actionHours.launch` — 0 (design draft) → data/strategic-rules.json; fees per op → MGT.
 **Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft); design/management.md › Soldiers & progression
 

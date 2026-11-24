@@ -30,6 +30,11 @@ with that unit as `activeUnit`. The neutral side (TAC-001) never activates, so i
 invoked for an activation. The controller returns commands; TAC validates and resolves them
 with its normal rules. Reaction settings chosen during an activation are applied by TAC automatically; the
 AI is not called mid-move.
+One action per call (spec choice, cleanup 2026-11-24): each answer holds exactly one command, because
+`allowedActions` is only valid for the current AP and position. With `activeUnit: null` it is `activate` or
+`pass`; with an active unit, any other TAI-005 command. After resolving it, TAC builds a new view (same
+`activeUnit`, updated AP, position and `allowedActions`) and calls again, until the answer is
+`endActivation` or `leaveMap`, the unit is out of action, or the retries run out (TAI-005).
 **Source.** design/ai.md › Tactical AI › Controller hand-off; design/tactical-layer.md › Turn structure › Reactions
 
 ### [TAI-003] Pluggable controller
@@ -48,7 +53,7 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 | `side`, `faction`, `doctrine` | Controlled side, faction ID, doctrine ID of the side (TAI-015) |
 | `turn`, `timeOfDay` | Turn number; `day` or `night` battle (TAC-003) |
 | `activeUnit` | Unit to act (null when choosing which unit to activate) |
-| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank` (`recruit`, `regular`, `veteran`, `elite`; TAI-013), `morale` (the unit's battle morale, TAC-095, plus the Leadership bonus while its leader is alive, TAC-094), `role` (TAI-014; from `squadPlan.roles`, null while none is assigned), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
+| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank` (`recruit`, `regular`, `veteran`, `elite`; TAI-013), `morale` (the unit's battle morale, TAC-095, plus the Leadership bonus while its leader is alive, TAC-094), `role` (TAI-014; from `squadPlan.roles`, null while none is assigned), `ap`, `stamina`, `staminaMax`, `zoneHp` (zone → `{hp, max}`, max from TAC-057), `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `activeWeapon` (`weapon1`, `weapon2`, `holster`; TAC-042), `equipment` (slot → item instance `{item, condition, durability, rounds, ammo, contents}`; `rounds`/`ammo` on a weapon = what is loaded), `magazines` (`id`, `item`, `rounds`, `slot`), `outOfAction` (dead or left the map), `leftMap` |
 | `squadMorale` | Average battle morale of the side's units still on the map (TAC-095, without the Leadership bonus); at battle start the request's `sides[].morale` for units sent without their own |
 | `squadPlan` | Current plan set by the squad leader (TAI-013): `leader` (current leader, TAC-094), `setBy`, `setTurn`, `roles` (unit → role, TAI-014), `intent` (AI-owned, not interpreted by TAC) |
 | `blackboard` | Squad `requests` and `claims` (TAI-012) |
@@ -56,13 +61,18 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 | `knownEnemies[]` | Opposing units: `id`, `position`, `level`, `seenTurn`, `visibleNow`; while `visibleNow`, also `stance`, `facing` and `visibleGear` (the gear the player would see: `weaponType`, `helmetClass`, `armourClass`); otherwise the last seen or heard position and turn |
 | `knownNeutrals[]` | Known units of the neutral side whose faction is not hostile to this side (TAC-001), same fields and last-known rule as `knownEnemies` (with `faction`, without `visibleGear`); once hostile to this side they are listed in `knownEnemies` instead |
 | `noises[]` | Noise markers since the unit's last activation (TAC-019): `origin` tile, `direction` and `distance` from the active unit, `turn` |
-| `map` | Tiles known to the side: `tiles` (terrain cost, impassable and obscuring flags, cover per tile edge, level, doors with state open, closed or locked, windows, destroyed state; TAC-029, TAC-082, TAC-084), `exits` (`id`, tile, condition), `containers` and `bodies` (contents only once searched by the side, TAC-070), `smoke` (clouds with tile, `radiusTiles`, last turn) |
-| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with path AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082). With `activeUnit: null`: one `activate` entry (with `unit`) per unit that may be activated (stamina ≥ `activationCost`, TAC-005, TAC-008), plus one `pass` entry, so the AI never reads `tactical-rules` for this |
-| `battleGoal` | The active unit's aim in this battle: `goal` (attack, defend, escort, reach an exit, hold), `targets` and `acceptableLoss`, as set by the strategic layer in the tactical map request (TAI-009, TAI-018) |
+| `map` | Tiles known to the side: `tiles` (`x`, `y`, `level`, `cost` (terrain move cost), `impassable`, `obscuring`, `cover` per edge `n`/`e`/`s`/`w` = `none`, `half`, `full`, `doors` (edge → `open`, `closed`, `locked`), `windows` (edges), `destroyed` (edges now rubble); TAC-029, TAC-035, TAC-082, TAC-084, TAC-085), `exits` (`id`, tile, condition), `containers` and `bodies` (contents only once searched by the side, TAC-070), `smoke` (clouds with tile, `radiusTiles`, last turn) |
+| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with the previewed `path`, its AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082). With `activeUnit: null`: one `activate` entry (with `unit`) per unit that may be activated (stamina ≥ `activationCost`, TAC-005, TAC-008), plus one `pass` entry, so the AI never reads `tactical-rules` for this |
+| `battleGoal` | The active unit's aim in this battle: `goal` (`attack`, `defend`, `escort`, `reachExit`, `hold`), `targets` and `acceptableLoss`, as set by the strategic layer in the tactical map request (TAI-009, TAI-018) |
 | `objectives[]` | The mission objectives of the battle that can be met on the tactical map (TAC-076), as known to the side |
 
 An AI soldier knows as much about a seen enemy's gear as the player would: weapon type, helmet and armour
 class (as shown in the shot preview), nothing more (no durability, no carried items).
+
+`squad[]` lists every unit of the side that entered the battle, also those dead or gone (spec choice,
+cleanup 2026-11-24): a dead unit and a unit that left the map (TAC-038) have `outOfAction: true`; a unit
+that left also has `leftMap: true`. Wounded units, disabled limbs included, are never out of action.
+Tile and unit positions are `{x, y, level}` (TAC-028).
 **Source.** design/ai.md › Tactical AI › Controller hand-off (1), Unit scoring; design/tactical-layer.md › Overview (Readability; Movement: path preview); › Turn structure › Gunshot noise
 
 ### [TAI-005] Tactical command set
@@ -73,7 +83,7 @@ class (as shown in the shot preview), nothing more (no durability, no carried it
 | --- | --- | --- |
 | `activate` | `unit` — the unit for this activation | TAC-005 |
 | `pass` | — | TAC-010 |
-| `move` | `path` (tiles), `stance`, `sprint` | TAC-029..TAC-032 |
+| `move` | `path` (tiles; the full path, or only the destination tile, which TAC moves to along the previewed path of that `reachable` entry, TAC-037 — spec choice), `stance`, `sprint` | TAC-029..TAC-032 |
 | `turn` | `facing` | TAC-017 |
 | `changeStance` | `stance` (`upright`, `crouched`, `prone`) | TAC-033 |
 | `vault` | `tile` (window or low wall to cross) | TAC-034 |
@@ -102,7 +112,8 @@ class (as shown in the shot preview), nothing more (no durability, no carried it
 There is no separate take-cover command: the player has no such action in `design/tactical-actions.md`, so
 "take cover" in the controller hand-off is a `move` to a covered tile and/or a `changeStance`, or the
 reaction setting `setReaction` with `reaction: takeCover`. The commands schema is authoritative for
-validation; this table lists the fields each type uses.
+validation; this table lists the fields each type uses. Each answer's `commands` holds exactly one command
+(TAI-002).
 
 TAC validates every command; an illegal command (not enough AP, no line of sight, invalid path) is
 rejected and not resolved. The rejection goes back to the controller with its reason (the view's
@@ -127,6 +138,14 @@ fit (TAI-010), coordination (TAI-011). Survival is a multiplier, not a hard rule
 `score = survival × (wGoal × battleGoal + wFit × actionFit + wCoord × coordination)`, each consideration
 in 0–1 through its response curve. Behaviour comes from the shared blackboard and units reacting to each
 other, not from scripts. Weights and curves come from the doctrine (TAI-015).
+Candidates are only the entries of `allowedActions` (TAI-006), one action each (TAI-002). The choice of whom
+to activate (`activeUnit: null`) is scored the same way (spec choice, cleanup 2026-11-24): the options are
+the `activate` entries and `pass`; with no active unit, survival is 1 and the battle goal and coordination
+inputs are neutral (0.5 before their curves); the action fit of `activate` is the unit's stamina share
+(`stamina ÷ staminaMax`), that of `pass` the doctrine's `actionFit.pass` weight.
+A response curve is `{type, points}`; `type: "linear"` is piecewise linear through the `[x, y]` points,
+held at the end points' `y` outside their range, output clamped to 0–1 (spec choice). A consideration entry
+without a curve passes its input through unchanged.
 **Values.** `wGoal`, `wFit`, `wCoord`, curves — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/ai.md › Overview (Data); › Tactical AI › Unit scoring
 
@@ -134,7 +153,20 @@ other, not from scripts. Weights and curves come from the doctrine (TAI-015).
 **Rule.** `survival` (0–1) multiplies the score. Inputs: the unit's exposure, the known threat, its HP and
 its morale (the active unit's `squad[].morale`, which already includes the Leadership bonus, TAC-094; morale is per soldier). Its curve keeps it near 1 when danger is low and lets it dominate the score as danger rises,
 so an exposed, wounded or shaken unit prefers safe actions; it never blocks an action outright.
-**Values.** input weights and curve — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.survival`.
+Inputs (spec choice, cleanup 2026-11-24), each shaped by its doctrine entry, measured where the action
+leaves the unit (a move's destination tile, a stance change's new stance):
+- `survival.exposure` — share of the visible enemies (`knownEnemies[].visibleNow`) the unit's tile edge
+  facing each enemy does not cover, with the edge's cover level encoded none 0, half ½, full 1; then
+  multiplied by `survival.stance`, the stance curve applied to the stance encoded upright 0, crouched ½,
+  prone 1. These encodings only rank the TAC-035 levels and stances; how much each protects is the doctrine
+  curve's job. TAC has no protection value per cover level in `/data` (cover protects by geometry in the
+  shot trace, TAC-054..TAC-056), and the shot preview covers only the unit's own shots.
+- `survival.threat` — number of visible enemies.
+- `survival.hp` — the unit's HP share, sum of `zoneHp[].hp` ÷ sum of `zoneHp[].max`.
+- `survival.morale` — the unit's `squad[].morale`.
+Danger = the weighted mean of the shaped inputs (weights from their entries; `survival.stance` is a factor,
+not a weighted input); `survival` = the `survival` curve applied to danger.
+**Values.** input weights and curve — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.survival`, `survival.exposure`, `survival.stance`, `survival.threat`, `survival.hp`, `survival.morale`.
 **Source.** design/ai.md › Tactical AI › Unit scoring
 
 ### [TAI-009] Battle goal
@@ -145,19 +177,46 @@ passes both in the view. `acceptableLoss` is a share 0–1 of the side's soldier
 left the map (TAC-038); wounded soldiers, disabled limbs included, never count. Once that share is
 reached, the side's battle goal becomes retreat: its units move to an exit and leave the map (TAC-038),
 and goal progress is scored toward that exit. A retreating side still fires and reacts.
-**Values.** goal weights per goal type — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations`, one flat entry per goal type named `battleGoal.<goal>` (e.g. `battleGoal.attack`; the generic map, name → {weight, curve}; a dotted name, not a nested object — spec choice, cleanup 2026-11-24); `acceptableLoss` per battle goal — not set (draft) → set by the strategic layer in the tactical map request.
+Spec choices (cleanup 2026-11-24): the goal names are the closed set `attack`, `defend`, `escort`,
+`reachExit`, `hold` (request and view `battleGoal.goal`). The share is counted over the view's `squad[]`
+(every unit of the side that entered the battle, TAI-004): units with `outOfAction: true` ÷ all listed.
+The AI derives the retreat itself from that share and `acceptableLoss`; TAC never changes `battleGoal.goal`,
+and while retreating the AI scores with the goal name `retreat`. The squad plan enters the score through
+roles (action fit, TAI-014) and blackboard requests (coordination, TAI-011); `squadPlan.intent` adds nothing
+to the goal term until a plan format is specced.
+**Values.** goal weights per goal type — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations`, one flat entry per goal type named `battleGoal.<goal>` (e.g. `battleGoal.attack`, plus `battleGoal.retreat`; the generic map, name → {weight, curve}; a dotted name, not a nested object — spec choice, cleanup 2026-11-24), falling back to the plain `battleGoal` entry for a goal without its own; `acceptableLoss` per battle goal — not set (draft) → set by the strategic layer in the tactical map request.
 **Status.** open (threshold values)
 **Source.** design/ai.md › Tactical AI › Unit scoring
 
 ### [TAI-010] Action fit
 **Rule.** `actionFit` (0–1) rates how effective the action is in the current situation for this unit: its
 role (TAI-014), weapon type (DAT-011 `weaponType` drives AI role), range to target, ammo and AP left.
-**Values.** — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.actionFit`.
+Base fit per command type (spec choice, cleanup 2026-11-24), plus the role bonus (TAI-014), clamped to 0–1
+and shaped by the `actionFit` curve:
+- `shoot` — the target's preview `hitChance`, × the `actionFit.noPenetration` weight when the preview says
+  the round does not penetrate.
+- `move` — the `actionFit.move` weight × the share of the unit's AP left at the destination (`apLeft ÷ ap`).
+- `reload` — the share of the active weapon's magazine that is empty (1 − loaded `rounds` ÷ the item's
+  magazine size).
+- `clearJam` — 1 while `weaponJammed`, else 0.
+- `activate`, `pass` — TAI-007.
+- `changeStance`, `setReaction`, `holdOverwatch`, `leaveMap`, `endActivation` — the doctrine weight
+  `actionFit.<commandType>`.
+The weapon is the unit's `activeWeapon` slot; its `weaponType` and magazine size come from `data/items.json`.
+OPTIONAL (later build): AI use of `turn`, `vault`, `climb`, `swapWeapon`, `throwGrenade`, `useItem`,
+`dropBackpack`, `pickUpBackpack`, `search`, `pickUp`, `cutLock`, `closeDoor`, `placeCharge`, `restrainVip`,
+`liftBody` and `putDownBody`. Until each gets a fit rule, the AI never chooses it; TAC still offers it in
+`allowedActions`, and a unit's final facing is set by `endActivation` (TAC-007).
+**Values.** — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.actionFit`, `actionFit.<commandType>`, `actionFit.noPenetration`.
+**Status.** optional (the AI use of the command types listed as OPTIONAL)
 **Source.** design/ai.md › Tactical AI › Unit scoring; design/data-definitions.md › Weapon profile (Weapon type → AI role)
 
 ### [TAI-011] Coordination
 **Rule.** `coordination` (0–1) gives a bonus for actions that answer open squad requests on the blackboard
-and a penalty for actions on tiles or targets a squadmate has claimed (TAI-012).
+and a penalty for actions on tiles or targets a squadmate has claimed (TAI-012). Spec choice (cleanup
+2026-11-24): an action answers an open request (not posted by the unit itself, not expired, not claimed by
+a squadmate) when it shoots the request's `target` or moves to its `tile`; `coordination` =
+(1 + bonus − penalty) ÷ 2, clamped to 0–1, so 0.5 means neither.
 **Values.** bonus and penalty sizes — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.requestBonus`, `considerations.claimPenalty` (generic `considerations` entries; no extra doctrine field).
 **Source.** design/ai.md › Tactical AI › Unit scoring
 
@@ -198,12 +257,28 @@ actions that match it. The role `callReinforcements` is OPTIONAL (later build): 
 calls reinforcements and a side fights with the units on the map. The role values are a closed set:
 `flank`, `suppress`, `retreat`, `callReinforcements` (view `squad[].role`, null while a unit has no role;
 `squadPlan.roles`).
+Spec choice (cleanup 2026-11-24): the leader gives each living unit its current role, `retreat` once the
+side retreats (TAI-009), and a unit without one the doctrine's `roles.byWeaponType` entry for its weapon
+type; a unit whose weapon type has no entry gets no role. A unit with no role in the plan scores with that
+same weapon-type role. A matching action adds `roles.fitBonus` to its base fit: `suppress` on `shoot`;
+`retreat` on `leaveMap` and on a `move` that ends nearer the nearest exit; `flank` on a `move` that ends
+further to the side of the nearest visible enemy's line. Claims last `roles.claimTurns` turns
+(`untilTurn` = current turn + `claimTurns`).
+**Values.** `roles.byWeaponType`, `roles.fitBonus`, `roles.claimTurns` — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/ai.md › Tactical AI; design/tactical-layer.md › Overview (Enemy AI)
 
 ### [TAI-015] Doctrines
 **Rule.** `data/ai/doctrines.json` holds records with `layer: "tactical"`; the tactical map request sets one
 doctrine ID per side (`sides[].doctrine`) and
 TAC passes it in the view's `doctrine`. All squads of a side use that doctrine. A doctrine sets weights and curves of TAI-007 to TAI-014.
+Fields a tactical doctrine holds (spec choice, cleanup 2026-11-24; schema `data/ai-doctrines.schema.json`):
+`wGoal`, `wFit`, `wCoord` (numbers, TAI-007); `logTopN` (integer ≥ 1, TAI-016); `considerations`
+(name → `{weight, curve}`) with the names `survival`, `survival.exposure`, `survival.stance`,
+`survival.threat`, `survival.hp`, `survival.morale` (TAI-008), `battleGoal`, `battleGoal.<goal>` (TAI-009),
+`actionFit`, `actionFit.<commandType>`, `actionFit.noPenetration` (TAI-010), `requestBonus`,
+`claimPenalty` (TAI-011); `roles` with `byWeaponType` (DAT-011 weapon type → `flank`, `suppress` or
+`retreat`), `fitBonus` (number 0–1) and `claimTurns` (integer ≥ 0) (TAI-014). Required for a call: `survival`,
+`battleGoal` and `actionFit`; any other absent entry has weight 0 and does not count.
 **Values.** all — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Source.** design/ai.md › Overview (Data); CLAUDE.md (data/ai)
 

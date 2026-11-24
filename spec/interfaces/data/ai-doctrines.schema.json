@@ -3,7 +3,7 @@
   "$id": "data/ai-doctrines.schema.json",
   "title": "AI doctrines",
   "description": "Utility AI weights, response curves and faction doctrines (spec SAI-006..SAI-011, SAI-014..SAI-017, TAI-007..TAI-016). The faction → doctrine link is factions.doctrine (SAI-010); a doctrine does not list its factions.",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -21,23 +21,42 @@
         },
         "additionalProperties": false
       },
-      "commitmentBonus": { "type": "object", "description": "SAI-008: bonus term for objectives the faction already pursues, as {weight, curve {type, points}} (not set)" },
-      "gainTerms": { "type": "object", "description": "SAI-008: ownGain terms rated against the faction's ultimate goal: term name → {weight, curve {type, points}} (not set)" },
-      "considerations": { "type": "object", "description": "SAI-006 / TAI-007: flat map, name → {weight, curve {type, points}}. Names are flat strings; a per-type consideration uses a dotted name, e.g. battleGoal.attack (TAI-009, spec choice), never a nested object", "additionalProperties": { "$ref": "#/$defs/consideration" } },
-      "escortAccept": { "type": "object", "description": "SAI-017 (Krug doctrine): Krug escort request scoring: considerations (price, requester standing, free squads, route danger) and the refusal threshold (not set)" },
+      "commitmentBonus": { "$ref": "#/$defs/consideration", "description": "SAI-008: bonus term for objectives the faction already pursues (input: SAI-006 vocabulary) (not set)" },
+      "gainTerms": { "type": "object", "description": "SAI-008: ownGain terms rated against the faction's ultimate goal: term name (SAI-006 gain-term vocabulary) → consideration (not set)", "additionalProperties": { "$ref": "#/$defs/consideration" } },
+      "considerations": { "type": "object", "description": "SAI-006 / TAI-007: flat map, name → consideration. Strategic names: SAI-006 vocabulary. Names are flat strings; a per-type consideration uses a dotted name, e.g. battleGoal.attack (TAI-009, spec choice), never a nested object", "additionalProperties": { "$ref": "#/$defs/consideration" } },
+      "escortAccept": {
+        "type": "object", "description": "SAI-017 (Krug doctrine): Krug escort request scoring (not set)",
+        "properties": {
+          "considerations": { "type": "object", "description": "name (price, standing, freeSquads, routeDanger; SAI-006 vocabulary) → consideration", "additionalProperties": { "$ref": "#/$defs/consideration" } },
+          "threshold": { "type": "number", "description": "Refusal threshold: accept only when the request's score is above it (SAI-017)" }
+        },
+        "additionalProperties": false
+      },
       "wGoal": { "type": "number", "description": "TAI-009" },
       "wFit": { "type": "number", "description": "TAI-010" },
       "wCoord": { "type": "number", "description": "TAI-011" },
-      "logTopN": { "type": "integer", "description": "SAI-011 / TAI-016" },
-      "roles": { "type": "object", "description": "TAI-014, reserved" }
+      "logTopN": { "type": "integer", "minimum": 1, "description": "SAI-011 / TAI-016" },
+      "roles": { "type": "object", "description": "TAI-014 role assignment", "additionalProperties": false, "properties": {
+        "byWeaponType": { "type": "object", "description": "DAT-011 weaponType → default role; a type with no entry gets no role", "additionalProperties": { "enum": ["flank", "suppress", "retreat"] } },
+        "fitBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "Added to the base action fit of an action matching the unit's role" },
+        "claimTurns": { "type": "integer", "minimum": 0, "description": "Claims last until current turn + claimTurns (TAI-012)" } } }
     }
   },
   "$defs": {
     "consideration": {
-      "type": "object",
+      "type": "object", "description": "One weighted consideration (SAI-006, TAI-007); shared by strategic and tactical doctrines",
+      "required": ["weight", "curve"],
       "properties": {
         "weight": { "type": "number" },
-        "curve": { "type": "object", "properties": { "type": { "type": "string" }, "points": { "type": "array" } } }
+        "curve": { "$ref": "#/$defs/curve" }
+      }
+    },
+    "curve": {
+      "type": "object", "description": "Response curve, raw input → 0–1 (SAI-006, spec choice). linear: piecewise-linear through points; step: y of the last point whose x ≤ input. Both clamp outside the points (input below the first x → first y, above the last → last y)",
+      "required": ["type", "points"],
+      "properties": {
+        "type": { "enum": ["linear", "step"] },
+        "points": { "type": "array", "minItems": 1, "description": "[x, y] pairs sorted by x; x in the input's unit, y in 0–1", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } } }
       }
     }
   }

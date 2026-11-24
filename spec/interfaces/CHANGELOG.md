@@ -5,6 +5,15 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | management_requests | 0.9.0 | Cleanup 2: payloads for hire, localRecruits, trade, barter, vehicleTrade, handIn, hospital, repair, refuel, buyFob, opReturn (MGT-076); `$defs/itemRef`; `reputationAct` `faction`/`count`; results `amountUsd`, `soldierId` | strategic, management |
+| 2026-11-24 | battle_result | 0.5.0 | Cleanup 2: `acts[].type` enum (battle subset of repActs), `faction` x-ref, `count` ≥ 1; `skillUse[]` = `{skill, uses}` | tactical, strategic, management |
+| 2026-11-24 | strategic_perception_view | 0.9.0 | Cleanup 2: required `mapShape`; `recruitsAvailable`; `knownSquads.id` (required with faction, region), `knownTarget`; `knownRegions.roadTo`, `roadCrossing` | strategic, strategic-ai |
+| 2026-11-24 | strategic_commands | 0.8.0 | Cleanup 2 (descriptions): an action for a squad in transit cancels its move; `attack.target` names a `knownSquads` id | strategic, strategic-ai |
+| 2026-11-24 | tactical_perception_view | 0.8.0 | Cleanup 2: typed `pos`, `tile`, `itemInstance`, `equipment`, `magazines`; `zoneHp` zone → `{hp, max}`; `activeWeapon`, `leftMap`; `squad[]` lists every unit; move entries carry `path`; `battleGoal.goal` enum | tactical, tactical-ai |
+| 2026-11-24 | tactical_commands | 0.7.0 | Cleanup 2: exactly one command per call; `move.path` typed, may be the destination only | tactical-ai, tactical |
+| 2026-11-24 | tactical_map_request | 0.10.0 | Cleanup 2: `battleGoal.goal` enum attack/defend/escort/reachExit/hold | strategic, tactical |
+| 2026-11-24 | data/ai-doctrines | 0.7.0 | Cleanup 2: `commitmentBonus`, `gainTerms`, `escortAccept` (+ `threshold`) typed; `$defs/curve` (linear/step); consideration requires weight and curve; `roles` typed (`byWeaponType`, `fitBonus`, `claimTurns`); `logTopN` ≥ 1 | strategic-ai, tactical-ai, tools |
+| 2026-11-24 | data/traders | 0.5.0 | Cleanup 2: `traders[]` typed (`id`, `faction`, `locationKind`, `stockByStanding {basic, military, best}`) | management, tools |
 | 2026-11-24 | management_requests | 0.8.0 | Cleanup: new `moraleChange` (`moraleChanges [{soldier, delta}]`); per-type payload fields for MGT-076 (`hpLost`, `modifierId`, `target`, `factor`, `regions`); `launchOp.fobId`; stale `feesUsd` and contractOffer-version text fixed | strategic, management |
 | 2026-11-24 | management_view | 0.3.0 | Cleanup: required `roster` (`$defs/soldier`: id, status, rank, morale, attributes, nerve, wounds, equipment, perks); `funds.debtsUsd` required (0 when none) | management, strategic |
 | 2026-11-24 | strategic_perception_view | 0.8.0 | Cleanup: typed `vips`, `contracts` (`role` employer/contractor, `contractor`, per-mission `status`), `contractOffers` (local copy of `contractOffer`), `events` (STR-050 instance); `$defs/timestamp` | strategic, strategic-ai |

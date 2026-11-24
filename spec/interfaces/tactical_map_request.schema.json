@@ -3,7 +3,7 @@
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
   "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAC-094, TAC-095, TAC-096, TAI-009, TAI-013, TAI-018.",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -72,7 +72,7 @@
     "battleGoal": {
       "type": "object", "required": ["goal"],
       "properties": {
-        "goal": { "type": "string" },
+        "goal": { "enum": ["attack", "defend", "escort", "reachExit", "hold"], "description": "TAI-009 (closed set, spec choice); retreat is never sent, the AI derives it from acceptableLoss" },
         "targets": { "type": "array", "items": { "type": "string" } },
         "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "Share of the side's soldiers out of action: dead, or left the map (TAC-038); wounded soldiers, disabled limbs included, never count. Reached = retreat (TAI-009)" }
       }
