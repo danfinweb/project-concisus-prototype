@@ -16,7 +16,8 @@ generation, never changes); `callsign` (current displayed callsign); `callsignSo
 `earned` | `player`); `callsignPrestige` (0 for generated, 1–5 for earned); the eight attributes
 (MGT-021); `nerve` (MGT-031); `morale` (MGT-008); `wounds` (per body zone, structure per TAC Medical
 system); `rank` (a tier ID, MGT-002: the hiring tier at hiring, rising by MGT-074, never dropping; the fee per
-op follows it, MGT-005); `deeds` (IDs of deeds already earned, MGT-018); `status` (`active` | `mia` | `captured` |
+op follows it, MGT-005); `feeDiscount` (0–1, default 0: the share taken off its fee per op for as long as it
+serves, set at hiring, e.g. a refugee recruit, MGT-003); `deeds` (IDs of deeds already earned, MGT-018); `status` (`active` | `mia` | `captured` |
 `dead`); `hiredSkills` (the four skill values at hiring, the drift floor of MGT-025); `serviceRecord`
 (MGT-006); `kitMarks` (cosmetic patches and colours). No name, portrait, voice, backstory or personality is generated or stored. Derived
 values (MGT-026…MGT-030) are never stored. A `battle_result` soldier status `leftMap` (left through an
@@ -53,8 +54,8 @@ attribute range pays the tier price, a better one more, a worse one less. The ex
 `priceFormula.spread` of the tier price from the bottom to the top of the attribute range) is not designed.
 Price modifiers, applied after the scaling: a Krug recruit (local recruit from Krug standing, GEN-010) costs
 × (1 + `resentment.priceMarkup`) (Krug resentment, GEN overview); an extra refugee recruit (STR-065, sent in a
-`localRecruits` request) costs × (1 − `params.recruitFeeDiscount`) — spec reading: the design's "fee 30% lower"
-applies to the hire price of these cheap recruits, not to the fee per op (see Open questions 50).
+`localRecruits` request) costs the normal hire price; it is hired with `feeDiscount` =
+`params.recruitFeeDiscount` (MGT-001), so its fee per op is lower for as long as it serves (MGT-005).
 **Values.** tier hire prices (design draft, MGT-002) → data/recruitment.json `tiers[].hirePriceUsd`;
 scaling within a tier `priceFormula` — not set (design: "scales with the average attribute") →
 data/recruitment.json; `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json (Krug record,
@@ -70,11 +71,12 @@ The service number is unchanged. The player may also set `kitMarks` (cosmetic on
 
 ### [MGT-005] Fee per op (was: Salaries and renewals)
 **Rule.** A soldier is paid per deployment, not per day: each soldier on an op costs the fee per op of its
-current `rank` (`tiers[].feePerOpUsd` of the tier with that ID, MGT-002, MGT-074), paid when the op launches.
-Strategic sends a `launchOp` management request (`squad`, `soldiers`, optional `hiredPilot`, optional
+current `rank` (`tiers[].feePerOpUsd` of the tier with that ID, MGT-002, MGT-074) × (1 − its `feeDiscount`,
+MGT-001), rounded to whole dollars, paid when the op launches.
+Strategic sends a `launchOp` management request (`squad`, `soldiers`, optional
 `insuredItems`) when the player launches an op (STR "Launch an op"); Management debits, as one payment, the
-sum of the listed soldiers' fees, plus `hiredPilotFeePerOpUsd` when `hiredPilot` is true (a hired helicopter
-pilot is paid a fee per op like a soldier, DAT-028), plus the insurance premium of MGT-036. If the balance
+sum of the listed soldiers' fees (a hired helicopter pilot is a normal roster soldier with Technical
+`pilotTechnicalMin`+, listed in `soldiers` and paid the normal fee of its rank, DAT-028), plus the insurance premium of MGT-036. If the balance
 cannot cover the whole sum (MGT-070) nothing is paid, the result is `ok: false` and the op does not launch
 (no fee, no launch); otherwise the result names `feesUsd` (and `premiumUsd`) and the op launches. There is no
 daily salary and no renewal: a soldier who is not on an op (idle at an FOB, wounded, MIA, captured) costs
@@ -82,10 +84,9 @@ nothing. The former non-payment rule and the soldier contract term are removed (
 A soldier promoted during an op (MGT-074) pays the new fee from the next launch. Fees use the shared economy
 rules file only for the booking (MGT-073); their amounts are recruitment data.
 **Values.** fee per op by rank — recruit $300, regular $600, veteran $1,200, elite $2,500 (design draft) →
-data/recruitment.json `tiers[].feePerOpUsd` (replaces `salaryPerDayUsd`); `hiredPilotFeePerOpUsd` — not set
-(design: "paid a fee per op like a soldier", no amount) → data/recruitment.json. Removed: `salaryPerDayUsd`,
-`contractTermHours`, `nonPayment` (recruitment.json); salaries no longer use `payIntervalHours`.
-**Status.** Draft; open (hired pilot fee)
+data/recruitment.json `tiers[].feePerOpUsd` (replaces `salaryPerDayUsd`). Removed: `salaryPerDayUsd`,
+`contractTermHours`, `nonPayment`, `hiredPilotFeePerOpUsd` (recruitment.json); salaries no longer use `payIntervalHours`.
+**Status.** Draft
 **Source.** design/management.md › Soldiers & progression (Recruitment; Contracts & morale); design/strategic-actions.md › Movement and operations (Launch an op; Fly one region by helicopter); › Trade, services, contracts and factions (Hire soldiers); design/data-definitions.md › Vehicles (draft) › Helicopters (draft)
 
 ### [MGT-074] Rank and promotion
@@ -105,7 +106,7 @@ data/recruitment.json `tiers[].attributeRange.max` (no separate field)
 ### [MGT-075] Squad leader and Leadership bonus
 **Rule.** On an op, the highest-ranked soldier (MGT-074) leads the squad; ties go to the higher average
 attribute (then, spec choice, the soldier listed first in the squad). While the leader is alive on the
-tactical map, every other soldier of the side gets the Leadership bonus of the leader's rank, added to its
+tactical map, every soldier of the side, the leader included, gets the Leadership bonus of the leader's rank, added to its
 morale and to its reaction chance (TAC-022). The bonus is added in battle only and never stored: the morale
 reported in the battle result excludes it (MGT-008). If the leader dies or leaves the map, the next
 highest-ranked soldier on the map takes over at its next activation (as for AI squad leaders, TAI; spec
@@ -778,14 +779,14 @@ plants, fuel at gas stations and oil plants. Each debits `economy` and applies i
 repair ITM condition, fuel STR). Prices: hospital treatment `servicePrices.hospitalPerWoundUsd` per wound
 treated; repairs at a mechanical plant `servicePrices.repairPerConditionPointUsd` per condition point
 restored (weapon `condition`, DAT-014, or vehicle condition, DAT-029); fuel `servicePrices.fuelPerUnitUsd`
-per fuel unit (DAT-024). A payment the balance cannot cover fails (MGT-070): the service is not given. A
-weapon repair by a soldier (not a paid service) raises the instance `condition` by a rate scaled by the
-repairing soldier's Technical, × `repairFactor` with the Armourer perk; a field repair of a vehicle by a soldier with the Sapper perk restores × `vehicleRepairFactor` (MGT-009).
+per fuel unit (DAT-024). A payment the balance cannot cover fails (MGT-070): the service is not given. A plant repair of a weapon brings its `condition` back to 100. A
+weapon repair by a soldier in the field (not a paid service) raises the instance `condition` by
+`weaponRepair.conditionPerHourPer10Technical` × floor(Technical ÷ 10) per hour of repair, capped at 100, ×
+`repairFactor` with the Armourer perk; a field repair of a vehicle by a soldier with the Sapper perk restores × `vehicleRepairFactor` (MGT-009).
 **Values.** `servicePrices.hospitalPerWoundUsd` — $300; `servicePrices.repairPerConditionPointUsd` — $20;
-`servicePrices.fuelPerUnitUsd` — $50 (design draft) → data/management-rules.json; `weaponRepair`
-(condition restored per repair, Technical scaling) — not set (design: Open, DAT-014) →
-data/management-rules.json
-**Status.** open (soldier repair rate)
+`servicePrices.fuelPerUnitUsd` — $50 (design draft) → data/management-rules.json; `weaponRepair.conditionPerHourPer10Technical` — 2 (design draft: +2 Condition per hour for every 10 points of
+Technical) → data/management-rules.json
+**Status.** Draft
 **Source.** design/management.md › Base & meta progression
 
 ### [MGT-068] Industry deliveries
@@ -837,16 +838,12 @@ data/management-rules.json
 ### [MGT-073] Shared economy rules for the PMC's running costs and income
 **Rule.** The player's PMC's fees and income use the shared economy rules file (`data/economy-rules.json`,
 the same file as the AI factions' funds, STR-092). Soldier fees are not recurring: they are booked once per
-op, at launch (MGT-005). The recurring items are vehicle upkeep and plant income (MGT-068); FOBs have no
-upkeep (MGT-066) and there are no salaries. Both are booked every `payIntervalHours` (daily, at the 00:00
-`dailyRollover`) in this order (spec choice): plant income and deliveries (`plantOutput`) first, then vehicle
-upkeep. Vehicle upkeep per owned vehicle = `round(vehicleUpkeepPerDayFraction × costUsd)` per day (DAT-024);
-fuel is paid separately when refuelling (MGT-067). Each booking follows MGT-070: a cost the balance cannot
-cover fails (the consequence of unpaid vehicle upkeep is not designed).
-**Values.** `payIntervalHours` — 24 (design draft); `vehicleUpkeepPerDayFraction` — 0.002 (design draft:
-0.2% of the price per day) → data/economy-rules.json; fee per op by rank → data/recruitment.json (MGT-005);
-plant output → data/poi.json (MGT-068). Removed: `fobUpkeepPerDayUsd`.
-**Status.** open (consequence of unpaid vehicle upkeep)
+op, at launch (MGT-005). The only recurring item is plant income (MGT-068): FOBs (MGT-066) and vehicles have no
+upkeep (a vehicle costs only its price, fuel and repairs, MGT-067; DAT-024) and there are no salaries.
+Plant income and deliveries (`plantOutput`) are booked every `payIntervalHours` (daily, at the 00:00
+`dailyRollover`). Each booking follows MGT-070.
+**Values.** `payIntervalHours` — 24 (design draft) → data/economy-rules.json; fee per op by rank → data/recruitment.json (MGT-005);
+plant output → data/poi.json (MGT-068). Removed: `fobUpkeepPerDayUsd`, `vehicleUpkeepPerDayFraction`.
 **Source.** design/management.md › Soldiers & progression (Contracts & morale); › Base & meta progression (FOBs); design/data-definitions.md › Vehicles (draft) (Vehicle parameters, Cost)
 
 ## Interfaces
@@ -976,7 +973,7 @@ No other part of `roster`, `unlocks` or `economy` is published.
     reports each soldier's morale at the end; Management stores the reported values (MGT-008). MGT-008: the battle result carries only `squadMorale`; spec applies the squad's change to every
     soldier who took part. Confirm, or should the battle result report morale per soldier?
 45. **Resolved (2026-11-24):** FOBs have no upkeep, only a purchase price ($25,000 small city, $50,000 large
-    city; MGT-066, MGT-073). Still open: consequence of unpaid vehicle upkeep (MGT-073). MGT-066, MGT-073: FOB upkeep is named as a running cost but has no amount; consequence of an upkeep
+    city; MGT-066, MGT-073). **Resolved (2026-11-24, design c1333f3):** vehicle upkeep is dropped (MGT-073). MGT-066, MGT-073: FOB upkeep is named as a running cost but has no amount; consequence of an upkeep
     payment the balance cannot cover is not stated.
 46. **Resolved (2026-11-24):** losses still apply, only gains stop; one disown roll per contract, when it
     first goes wrong (MGT-050). MGT-050: once a contract is disowned, do mission-failed and contract-broken losses with the employer
@@ -987,9 +984,12 @@ No other part of `roster`, `unlocks` or `economy` is published.
 48. **Resolved (2026-11-24):** no repayment: a failed contract costs only reputation, the advance is kept and
     nothing is owed; `repayDebt` and the `repayment` result are removed (MGT-048). MGT-048: how does the player repay an advance debt? Spec adds a `repayDebt` management request
     (`contractId`, `amountUsd`) whose result names the `repayment` for Strategic to credit.
-49. MGT-005, DAT-028: a hired helicopter pilot is "paid a fee per op like a soldier", but the design gives no
+49. **Resolved (2026-11-24, design c1333f3):** the hired pilot is a normal roster soldier with Technical
+    50+, paid the normal fee by rank; `hiredPilotFeePerOpUsd` and `launchOp` `hiredPilot` are removed (MGT-005).
+    MGT-005, DAT-028: a hired helicopter pilot is "paid a fee per op like a soldier", but the design gives no
     amount and does not say whether the pilot is a roster soldier (with a rank and its fee) or a separate hire.
     Spec: a separate per-op hire, `recruitment.hiredPilotFeePerOpUsd`, not set.
-50. MGT-003, STR-065: refugee recruits come with a "fee 30% lower". With the fee-per-op model "fee" could mean
+50. **Resolved (2026-11-24, design c1333f3):** the 30% applies to the fee per op, for as long as they
+    serve; the hire price is normal (MGT-001 `feeDiscount`, MGT-003, MGT-005). MGT-003, STR-065: refugee recruits come with a "fee 30% lower". With the fee-per-op model "fee" could mean
     the hire price or the fee per op. Spec: the hire price (the design calls them cheap recruits); the fee per
     op stays the rank's fee.

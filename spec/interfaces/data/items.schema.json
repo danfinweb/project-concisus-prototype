@@ -3,7 +3,7 @@
   "$id": "data/items.schema.json",
   "title": "Items",
   "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, DAT-030, ITM-001..ITM-034. valueUsd is the full faction-trader price (ITM-034).",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -68,7 +68,7 @@
         { "description": "DAT-016 tactical: optional small ergonomics modifier (flashlight or laser); laser snapShotSpread (DAT-017)", "properties": { "slot": { "const": "tactical" }, "modifiers": { "$ref": "#/$defs/modifiersTactical" } } }
       ]
     },
-    "modifiersMuzzle": { "type": "object", "properties": { "recoil": { "type": "number", "exclusiveMinimum": 0, "description": "factor" }, "flash": { "type": "number", "minimum": 0, "description": "factor on how far the muzzle flash reveals the shooter (DAT-016)" } }, "additionalProperties": false },
+    "modifiersMuzzle": { "type": "object", "properties": { "recoil": { "type": "number", "exclusiveMinimum": 0, "description": "factor" }, "ergonomics": { "type": "number", "description": "added (DAT-016)" } }, "additionalProperties": false },
     "modifiersGrip": { "type": "object", "properties": { "ergonomics": { "type": "number", "description": "added" }, "recoil": { "type": "number", "exclusiveMinimum": 0, "description": "factor" } }, "additionalProperties": false },
     "modifiersHandguard": { "type": "object", "properties": { "ergonomics": { "type": "number" } }, "additionalProperties": false },
     "modifiersOptic": { "type": "object", "properties": { "shooterSpreadAtRange": { "type": "number" } }, "additionalProperties": false },

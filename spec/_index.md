@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
+Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 
 ## IDs
 
-419 IDs (first split 2026-11-22, updated from design 06dc2a6). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+420 IDs (first split 2026-11-22, updated from design c1333f3). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -36,7 +36,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [GEN-009] | Krug markets as no-fire zones | all modules | design/design.md › Factions & campaign › The Krug |
 | [GEN-010] | Krug standing unlocks (open) | all modules | design/design.md › Factions & campaign › The Krug |
 | [GEN-011] | Player allegiance (open) | all modules | design/design.md › Factions & campaign › Player role |
-| [GEN-012] | Campaign end states (open) | all modules | design/design.md › Factions & campaign › Player role; design/strategic-layer.md › Map (draft); design/management.md › Base & meta progression |
+| [GEN-012] | Campaign end states | all modules | design/design.md › Factions & campaign › Player role; design/strategic-layer.md › Map (draft); design/management.md › Base & meta progression |
 | [GEN-013] | Player coup requirements (open) | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-014] | Coup final operation | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-015] | Holding phase (open) | all modules | design/design.md › Factions & campaign › Coups; design/strategic-layer.md › Map (draft) |
@@ -93,7 +93,8 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [STR-040] | Contract actions (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions |
 | [STR-041] | Paid services (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions; design/data-definitions.md › Vehicles (draft) › Helicopters |
 | [STR-042] | Acquire an FOB (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions; design/management.md › Base & meta progression |
-| [STR-043] | Payments to factions (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions |
+| [STR-043] | Payments to factions | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions |
+| [STR-099] | Broker a ceasefire (open) | modules/strategic | design/design.md › Factions & campaign › Player role (Endings) |
 | [STR-044] | Contract postings from goals | modules/strategic | design/management.md › Contracts and missions; design/ai.md › Strategic AI |
 | [STR-045] | VIP entity | modules/strategic | design/strategic-layer.md › VIPs |
 | [STR-046] | VIP guard | modules/strategic | design/strategic-layer.md › VIPs |
@@ -112,7 +113,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [STR-059] | Event: Front offensive (open) | modules/strategic | design/world-events.md › Events |
 | [STR-060] | Event: Local ceasefire (open) | modules/strategic | design/world-events.md › Events |
 | [STR-061] | Event: Defection (open) | modules/strategic | design/world-events.md › Events; › Reputation in the event system |
-| [STR-062] | Event: Fuel shortage (open) | modules/strategic | design/world-events.md › Events |
+| [STR-062] | Event: Fuel shortage | modules/strategic | design/world-events.md › Events |
 | [STR-063] | Event: Chemical leak (open) | modules/strategic | design/world-events.md › Events; design/strategic-layer.md › Map (draft) › Points of interest |
 | [STR-064] | Event: Bounty on the PMC (open) | modules/strategic | design/world-events.md › Events; › Reputation in the event system |
 | [STR-065] | Event: Refugee movement (open) | modules/strategic | design/world-events.md › Events |
@@ -236,7 +237,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [TAC-092] | City landmarks (optional) | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Optional extras, Randomness |
 | [TAC-093] | Generation randomness | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Randomness |
 | [TAC-094] | Squad leader and Leadership bonus | modules/tactical | design/management.md › Soldiers & progression (Rank and leadership); design/ai.md › Tactical AI |
-| [TAC-095] | Morale in battle (open) | modules/tactical | design/management.md › Soldiers & progression (Contracts & morale) |
+| [TAC-095] | Morale in battle | modules/tactical | design/management.md › Soldiers & progression (Contracts & morale) |
 | [TAC-096] | Perk effects in battle | modules/tactical | design/management.md › Soldier attributes (draft) (Perks) |
 | [MGT-001] | Soldier record | modules/management | design/management.md › Soldiers & progression |
 | [MGT-002] | Hiring pools (open) | modules/management | design/management.md › Soldiers & progression |
@@ -304,7 +305,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [MGT-064] | Attribution | modules/management | design/management.md › Reputation › Attribution |
 | [MGT-065] | Acquisition paths | modules/management | design/management.md › Base & meta progression |
 | [MGT-066] | FOBs (open) | modules/management | design/management.md › Base & meta progression |
-| [MGT-067] | Paid field services (open) | modules/management | design/management.md › Base & meta progression |
+| [MGT-067] | Paid field services | modules/management | design/management.md › Base & meta progression |
 | [MGT-068] | Industry deliveries (open) | modules/management | design/management.md › Base & meta progression |
 | [MGT-069] | FOB raids (open) | modules/management | design/management.md › Base & meta progression |
 | [MGT-070] | Economy ledger | modules/management | design/management.md › Contracts and missions › Contract terms; design/design.md › Factions & campaign › Leaders; design/strategic-layer.md › Squads and simulation (Faction funds (draft)) |
@@ -361,7 +362,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [DAT-011] | Weapon profile (Draft (design: "Draft — not final")) | /data, tools | design/data-definitions.md › Weapon profile (draft); design/item-list.md › Weapons; design/tactical-actions.md › Weapons (Fire, Reload) |
 | [DAT-012] | Fire modes | /data, tools | design/data-definitions.md › Weapon profile (draft) › Fire modes; design/tactical-actions.md › Weapons |
 | [DAT-013] | Base MoA game scale | /data, tools | design/data-definitions.md › Weapon profile (draft) › Base MoA; design/tactical-layer.md › Hit model |
-| [DAT-014] | Weapon condition (open) | /data, tools | design/data-definitions.md › Weapon profile (draft) › State, not profile |
+| [DAT-014] | Weapon condition | /data, tools | design/data-definitions.md › Weapon profile (draft) › State, not profile |
 | [DAT-015] | Mod slots and handguard sub-slots | /data, tools | design/data-definitions.md › Weapon profile (draft) › Mod slots; › How mods change the profile |
 | [DAT-016] | Weapon mod profile (Draft; initial content: none in design/item-list.md (no mods listed)) | /data, tools | design/data-definitions.md › Weapon profile (draft) › How mods change the profile; design/item-list.md › Weapons (magazines are items) |
 | [DAT-017] | Tactical modules (open) | /data, tools | design/data-definitions.md › Weapon profile (draft) › Tactical modules |
@@ -395,7 +396,7 @@ Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 | [ITM-014] | Pouch type limits | /data, tools | design/item-list.md › Load-bearing vests; › Weapons (magazines are items); › Grenades; design/data-definitions.md › Soldier equipment slots (draft) › Type limits |
 | [ITM-015] | Other items | /data, tools | design/item-list.md › Load-bearing vests |
 | [ITM-016] | Pouch item weight limit | /data, tools | design/item-list.md › Load-bearing vests |
-| [ITM-017] | Battle belt items (open (holster meaning)) | /data, tools | design/item-list.md › Battle belts |
+| [ITM-017] | Battle belt items | /data, tools | design/item-list.md › Battle belts |
 | [ITM-018] | Backpack items | /data, tools | design/item-list.md › Backpacks |
 | [ITM-019] | Medical items | /data, tools | design/item-list.md › Medical items; design/tactical-layer.md › Medical system (draft) |
 | [ITM-020] | Medical item restrictions | /data, tools | design/item-list.md › Medical items; design/tactical-layer.md › Medical system (draft) › Using medical items |

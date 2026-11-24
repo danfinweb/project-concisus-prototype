@@ -139,8 +139,9 @@ standing. Two effects:
   `resentment.priceMarkup` more (price factor `1 + priceMarkup`, applied by MGT when it prices them).
 - Each paid escort request a foreign PMC makes to the Krug (STR-094) is refused outright with chance
   `resentment.escortRefusalChance` (seeded, rolled by Strategic before the request reaches the Krug AI): a
-  Krug squad that resents foreign soldiers refuses the work. Foreign PMCs are the player's PMC, Varyag and
-  Aegis (a rogue PMC included); the states and resistance groups are not (Open questions 14).
+  Krug squad that resents foreign soldiers refuses the work. Foreign PMCs are the player's PMC, Varyag,
+  Aegis and a rogue PMC; the SSV, the VDK and the Krug never count (design), nor do resistance groups
+  (spec reading: they are not PMCs).
 **Values.** `standingUnlocks` — `localRecruits` 0, `marketStock` 20, `smugglingRoutes` 35, `safeHouses` 50
 (design draft); `resentment.priceMarkup` 0.10, `resentment.escortRefusalChance` 0.20 (design draft) →
 data/factions.json (Krug record)
@@ -169,8 +170,10 @@ Checked at each daily check (STR-004):
   `campaign.victoryHoldDays` days; the count restarts whenever either condition fails. Only the SSV
   (`ssvUnited`), the VDK (`vdkUnited`), the player's PMC and a rogue PMC (STR-066; `rogueVictory`) can
   meet it, and Strategic keeps the count only for them: Varyag and Aegis while they serve a patron, the
-  Krug and resistance groups cannot. `rogueVictory` ends the campaign as a loss for the player. Which
-  ending the player's PMC reaches by meeting the rule is not named (Open questions 13).
+  Krug and resistance groups cannot. `rogueVictory` ends the campaign as a loss for the player. When the
+  player's PMC meets the rule, that counts as the coup (GEN-014): the coup requirements and final operation
+  are not needed, the holding phase (GEN-015) starts the same day, and its success ends the campaign as
+  `playerCoup`.
 - **`reformed`:** GEN-019.
 - **`endlessWar`:** no faction has won when the day counter reaches `campaign.endlessWarDay`.
 - **`cashOut`:** offered to the player (a choice, not forced) once the PMC's money (MGT `economy`) exceeds
@@ -180,7 +183,6 @@ A rogue PMC that only holds the capital (STR-007) is its holder and the campaign
 campaign only by meeting the victory rule.
 **Values.** `campaign.victoryTileShare` 0.6, `campaign.victoryHoldDays` 14, `campaign.endlessWarDay` 120,
 `campaign.cashOutFundsUsd` 2000000 (design draft) → data/strategic-rules.json; `reformed` → GEN-019.
-**Status.** open (the ending of the player's own victory)
 **Source.** design/design.md › Factions & campaign › Player role; design/strategic-layer.md › Map (draft); design/management.md › Base & meta progression
 
 ## Coups
@@ -205,11 +207,13 @@ data/strategic-rules.json; difficulty scaling — not set (design: no numbers)
 objectives: seize command, seize communications, seize the government district. Op success rules
 (GEN-002) apply per stage. The coup happens only when the requirements (GEN-013) were met at launch and
 this operation is won (all three stages); holding the capital alone is never a coup. On success the
-holding phase starts (GEN-015).
-**Source.** design/design.md › Factions & campaign › Coups
+holding phase starts (GEN-015). The player's PMC meeting the victory rule (GEN-012) also counts as the
+coup, without this operation; the holding phase follows as well.
+**Source.** design/design.md › Factions & campaign › Coups; design/design.md › Factions & campaign › Player role (Endings)
 
 ### [GEN-015] Holding phase
-**Rule.** After a won coup operation (GEN-014) the holding phase runs:
+**Rule.** After a won coup operation (GEN-014), or once the player's PMC meets the victory rule (GEN-012),
+the holding phase runs:
 - Both `east` and `west` turn against the PMC and drive counter-attacks on the capital (STR).
 - **Success:** the phase ends, and the `playerCoup` ending is reached, as soon as one patron accepts the
   new order: at a daily check (STR-004), a patron accepts once the PMC's reputation with the state it
@@ -266,11 +270,11 @@ GEN-012).
 ### [GEN-019] Reformed ending: ceasefire peace
 **Rule.** The `reformed` ending is a ceasefire peace between the SSV and the VDK:
 - **General ceasefire.** While it holds, every SSV–VDK encounter on any tile never turns hostile (as the
-  local ceasefire flag does, STR-060, but across the whole front and the whole map). The player can broker
-  it while both the SSV and the VDK are exhausted (GEN-013: at least `coup.exhaustedSigns` true crisis
-  signs at the last daily check) and the player's reputation with both is Trusted (MGT-054). How the player
-  brokers it (where, how long it takes) and whether it can also start without the player are not designed
-  (Open questions 15).
+  local ceasefire flag does, STR-060, but across the whole front and the whole map). It never starts by
+  itself: only the player starts it, with the strategic action Broker a ceasefire (STR-099) at a
+  governmental institution, while both the SSV and the VDK are exhausted (GEN-013: at least
+  `coup.exhaustedSigns` true crisis signs at the last daily check) and the player's reputation with both is
+  Trusted (MGT-054).
 - **Ending.** At a daily check (STR-004), the campaign ends as `reformed` once the general ceasefire has
   held without a break for `campaign.reformedCeasefireDays` days while both stayed exhausted. A fight
   between SSV and VDK squads breaks it; when either state is no longer exhausted at a daily check the
@@ -278,7 +282,6 @@ GEN-012).
 - **Epilogue.** The `reformed` epilogue makes clear that the peace is only temporary.
 **Values.** `campaign.reformedCeasefireDays` 14 (design draft) → data/strategic-rules.json; exhaustion →
 `coup.exhaustedSigns` (GEN-013).
-**Status.** open (brokering action)
 **Source.** design/design.md › Factions & campaign › Player role
 
 ## Open questions
@@ -335,16 +338,22 @@ GEN-012).
     the spec applies those event stances on top of 0. Confirm.
 12. **Partly resolved (2026-11-24, design 06dc2a6):** besides the SSV, the VDK and the player only a rogue
     PMC can meet the victory rule, which ends the campaign as a loss for the player (`rogueVictory`);
-    Varyag and Aegis while serving a patron and the Krug cannot (GEN-012). Still open: must the capital and
+    Varyag and Aegis while serving a patron and the Krug cannot (GEN-012). **Resolved (2026-11-24, design
+    c1333f3):** yes, without a break; losing the capital or dropping below the share resets the count
+    (GEN-012). Formerly open: must the capital and
     the tile share be held without a break (spec: yes, the count restarts)? GEN-012: may a faction other
     than the SSV or the VDK (a rival or rogue PMC, the Krug) meet the victory condition, and what happens
     then (no ending is named for it)?
-13. GEN-012: the design lets the player's PMC meet the victory rule (capital and tile share held), but names
+13. **Resolved (2026-11-24, design c1333f3):** it counts as the coup ending; the holding phase still
+    follows (GEN-012, GEN-014, GEN-015). GEN-012: the design lets the player's PMC meet the victory rule (capital and tile share held), but names
     no ending for it. Is it `playerCoup` (and must the coup requirements, final operation and holding phase
     of GEN-013…GEN-015 still come first), or a separate ending? The spec keeps the count but ends nothing.
-14. GEN-010, STR-094: "some Krug squads refuse escort work for a foreign PMC" — the spec rolls the refusal
+14. **Resolved (2026-11-24, design c1333f3):** the player's PMC, Varyag, Aegis and a rogue PMC; never the
+    SSV, the VDK or the Krug (GEN-010). GEN-010, STR-094: "some Krug squads refuse escort work for a foreign PMC" — the spec rolls the refusal
     for the player's PMC, Varyag and Aegis (a rogue PMC included), not for the states or resistance groups.
     Confirm which requesters count as foreign PMCs.
-15. GEN-019: how does the player broker the general ceasefire (a strategic action: where, how long, at what
+15. **Resolved (2026-11-24, design c1333f3):** only the player brokers it, through an action at a
+    governmental institution (STR-099); it never starts by itself (GEN-019). The action's time and cost are
+    not stated (STR-099, data). GEN-019: how does the player broker the general ceasefire (a strategic action: where, how long, at what
     cost), and can the SSV and the VDK fall into it without the player? Until decided, the spec has no
     command or action that starts it.

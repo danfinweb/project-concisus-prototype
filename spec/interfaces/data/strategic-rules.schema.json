@@ -3,7 +3,7 @@
   "$id": "data/strategic-rules.schema.json",
   "title": "Strategic rules",
   "description": "Global strategic and campaign constants (spec STR, GEN-012..GEN-015, GEN-019). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules. Roads have no visibility of their own (STR-006).",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design drafts listed in the spec.",
   "type": "object",
   "properties": {
@@ -137,7 +137,8 @@
         "evade": { "type": "integer", "minimum": 0, "description": "STR-024, design draft 1" },
         "krugPass": { "type": "integer", "minimum": 0, "description": "STR-025, design draft 0" },
         "payFaction": { "type": "integer", "minimum": 0, "description": "STR-043: pay compensation or pay off a bounty, design draft 0" },
-        "krugEscort": { "type": "integer", "minimum": 0, "description": "STR-094: hire a Krug escort, design draft 0" }
+        "krugEscort": { "type": "integer", "minimum": 0, "description": "STR-094: hire a Krug escort, design draft 0" },
+        "brokerCeasefire": { "type": "integer", "minimum": 0, "description": "STR-099: broker the general SSV–VDK ceasefire at a governmental institution, not set (design: no time)" }
       },
       "additionalProperties": false
     },

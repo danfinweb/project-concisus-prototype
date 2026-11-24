@@ -3,7 +3,7 @@
   "$id": "data/tactical-rules.schema.json",
   "title": "Tactical rules",
   "description": "Global tactical constants (spec TAC; ballistic constants from DAT/ITM).",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -141,7 +141,7 @@
     "carryMoveSurcharge": { "type": "integer", "description": "TAC-074, draft 2 per tile" },
     "dragMoveSurcharge": { "type": "integer", "description": "TAC-074, draft 3 per tile" },
     "moraleFlight": { "type": "object", "description": "TAC-077 (optional)", "properties": { "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "flight chance, not set" }, "nerveDivisor": { "type": "number", "exclusiveMinimum": 0, "description": "design draft 200: suppression spread and casualty morale loss × (1 − Nerve ÷ nerveDivisor)" } }, "additionalProperties": false },
-    "moraleCasualty": { "type": "object", "description": "TAC-095: morale change per casualty, not set (design: no sizes)", "properties": { "allyKilled": { "type": "number", "minimum": 0 }, "allyWounded": { "type": "number", "minimum": 0 }, "enemyKilled": { "type": "number", "minimum": 0 }, "enemyWounded": { "type": "number", "minimum": 0 } }, "additionalProperties": false },
+    "moraleCasualty": { "type": "object", "description": "TAC-095: morale change per casualty for each soldier with it in line of sight or in its squad; design draft allyKilled 10, allyWounded 3 (losses), enemyKilled 3, enemyWounded 1 (gains)", "properties": { "allyKilled": { "type": "number", "minimum": 0 }, "allyWounded": { "type": "number", "minimum": 0 }, "enemyKilled": { "type": "number", "minimum": 0 }, "enemyWounded": { "type": "number", "minimum": 0 } }, "additionalProperties": false },
     "weaponWearPerShot": { "type": "number", "minimum": 0, "description": "DAT-014 / TAC-083, draft 0.02 condition per round" },
     "jamChanceCurve": { "type": "object", "description": "TAC-083, draft {max 0.10, exponent 2}" },
     "clearJamCost": { "type": "integer", "description": "TAC-083, draft 4" },

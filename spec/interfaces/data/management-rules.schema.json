@@ -3,7 +3,7 @@
   "$id": "data/management-rules.schema.json",
   "title": "Management rules",
   "description": "Global management constants (spec MGT). The weight to AP/stamina penalty is TAC-027 (tactical-rules); the pay interval and running-cost formulas are economy-rules (MGT-073).",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
@@ -127,7 +127,7 @@
       },
       "additionalProperties": false
     },
-    "weaponRepair": { "type": "object", "description": "DAT-014, MGT-067: condition restored per soldier repair and its Technical scaling, not set" },
+    "weaponRepair": { "type": "object", "description": "DAT-014, MGT-067: field repair of a weapon by a soldier (a plant repair restores 100 at servicePrices.repairPerConditionPointUsd)", "properties": { "conditionPerHourPer10Technical": { "type": "number", "minimum": 0, "description": "Condition per hour of repair for every 10 points of Technical, design draft 2" } }, "additionalProperties": false },
     "advanceFraction": { "$ref": "#/$defs/fraction", "description": "MGT-047, design 0.25" },
     "repMin": { "type": "integer", "description": "MGT-053, design -100" },
     "repMax": { "type": "integer", "description": "MGT-053, design 100" },

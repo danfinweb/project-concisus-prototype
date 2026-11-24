@@ -3,7 +3,7 @@
   "$id": "data/events.schema.json",
   "title": "World events and measures",
   "description": "World events, desperate measures and flavour events (spec STR-050..STR-081). Event-specific values the spec names (with or without the params. prefix, e.g. offensiveAdvantage, fuelPriceFactor, bountyAt) live in params; how long an event runs (shipmentDays, offensiveDays, ceasefireDays, leakDays, refugeeDays, disputeDays, measure durations) is its duration (STR-050).",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -40,7 +40,7 @@
       "effects": { "type": "array", "description": "STR-055..STR-080" },
       "contracts": { "type": "array", "description": "STR-053" },
       "oncePerCampaign": { "type": "boolean", "description": "STR-066, STR-080" },
-      "params": { "type": "object", "description": "Event-specific values that STR-043, STR-055..STR-080 name as params.<name> (e.g. compensationPrice {perSoldierUsd, minUsd}, bountyPayoffPrice {baseUsd, highUsd}, jointAssaultRelationDrop, eliteShareBonus, gearTierBonus, relationDrop, recoveryPerDay, shortageMoveFactor, medicalPriceFactor, huntSquads, huntSquadsHigh, rivalHuntSquads, loyaltyShift, extraRecruitsPerDay, recruitFeeDiscount, weakGuardSquads, lossDaysMin, lossWindowDays, lostFightsMin, windowDays, sectorRadius, areaRadius, lossesMin, defectionSupply, defectionJoinChance, patronVetoChance, resistanceSquads)" }
+      "params": { "type": "object", "description": "Event-specific values that STR-043, STR-055..STR-080 name as params.<name> (e.g. compensationPrice {perSoldierUsd, minUsd}, bountyPayoffPrice {baseUsd, highUsd}, jointAssaultRelationDrop, eliteShareBonus, gearTierBonus, relationDrop, recoveryPerDay, medicalPriceFactor, huntSquads, huntSquadsHigh, rivalHuntSquads, loyaltyShift, extraRecruitsPerDay, recruitFeeDiscount, weakGuardSquads, lossDaysMin, lossWindowDays, lostFightsMin, windowDays, sectorRadius, areaRadius, lossesMin, defectionSupply, defectionJoinChance, patronVetoChance, resistanceSquads)" }
     },
     "additionalProperties": false
   }

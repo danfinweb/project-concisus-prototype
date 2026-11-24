@@ -3,7 +3,7 @@
   "$id": "data/recruitment.schema.json",
   "title": "Recruitment",
   "description": "Hiring pools and price tiers (= soldier ranks) with hire price, fee per op and attribute range (spec MGT-002..MGT-005, MGT-022, MGT-074). Fees are paid once per op at launch; there are no salaries.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
@@ -41,8 +41,7 @@
       }
     },
     "priceFormula": { "type": "object", "description": "MGT-003: scaling of the hire price with the average attribute within a tier, not set" },
-    "attributeDistribution": { "type": "object", "description": "MGT-022: distribution within the tier range, not set" },
-    "hiredPilotFeePerOpUsd": { "type": "number", "minimum": 0, "description": "MGT-005 / DAT-028: fee per op of a hired helicopter pilot, not set" }
+    "attributeDistribution": { "type": "object", "description": "MGT-022: distribution within the tier range, not set" }
   },
   "additionalProperties": false
 }

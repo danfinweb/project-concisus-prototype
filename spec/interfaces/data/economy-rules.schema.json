@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/economy-rules.schema.json",
   "title": "Economy rules",
-  "description": "Money formulas shared by the strategic layer (AI faction funds, STR-092, STR-093) and Management (the player's PMC: fees per op booked at launch, vehicle upkeep and plant income; no salaries, no FOB upkeep; MGT-005, MGT-070, MGT-073).",
-  "version": "0.4.0",
+  "description": "Money formulas shared by the strategic layer (AI faction funds, STR-092, STR-093) and Management (the player's PMC: fees per op booked at launch and plant income; no salaries, no FOB or vehicle upkeep; MGT-005, MGT-070, MGT-073).",
+  "version": "0.5.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -12,7 +12,6 @@
     "squadUpkeep": { "type": "object", "description": "STR-092: cost per squad per booking interval" },
     "salaryFormula": { "type": "object", "description": "STR-092: AI faction salaries only (the player pays fees per op, recruitment tiers[].feePerOpUsd, MGT-005)" },
     "payIntervalHours": { "type": "integer", "minimum": 1, "description": "STR-092 / MGT-073: booking interval, design draft 24 (daily at 00:00)" },
-    "vehicleUpkeepPerDayFraction": { "type": "number", "minimum": 0, "maximum": 1, "description": "MGT-073 / DAT-024: upkeep per owned vehicle per day as a share of costUsd, design draft 0.002; fuel extra" },
     "lowLiquidity": { "type": "object", "description": "STR-069 sign 5: evaluation inputs" },
     "fundsMode": { "enum": ["hardLimit", "scoreTerm"], "description": "STR-092 / SAI-014: hardLimit default, scoreTerm test option" }
   },

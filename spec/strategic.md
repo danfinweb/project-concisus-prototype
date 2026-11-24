@@ -544,8 +544,7 @@ signed by the player, Strategic posts one through the normal path (STR-044, `con
 and not through an AI command: the employer is a faction that posts contracts (`ssv`, `vdk`, `krug`) whose
 funds cover the full pay (STR-092), picked with the seeded RNG among those that qualify; `sourceGoal`
 `supplyRun`; no reputation gate. Pay inputs follow MGT-046. If no faction can pay, none is posted that day
-and a log line records it. (Employer choice and `sourceGoal` are spec choices; the design says only "some
-faction", Open questions 52.)
+and a log line records it. (Employer choice and `sourceGoal` are spec choices, confirmed by the user on 2026-11-24.)
 **Values.** `lowRiskContract` (`missionId`, `targetFaction`, `minFrontDistance`) → see MGT-038
 (data/management-rules.json; `minFrontDistance` not set).
 **Status.** open (front distance)
@@ -572,7 +571,7 @@ not return are reported to MGT as MIA, captured or dead.
 on foot, STR-017); they are locked to the op until it ends. Launching takes `actionHours.launch`: with 0
 the squad's first move starts at once in the same planning phase. Each soldier's fee per op (and a hired
 pilot's, STR-034) is paid at launch: Strategic sends a `launchOp` management request (`squad`,
-`soldiers`, optional `hiredPilot`, optional `insuredItems`; MGT-005); if MGT returns `ok: false` the PMC
+`soldiers` (a helicopter pilot is one of them), optional `insuredItems`; MGT-005); if MGT returns `ok: false` the PMC
 cannot pay and the op does not launch (no fee, no launch). Amounts and booking: MGT.
 **Values.** `actionHours.launch` — 0 (design draft) → data/strategic-rules.json; fees per op → MGT.
 **Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft); design/management.md › Soldiers & progression
@@ -633,14 +632,15 @@ relation toward the helicopter's faction ≤ `hostileAt`, for the player: standi
 with both a hostile military POI and a hostile squad rolls once), roll once (seeded) with exclusive
 outcomes: downed with chance `heliFire.downChance`, damaged with chance `heliFire.damageChance`, otherwise
 unharmed. A downed helicopter becomes a crash site and its crew starts an emergency op on foot (STR-027). A
-damaged helicopter (vehicle state `damaged`) completes the move, must then land (STR-035) and cannot fly
-again until it is repaired (STR-041); while damaged its only move is the landing. Where a damaged
-helicopter that cannot land on the tile (water) comes down, and how it is repaired away from a mechanical
-plant, are open (Open questions 49).
+damaged helicopter (vehicle state `damaged`) completes the move. Over water (a tile where it cannot land,
+STR-035) it crashes the same way as a downed one. Over land it must then land (STR-035) and waits there,
+grounded, for repair at a mechanical plant (STR-041); while damaged its only move is the landing. How a
+helicopter grounded away from a plant gets to one is not stated; until settled it stays grounded (Open
+questions 53).
 **Values.** `heliMoveHours` — design 1; `pilotTechnicalMin` — design 50; `heliFire.damageChance` 0.10,
 `heliFire.downChance` 0.03 per point of interest (design draft) → data/strategic-rules.json; `military` per
 POI type → data/poi.json.
-**Status.** open (damaged landing on water, field repair)
+**Status.** open (repair of a helicopter grounded away from a plant)
 **Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters
 
 ### [STR-035] Land a helicopter
@@ -720,14 +720,23 @@ receiving faction's funds (STR-092). Ends the related event's effect toward the 
   of the hurt faction killed)` in the fight that triggered the dispute.
 - Bounty pay-off = `params.bountyPayoffPrice.baseUsd`, or `params.bountyPayoffPrice.highUsd` while the
   player's reputation with the faction is ≤ `bountyDoubleAt` (STR-064).
-Where it is paid (design: "the hurt faction", "the faction that set it", no place named) is not set (Open
-questions 50).
+Both are paid remotely, anywhere and at any time: no travel and no POI needed.
 **Values.** `actionHours.payFaction` — 0 (design draft) → data/strategic-rules.json;
 `params.compensationPrice` — `perSoldierUsd` 1000, `minUsd` 2000 (design draft) → data/events.json (STR-058
 record); `params.bountyPayoffPrice` — `baseUsd` 10000, `highUsd` 20000 (design draft) → data/events.json
 (STR-064 record).
-**Status.** open (place of payment)
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions
+
+### [STR-099] Broker a ceasefire
+**Rule.** The player's only way to start the general SSV–VDK ceasefire of the `reformed` ending (GEN-019);
+it never starts by itself and no AI faction takes this action. Where: a squad of the PMC on a tile with a
+governmental institution POI (STR-010). Allowed only while both the SSV and the VDK are exhausted (GEN-013)
+and the player's reputation with both is Trusted (MGT-054), checked when the action starts and again when it
+ends. Takes `actionHours.brokerCeasefire`; on completion the general ceasefire starts (GEN-019). A cost is
+not stated (spec reading: none).
+**Values.** `actionHours.brokerCeasefire` — not set (design: no time) → data/strategic-rules.json.
+**Status.** open (time)
+**Source.** design/design.md › Factions & campaign › Player role (Endings)
 
 ### [STR-044] Contract postings from goals
 **Rule.** When a faction command offers a contract (`offerContract`, STR-021), or an event/measure creates
@@ -927,12 +936,9 @@ them).
 
 ### [STR-062] Event: Fuel shortage
 **Rule.** Trigger: an oil plant is ruined or cut off (no road path to its controller's other
-regions). Effect: fuel prices ×2 (sent to MGT as a price modifier) and faction squads move less: each move
-takes `ceil(hours × params.shortageMoveFactor)` hours. Which factions' squads are slowed is not stated
-(Open questions 51). Ends when supply is restored.
-**Values.** `fuelPriceFactor` — design 2; `params.shortageMoveFactor` 1.5 (design draft; hours rounded up)
-→ data/events.json.
-**Status.** open (factions affected)
+regions). Effect: fuel prices ×2 (sent to MGT as a price modifier); nobody moves slower. Ends when supply is
+restored.
+**Values.** `fuelPriceFactor` — design 2 → data/events.json (`params.shortageMoveFactor` removed).
 **Source.** design/world-events.md › Events
 
 ### [STR-063] Event: Chemical leak
@@ -959,7 +965,8 @@ rule (STR-096), not through `recruit`; each rival PMC (Varyag, Aegis) joins with
 **Rule.** Trigger: a city (small, large or capital) changes controller. Effect: in each neighbouring
 region with a settlement, loyalty toward the new controller changes by `params.loyaltyShift` (once, at the
 start, clamped); for `refugeeDays`, each neighbouring town or city gets `params.extraRecruitsPerDay` extra
-local recruit(s) per day whose fee is `params.recruitFeeDiscount` lower (sent to MGT).
+local recruit(s) per day whose fee per op (MGT-005) is `params.recruitFeeDiscount` lower for as long as
+they serve; their hire price is normal (sent to MGT).
 **Values.** `refugeeDays` — design 10; `params.loyaltyShift` −10, `params.extraRecruitsPerDay` 1,
 `params.recruitFeeDiscount` 0.30 (design draft) → data/events.json.
 **Source.** design/world-events.md › Events
@@ -1402,14 +1409,21 @@ road, each with a non-water landable neighbour.
     convoy's tile it travels there first, which may delay the departure (STR-094). STR-094: how many Krug
     escorts may one convoy hire, and may the Krug attach a squad that is not on the convoy's tile (does the
     escort squad have to travel there first)?
-49. STR-034: a damaged helicopter "must land and be repaired before it flies on". Where does it come down
+49. **Resolved (2026-11-24, design c1333f3):** over water it crashes like a downed helicopter; over land
+    it lands and waits for repair at a mechanical plant (STR-034; the way to the plant moves to question 53).
+    STR-034: a damaged helicopter "must land and be repaired before it flies on". Where does it come down
     when the tile it entered is water (no landing allowed, STR-035), and how is it repaired when it lands
     away from a mechanical plant (repairs are a mechanical-plant service, STR-041; a landed helicopter
     cannot reach one)? Field repair by a Technical soldier, recovery, or abandonment?
-50. STR-043: where are compensation and a bounty pay-off paid (any POI of that faction, an FOB, a Krug
+50. **Resolved (2026-11-24, design c1333f3):** paid remotely, anywhere, at any time (STR-043). STR-043:
+    where are compensation and a bounty pay-off paid (any POI of that faction, an FOB, a Krug
     market)? The design names only the receiving faction.
-51. STR-062: "faction squads move less" during a fuel shortage — all non-player squads, only the squads of
+51. **Resolved (2026-11-24, design c1333f3):** nobody moves slower; the shortage only doubles fuel
+    prices (STR-062). STR-062: "faction squads move less" during a fuel shortage — all non-player squads, only the squads of
     the faction whose oil plant was lost, or player squads too?
-52. STR-098: "some faction always has at least one low-risk contract posted" — the spec picks the employer
+52. **Resolved (2026-11-24):** confirmed as specced (STR-098). STR-098: "some faction always has at least one low-risk contract posted" — the spec picks the employer
     among the SSV, the VDK and the Krug by funds and seeded RNG, with `sourceGoal` `supplyRun`, checked at
     each daily check. Confirm, or say which faction posts it.
+53. STR-034, STR-041: a damaged helicopter over land lands and "waits for repair at a mechanical plant".
+    When it lands on a tile without a mechanical plant, how does the repair reach it (a plant service sent
+    out, transport, field repair by a Technical soldier as for weapons)? Until decided, it stays grounded.

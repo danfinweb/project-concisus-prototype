@@ -176,12 +176,14 @@ change `baseMoa`.
 
 ### [DAT-014] Weapon condition
 **Rule.** Every gun instance tracks `condition`, integer 0–100 (instance state, DAT-004). Wear raises jam
-chance (TAC-083) and spread (TAC-044); repair uses the Technical attribute (MGT). Condition is not part
+chance (TAC-083) and spread (TAC-044); repair: in the field by a soldier, scaled by its Technical, or at a mechanical plant
+back to 100 (paid per Condition point; MGT-067). Condition is not part
 of the profile. A gun loses `weaponWearPerShot` Condition per round fired.
 **Values.** (draft, owned by TAC) `weaponWearPerShot` — 0.02 (1 per 50 rounds), `jamChanceCurve` — `max`
-0.10, `exponent` 2, `conditionSpreadCurve` — `maxExtra` 0.5 → data/tactical-rules.json; repair rate
-`weaponRepair` — not set (design: Open) → data/management-rules.json (MGT-067).
-**Status.** open (repair rate)
+0.10, `exponent` 2, `conditionSpreadCurve` — `maxExtra` 0.5 → data/tactical-rules.json; field repair
+`weaponRepair.conditionPerHourPer10Technical` — 2 (design draft: +2 Condition per hour per 10 Technical) →
+data/management-rules.json; plant repair  per Condition point (design draft) → `servicePrices` (MGT-067).
+**Status.** Draft
 **Source.** design/data-definitions.md › Weapon profile (draft) › State, not profile; design/tactical-layer.md › Derived per shot › Armour wear and weapon condition (draft)
 
 ### [DAT-015] Mod slots and handguard sub-slots
@@ -202,7 +204,7 @@ them. Each slot holds at most one mod.
 | `subSlots` | object `{ frontGrip: 0–1, tactical: 1–2 }` | — | — | Handguard only (DAT-015) |
 | `module` | enum | — | `flashlight`, `laser` | Tactical only (DAT-017) |
 
-Allowed `modifiers` keys per slot: muzzle — `recoil`, `flash`; stock, pistolGrip, frontGrip — `ergonomics`,
+Allowed `modifiers` keys per slot: muzzle — `recoil`, `ergonomics`; stock, pistolGrip, frontGrip — `ergonomics`,
 `recoil`; handguard — `ergonomics` (plus own `weightKg`); optic — `shooterSpreadAtRange` (multiplies the
 range spread, TAC-044); tactical — `snapShotSpread` for a laser (multiplies shooter spread on snap shots,
 DAT-017) and, for any tactical module (flashlight or laser), an optional small `ergonomics` modifier set per
@@ -215,12 +217,9 @@ type limits (ITM-014). The weapon's effective weight = `weightKg` + Σ fitted mo
 effective `recoil` = weapon `recoil` × Π fitted `modifiers.recoil`; `shooterSpreadAtRange` and
 `snapShotSpread` are factors on the TAC-044 spread parts (Π over fitted mods); effective `ergonomics` =
 weapon `ergonomics` + Σ fitted `modifiers.ergonomics`, clamped to 1–100 (spec choice); weight adds through
-each mod's own `weightKg`. The muzzle `flash` value is how far the muzzle flash reveals the shooter; it is a
-factor on the TAC muzzle-flash reveal distance (spec reading: a muzzle device scales it, like the other
-muzzle modifier; without a muzzle device the factor is 1). The reveal distance itself is TAC (not set there,
-design: not stated).
-**Values.** all mod values → data/items.json; arithmetic as above (design); the base muzzle-flash reveal
-distance — not set (design: not stated) → TAC (data/tactical-rules.json).
+each mod's own `weightKg`. There is no muzzle-flash reveal: the former muzzle `flash` value is removed (design
+c1333f3).
+**Values.** all mod values → data/items.json; arithmetic as above (design).
 **Status.** Draft; initial content: design/item-list.md › Mods (ITM-033).
 **Source.** design/data-definitions.md › Weapon profile (draft) › Mod slots; › How mods change the profile; design/item-list.md › Weapons (magazines are items); › Mods
 
@@ -369,8 +368,8 @@ every other load ×1.0).
 The former `profile` field (`civilian` / `military`) is removed (design 06e571f: the Profile column is gone;
 STR-033).
 
-**Values.** (design drafts) upkeep 0.2% of `costUsd` per day plus fuel → data/economy-rules.json
-`vehicleUpkeepPerDayFraction` (MGT-073; the player's running cost); the tank is a counter of fuel units
+**Values.** (design drafts) no upkeep: a vehicle costs only its price, fuel and repairs (MGT-073;
+`vehicleUpkeepPerDayFraction` removed); the tank is a counter of fuel units
 (0…`fuelRangeRegions`, instance state DAT-029), one unit = 20 litres, not an item; spare fuel is carried as
 diesel canister items (DAT-025); noise → notice distance Low 1 tile, Medium 2, High 3,
 Very high 4, Extreme 6 → data/strategic-rules.json `noiseRange` (STR-008); off-road → travel time — STR-032.
@@ -388,7 +387,8 @@ engagements. Spare fuel travels as diesel canister items (the item list's "Diese
 `kind: barter` with `refuelUnits` 1): using one out of battle consumes it and adds `refuelUnits` to the
 vehicle's tank counter, never above `fuelRangeRegions` (spec choice: it is not used while the tank has less
 than one unit free). Using a canister takes no game time (spec choice; design: not stated). Helicopters
-refuel only at FOBs and oil plants (DAT-028), so canisters refill ground vehicles only (spec reading). A squad without a vehicle travels on foot (`onFootHours` per tile, mountains separate,
+refuel only at FOBs and oil plants and never from diesel canisters (DAT-028): canisters refill ground vehicles
+only (design). A squad without a vehicle travels on foot (`onFootHours` per tile, mountains separate,
 data/strategic-rules.json, STR-031) and carries only what its soldiers carry (their seven slots and
 containers, DAT-005, DAT-007); it has no storage list and no supplies store beyond its soldiers' gear, and
 loot it brings home must fit in their backpacks, vests and belts (container limits, DAT-008). Vehicles are
@@ -434,10 +434,12 @@ civilian Robinson R44 needs no standing (`standing: null`).
 
 ### [DAT-028] Helicopter data
 **Rule.** `vehicleType: "helicopter"` implies: travel `heliMoveHours` per region over any terrain incl.
-water; landing on any open, non-water tile; one seat is the pilot, who needs Technical ≥
-`pilotTechnicalMin` or is a hired pilot, paid a fee per op like a soldier (MGT-005, `launchOp` `hiredPilot`); refuel only at FOBs and oil plants; noticed by every
+water; landing on any open, non-water tile; one seat is the pilot, a roster soldier with Technical ≥
+`pilotTechnicalMin` (a hired pilot is a normal roster soldier, paid the normal fee by rank, MGT-005); refuel
+only at FOBs and oil plants, never from diesel canisters; noticed by every
 faction in range; each hostile military point of interest on its path rolls a chance to damage or down it
-(STR-034); a downed helicopter becomes a crash site and starts an emergency op (STR). Hidden cities are
+(STR-034); a downed helicopter becomes a crash site and starts an emergency op (STR); a damaged one
+crashes the same way over water and over land lands and waits for repair at a mechanical plant (STR-034). Hidden cities are
 reachable only this way (optional feature).
 **Values.** → see STR-034: `pilotTechnicalMin` — design 50 and `heliMoveHours` — design 1 are single values in
 data/strategic-rules.json, not vehicle record fields; damage / down chance per point of interest (design
@@ -903,7 +905,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 ## Open questions
 
 1. **Resolved (design 8972470):** burst 3 rounds +2 AP, full auto 5 rounds +4 AP on top of the weapon-type default fire AP (draft), per-weapon override `fireApCost`. DAT-012 — Rounds fired by an `"auto"` fire mode and AP per shot action per mode are not designed.
-2. **Resolved (design 75e776f):** wear per shot, jam chance and spread curves are drafted (DAT-014, TAC-083) (part). Still open: the repair rate. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open (values;
+2. **Resolved (design 75e776f):** wear per shot, jam chance and spread curves are drafted (DAT-014, TAC-083) (part). **Resolved (2026-11-24, design c1333f3):** repair: field +2 Condition per hour per 10 Technical, plant back to 100 at $20 per point (draft; DAT-014, MGT-067). Formerly open: the repair rate. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open (values;
    the fields are now named: `weaponWearPerShot`, `jamChanceCurve`, `conditionSpreadCurve` in tactical-rules,
    `weaponRepair` in management-rules).
 3. **Resolved (2026-11-24):** each mod lists the weapons it fits; spread and recoil modifiers multiply, ergonomics and weight add; muzzle `flash` = how far the muzzle flash reveals the shooter, a factor on the TAC reveal distance (DAT-016). DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
@@ -975,9 +977,9 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
     counter? Refuel price is $50 per unit (MGT-067), the diesel canister's barter value $60.
 34. **Resolved (2026-11-24):** confirmed by the design — the old rounds go back to loose ammunition first (DAT-030). DAT-030 — With one load per magazine, refilling a partly filled magazine with a different load: the
     spec empties it back to loose rounds first. Confirm.
-35. DAT-025, DAT-028: helicopters "refuel only at FOBs and oil plants", while diesel canisters refill a
+35. **Resolved (2026-11-24, design c1333f3):** no; canisters refill ground vehicles only (DAT-025, DAT-028). DAT-025, DAT-028: helicopters "refuel only at FOBs and oil plants", while diesel canisters refill a
     vehicle's tank anywhere. Spec reads canisters as ground vehicles only; confirm, or may a landed helicopter
     refuel from canisters?
-36. DAT-016: the muzzle `flash` modifier scales "how far the muzzle flash reveals the shooter", but no base
+36. **Resolved (2026-11-24, design c1333f3):** dropped; the muzzle `flash` value is removed (DAT-016). DAT-016: the muzzle `flash` modifier scales "how far the muzzle flash reveals the shooter", but no base
     reveal distance exists in the tactical rules (design: not stated). TAC needs the base distance (and a
     rule for when a flash reveals: night only, or always).

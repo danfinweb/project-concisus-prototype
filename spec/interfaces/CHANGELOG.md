@@ -5,6 +5,14 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | management_requests | 0.7.0 | `launchOp.hiredPilot` removed: a hired pilot is a roster soldier listed in `soldiers` (MGT-005) | strategic, management |
+| 2026-11-24 | data/strategic-rules | 0.7.0 | New `actionHours.brokerCeasefire` (STR-099, not set) | strategic |
+| 2026-11-24 | data/events | 0.7.0 | `params.shortageMoveFactor` dropped: a fuel shortage only doubles fuel prices (STR-062) | strategic |
+| 2026-11-24 | data/items | 0.9.0 | Muzzle `modifiers.flash` removed; muzzle mods may carry `ergonomics` (DAT-016) | tools (item editor), tactical |
+| 2026-11-24 | data/tactical-rules | 0.9.0 | `moraleCasualty` drafts in the description (10 / 3 / 3 / 1, line of sight or same squad, TAC-095) | tactical |
+| 2026-11-24 | data/management-rules | 0.8.0 | `weaponRepair.conditionPerHourPer10Technical` (draft 2; DAT-014, MGT-067) | management |
+| 2026-11-24 | data/economy-rules | 0.5.0 | `vehicleUpkeepPerDayFraction` removed: no vehicle upkeep (MGT-073) | management, strategic |
+| 2026-11-24 | data/recruitment | 0.6.0 | `hiredPilotFeePerOpUsd` removed (MGT-005) | management |
 | 2026-11-24 | tactical_map_request | 0.8.0 | **Breaking:** `units[].rank` integer → enum recruit/regular/veteran/elite; new `units[].morale`; `sides[].morale` only a fallback; `attributes` lists all eight; `equipment` slots include `holster` | strategic, tactical, tactical-ai |
 | 2026-11-24 | battle_result | 0.4.0 | `soldiers[].morale` (end of battle, without Leadership); `squadMorale` = average of surviving player soldiers; holster in returned equipment | tactical, strategic, management |
 | 2026-11-24 | tactical_perception_view | 0.6.0 | `squad[].rank` enum; `squad[].morale` (battle morale + Leadership); `squadMorale` = side average | tactical, tactical-ai |

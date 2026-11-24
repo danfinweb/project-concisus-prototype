@@ -173,7 +173,7 @@ values leads; if that ties too, the first in the request's unit order. It sets t
 its activation assigns roles (TAI-014) and posts requests to the blackboard; other units read the plan
 from the view. If the leader dies, the next highest-ranked living soldier (same tie-break) becomes leader
 at its next activation and keeps the current plan. Until then the plan stays as it was. The leader also lends
-the other units a Leadership bonus to morale and reaction chance; TAC applies it (TAC-094) and the view's
+the whole squad, itself included, a Leadership bonus to morale and reaction chance; TAC applies it (TAC-094) and the view's
 `squad[].morale` already includes it, so the AI adds nothing itself.
 **Source.** design/ai.md › Tactical AI › Unit scoring; design/ai.md › Tactical AI (roles, squad leader); design/management.md › Soldiers & progression (Rank and leadership)
 
