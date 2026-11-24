@@ -35,7 +35,7 @@ Calibres and ammunition loads stay in `data/items.json` (not own tables): they a
 the weapons in the item editor, ammo loads are carried and traded like any item, and one registry lookup
 resolves every weapon → calibre → load reference. Vehicles are not items (they are bought, crewed and
 moved on the strategic map) and live in their own table `data/vehicles.json` (listed in data/tables.json).
-**Source.** design/design.md › Data definitions; design/item-list.md › Weapons (magazines are items), Grenades
+**Source.** design/data-definitions.md; design/item-list.md › Weapons (magazines are items), Grenades
 
 ### [DAT-002] Common item fields
 **Rule.** Every record in `data/items.json` has:
@@ -51,14 +51,14 @@ moved on the strategic map) and live in their own table `data/vehicles.json` (li
 | `notes` | string | — | — | Display text only; no rule reads it |
 
 Mechanical effects are always explicit fields; `notes` never carries a rule.
-**Source.** design/design.md › Data definitions; design/item-list.md
+**Source.** design/data-definitions.md; design/item-list.md
 
 ### [DAT-003] Units
 **Rule.** Weight in kg (`…Kg`), except cartridge weight in g (`roundWeightG`). Tactical distances in tiles
 (1 tile ≈ 1.5 m, TAC). Strategic distances in regions. Durations: tactical in turns, strategic in whole
 hours or days (STR clock). Money in USD. Percentages are stored as fractions 0–1 (`0.06` = 6%).
 Multipliers are plain factors (`0.9` = ×0.9).
-**Source.** design/design.md › Data definitions; › Tactical Layer › Movement; › Strategic Layer
+**Source.** design/data-definitions.md; design/tactical-layer.md › Movement; design/strategic-layer.md
 
 ### [DAT-004] Definitions versus instance state
 **Rule.** `/data` holds definitions only; they are frozen at load and never changed by play. Per-instance
@@ -67,7 +67,7 @@ its fitted mods, its loaded magazine and loaded rounds; a magazine's rounds (cou
 HP; the issuing faction or point of interest of per-faction items (ITM-025); a vehicle's fuel, storage
 contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `battle` (TAC) in a fight,
 `world` (STR) for items and vehicles left on the map.
-**Source.** design/design.md › Data definitions (intro); › Weapon profile › State, not profile; design/item-list.md › Weapons (magazine rounds are counted)
+**Source.** design/data-definitions.md (intro); › Weapon profile › State, not profile; design/item-list.md › Weapons (magazine rounds are counted)
 
 ## Soldier equipment slots
 
@@ -86,7 +86,7 @@ contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `ba
 
 The loadout is part of the soldier record (MGT) and of the unit in `battle` (TAC).
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); design/tactical-actions.md › Weapons (Swap between weapon 1 and 2)
+**Source.** design/data-definitions.md › Soldier equipment slots (draft); design/tactical-actions.md › Weapons (Swap between weapon 1 and 2)
 
 ### [DAT-006] Access tiers
 **Rule.** Items used from a quick container (vest, belt) cost their normal AP. Items used from the backpack
@@ -94,30 +94,30 @@ The loadout is part of the soldier record (MGT) and of the unit in `battle` (TAC
 magazines (reload), grenades and medical items.
 **Values.** `backpackSurcharge` — 4 (draft) → data/tactical-rules.json (owned by TAC, TAC-068; replaces the
 earlier name `backpackAccessSurchargeAp`).
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); › Medical system › Using medical items; design/tactical-actions.md › Medical, Gear and interaction
+**Source.** design/data-definitions.md › Soldier equipment slots (draft); › Medical system › Using medical items; design/tactical-actions.md › Medical, Gear and interaction
 
 ### [DAT-007] Everything carried counts toward weight
 **Rule.** Carried weight = Σ `weightKg` of everything in the seven slots and in their containers, plus
 `roundWeightG` / 1000 per loose or loaded round, including the containers' own `weightKg`. It feeds carry
 capacity (MGT), stamina costs and sprint penalties (TAC).
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft)
+**Source.** design/data-definitions.md › Soldier equipment slots (draft)
 
 ### [DAT-008] Container limits
 **Rule.** A container (vest, plate carrier pouches, belt, backpack, vehicle storage) accepts an item only if
 its total contents stay ≤ its `capacityKg`. Vests and plate carriers additionally cap the count per type
 category (ITM-014). Weight limit and type limits both apply; neither replaces the other.
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits; › Gear, loot & return › Inventory
+**Source.** design/data-definitions.md › Soldier equipment slots (draft) › Type limits; › Gear, loot & return › Inventory
 
 ### [DAT-009] Plate carrier fills two slots
 **Rule.** A `bodyArmour` record with `fillsVestSlot: true` occupies both the `bodyArmour` and the `vest`
 slot; its `pouches` act as the vest container. While it is worn, no separate vest can be equipped.
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits; design/item-list.md › Body armour
+**Source.** design/data-definitions.md › Soldier equipment slots (draft) › Type limits; design/item-list.md › Body armour
 
 ### [DAT-010] Loot and death
 **Rule.** Anything not in a slot or a soldier's containers stays on the tactical map when the battle ends;
 anything in the vehicle's storage can be brought home. A dead soldier keeps everything in the seven slots
 on the body until another soldier recovers it.
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft) › Loot, Death
+**Source.** design/data-definitions.md › Soldier equipment slots (draft) › Loot, Death
 
 ## Weapon profile
 
@@ -147,7 +147,7 @@ RPK-74; `belt` — M249, PKM; `tube` — Remington 870. `stripperClip` and `bolt
 reload costs) but no weapon uses them. RPK-74 `magazineSize` 40 (was 45). `fireApCost` — not set for any
 weapon (type defaults apply, TAC-039).
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Weapon profile (draft); design/item-list.md › Weapons; design/tactical-actions.md › Weapons (Fire, Reload)
+**Source.** design/data-definitions.md › Weapon profile (draft); design/item-list.md › Weapons; design/tactical-actions.md › Weapons (Fire, Reload)
 
 ### [DAT-012] Fire modes
 **Rule.** Each entry of `fireModes` is one shot action: an integer n fires n rounds per trigger action
@@ -157,7 +157,7 @@ has no mode switch. AP per shot action = weapon-type default or the weapon's `fi
 or auto surcharge ± ergonomics (TAC-039).
 **Values.** `autoRounds` — 5, `burstApSurcharge` — 2, `autoApSurcharge` — 4,
 `fireApByWeaponType` (all draft) → data/tactical-rules.json (owned by TAC, TAC-039).
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › Fire modes; design/tactical-actions.md › Weapons
+**Source.** design/data-definitions.md › Weapon profile (draft) › Fire modes; design/tactical-actions.md › Weapons
 
 ### [DAT-013] Base MoA game scale
 **Rule.** `baseMoa` is a game-scale accuracy, not real minutes of angle. 1 point ≈ 0.17 m spread width at
@@ -166,7 +166,7 @@ Calibration: `baseMoa` 5 spreads over the thorax-plus-head target (0.83 m tall) 
 Total spread uses it as `baseMoa × ammo spreadModifier + shooter spread` (TAC hit model). Optics never
 change `baseMoa`.
 **Values.** `moaSpreadPer50m` — design 0.17 m per point → data/tactical-rules.json (owned by TAC).
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › Base MoA; › Tactical Layer › Hit model
+**Source.** design/data-definitions.md › Weapon profile (draft) › Base MoA; design/tactical-layer.md › Hit model
 
 ### [DAT-014] Weapon condition
 **Rule.** Every gun instance tracks `condition`, integer 0–100 (instance state, DAT-004). Wear raises jam
@@ -176,13 +176,13 @@ of the profile. A gun loses `weaponWearPerShot` Condition per round fired.
 0.10, `exponent` 2, `conditionSpreadCurve` — `maxExtra` 0.5 → data/tactical-rules.json; repair rate
 `weaponRepair` — not set (design: Open) → data/management-rules.json (MGT-067).
 **Status.** open (repair rate)
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › State, not profile; design/design.md › Tactical Layer › Derived per shot › Armour wear and weapon condition (draft)
+**Source.** design/data-definitions.md › Weapon profile (draft) › State, not profile; design/tactical-layer.md › Derived per shot › Armour wear and weapon condition (draft)
 
 ### [DAT-015] Mod slots and handguard sub-slots
 **Rule.** Mod slots of a weapon are its `modSlots`. A fitted handguard decides which sub-slots exist:
 `frontGrip` (0 or 1) and `tactical` (1 or 2). Removing the handguard removes its sub-slots and the mods in
 them. Each slot holds at most one mod.
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › Mod slots; › How mods change the profile
+**Source.** design/data-definitions.md › Weapon profile (draft) › Mod slots; › How mods change the profile
 
 ### [DAT-016] Weapon mod profile
 **Rule.** A `kind: "mod"` record has, in addition to DAT-002:
@@ -206,7 +206,7 @@ Allowed `modifiers` keys per slot: muzzle — `recoil`, `flash`; stock, pistolGr
 effective weight = `weightKg` + Σ fitted mod `weightKg`.
 **Values.** all mod values; whether modifiers add or multiply — not set (design: Open) → data/items.json.
 **Status.** Draft; initial content: none in design/item-list.md (no mods listed).
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; design/item-list.md › Weapons (magazines are items)
+**Source.** design/data-definitions.md › Weapon profile (draft) › How mods change the profile; design/item-list.md › Weapons (magazines are items)
 
 ### [DAT-017] Tactical modules
 **Rule.** `flashlight`: at night restores the carrier's full day sight range (TAC-004), blinds enemies in its cone
@@ -216,12 +216,12 @@ visible to enemies.
 **Values.** `blindRangeTiles` — 10, `blindSpread` — 4 (draft) → data/tactical-rules.json (TAC-004); laser
 `modifiers.snapShotSpread` per item (laser module 0.8, ITM-033) → data/items.json; reveal range — not set (design: Open).
 **Status.** open (reveal range)
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › Tactical modules; design/design.md › Tactical Layer › Turn structure › Sight and spotting (draft), › Hit model › Shooter spread and recoil (draft)
+**Source.** design/data-definitions.md › Weapon profile (draft) › Tactical modules; design/tactical-layer.md › Turn structure › Sight and spotting (draft), › Hit model › Shooter spread and recoil (draft)
 
 ### [DAT-018] Suppressors and hearing
 **Rule.** A weapon with a fitted mod with `suppressor: true` fires suppressed shots; hearing ranges for
 suppressed and suppressed-subsonic shots are TAC gunshot-noise rules (ITM-007).
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; › Tactical Layer › Gunshot noise
+**Source.** design/data-definitions.md › Weapon profile (draft) › How mods change the profile; design/tactical-layer.md › Gunshot noise
 
 ### [DAT-030] Magazine profile
 **Rule.** Magazines (box and pistol magazines) and belts are items, `kind: "magazine"`, with, in addition to
@@ -260,14 +260,14 @@ weight — not set (design: "a weight", no values); refill cost or time — not 
 
 A load may override `damage` and `projectiles` (ITM-008); 12 gauge sets them per load.
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Calibre profile (draft); design/item-list.md › Calibres
+**Source.** design/data-definitions.md › Calibre profile (draft); design/item-list.md › Calibres
 
 ### [DAT-020] Calibre fit
 **Rule.** A weapon accepts an ammo load or a magazine mod only if it references the same calibre ID
 (weapon `calibre` = load `calibre` = magazine's weapon calibre). A `magazine` item (DAT-030) fits a weapon
 only if the weapon is in its `fits` list, which requires the same `calibre` and `feedType`; a magazine is
 filled only with loads of its own `calibre`.
-**Source.** design/design.md › Data definitions › Calibre profile (draft) › Designation; design/item-list.md › Weapons (magazines are items)
+**Source.** design/data-definitions.md › Calibre profile (draft) › Designation; design/item-list.md › Weapons (magazines are items)
 
 ## Ammunition load profile
 
@@ -291,7 +291,7 @@ filled only with loads of its own `calibre`.
 
 Each load carries its own values; the per-type values in DAT-022 are authoring defaults.
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition
+**Source.** design/data-definitions.md › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition
 
 ### [DAT-022] Ammo type defaults
 **Rule.** The item editor pre-fills a new load from its `ammoType`:
@@ -308,7 +308,7 @@ Each load carries its own values; the per-type values in DAT-022 are authoring d
 
 **Values.** the table above — design placeholders → data/items.json (editor defaults; stored per load).
 **Status.** Draft (falloff ranges marked placeholder).
-**Source.** design/design.md › Data definitions › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition
+**Source.** design/data-definitions.md › Calibre profile (draft) › Ammo types; design/item-list.md › Ammunition
 
 ### [DAT-023] Per-shot inputs
 **Rule.** Data feeding the TAC per-shot rules: muzzle damage = (load `damageOverride` or calibre
@@ -316,7 +316,7 @@ Each load carries its own values; the per-type values in DAT-022 are authoring d
 `falloffRangeTiles` and the floor of ITM-005; projectiles per round = load `projectilesOverride` or calibre
 `projectiles`; penetration class = load `penetrationClass`; effective recoil = weapon `recoil` (after mods)
 × calibre `recoilModifier`. Formulas are owned by TAC.
-**Source.** design/design.md › Tactical Layer › Derived per shot (draft); › Data definitions › Calibre profile (draft)
+**Source.** design/tactical-layer.md › Derived per shot (draft); design/data-definitions.md › Calibre profile (draft)
 
 ## Vehicles
 
@@ -343,9 +343,9 @@ Each load carries its own values; the per-type values in DAT-022 are authoring d
 
 **Values.** upkeep scaling factor, noise → notice distance, off-road → travel time — not set (design:
 Open) → data/vehicles.json / STR tables.
-Initial content: design/design.md › Data definitions › Vehicles (14 vehicles).
+Initial content: design/data-definitions.md › Vehicles (14 vehicles).
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/design.md › Data definitions › Vehicles (draft) › Vehicle parameters
+**Source.** design/data-definitions.md › Vehicles (draft) › Vehicle parameters
 
 ### [DAT-025] A squad has at most one vehicle
 **Rule.** A strategic squad has at most one vehicle. With a vehicle, `seats` caps its soldiers (plus any VIP
@@ -355,7 +355,7 @@ engagements. A squad without a vehicle travels on foot (`onFootHours` per tile, 
 data/strategic-rules.json, STR-031) and carries only what its soldiers carry (their seven slots and
 containers, DAT-005, DAT-007); it has no storage list. Vehicles are not upgraded. Several vehicles allow
 several vehicle squads to run ops at the same time.
-**Source.** design/design.md › Data definitions › Vehicles (draft)
+**Source.** design/data-definitions.md › Vehicles (draft)
 
 ### [DAT-026] Vehicle features
 **Rule.** `features` enum and effect owner:
@@ -376,7 +376,7 @@ several vehicle squads to run ops at the same time.
 other fields and get no feature.
 **Values.** repair cost reduction, recovery rate, weapon strength — not set (design: Open) → data/vehicles.json.
 **Status.** open
-**Source.** design/design.md › Data definitions › Vehicles (draft) › Vehicles table
+**Source.** design/data-definitions.md › Vehicles (draft) › Vehicles table
 
 ### [DAT-027] Vehicle availability
 **Rule.** `availability = { where: array of enum (largeCity, mechanicalPlant, krugMarket), standing:
@@ -385,7 +385,7 @@ where listed (`krugMarket` = a town or city tile with the `krugMarket` flag, STR
 is sold only to a PMC with that standing with one of the listed factions, or through the Krug. At campaign start the player buys the first vehicle from the starting
 budget; only the cheapest few are affordable (MGT economy).
 **Values.** standing level per restricted vehicle — not set (design: "high standing") → data/vehicles.json.
-**Source.** design/design.md › Data definitions › Vehicles (draft) › Buying and selling, Start; › Management › Reputation › Standing
+**Source.** design/data-definitions.md › Vehicles (draft) › Buying and selling, Start; design/management.md › Reputation › Standing
 
 ### [DAT-028] Helicopter data
 **Rule.** `vehicleType: "helicopter"` implies: travel `heliMoveHours` per region over any terrain incl.
@@ -395,13 +395,13 @@ faction in range; a downed helicopter becomes a crash site and starts an emergen
 are reachable only this way (optional feature).
 **Values.** → see STR-034: `pilotTechnicalMin` — design 50 and `heliMoveHours` — design 1 are single values in
 data/strategic-rules.json, not vehicle record fields.
-**Source.** design/design.md › Data definitions › Vehicles (draft) › Helicopters (draft)
+**Source.** design/data-definitions.md › Vehicles (draft) › Helicopters (draft)
 
 ### [DAT-029] Vehicle instance state and loss
 **Rule.** Each owned vehicle instance tracks fuel, storage contents and condition (owner: MGT; on the map:
 STR). A vehicle left behind on a failed op can be destroyed, captured or recovered later (STR).
 **Status.** open
-**Source.** design/design.md › Data definitions › Vehicles (draft) › Loss
+**Source.** design/data-definitions.md › Vehicles (draft) › Loss
 
 ## Weapons
 
@@ -441,19 +441,19 @@ otherwise: FMJ 1.0, AP 0.9, HP 1.25, Subsonic 0.8, Tracer 1.0, Buckshot 1.0, Slu
 ### [ITM-005] Falloff floor
 **Rule.** Damage at distance never drops below `falloffFloor` × muzzle damage (TAC per-shot rule).
 **Values.** `falloffFloor` — design 0.10 → data/tactical-rules.json (owned by TAC).
-**Source.** design/item-list.md › Ammunition; design/design.md › Tactical Layer › Derived per shot (draft)
+**Source.** design/item-list.md › Ammunition; design/tactical-layer.md › Derived per shot (draft)
 
 ### [ITM-006] Penetration class
 **Rule.** `penetrationClass` is the highest armour class the round defeats; 0 = unarmoured targets only.
 It comes from the load alone and never changes with distance or barrel length.
-**Source.** design/item-list.md › Ammunition; design/design.md › Tactical Layer › Derived per shot (draft)
+**Source.** design/item-list.md › Ammunition; design/tactical-layer.md › Derived per shot (draft)
 
 ### [ITM-007] Subsonic through a suppressor
 **Rule.** A shot with a `subsonic: true` load from a suppressed weapon is heard only within
 `subsonicSuppressedHearingTiles` (TAC gunshot noise; halved by a helmet hearing penalty, ITM-010).
 `subsonic` may be true by nature of the calibre (9×18 mm loads).
 **Values.** `subsonicSuppressedHearingTiles` — design 6 → data/tactical-rules.json (owned by TAC).
-**Source.** design/item-list.md › Ammunition; design/design.md › Tactical Layer › Gunshot noise
+**Source.** design/item-list.md › Ammunition; design/tactical-layer.md › Gunshot noise
 
 ### [ITM-008] Load-specific damage and projectiles
 **Rule.** If a load sets `damageOverride` / `projectilesOverride`, they replace the calibre's `damage` /
@@ -499,7 +499,7 @@ Initial content: design/item-list.md › Helmets (5 helmets).
 **Rule.** A helmet with `hearingPenalty: true` halves the suppressed hearing ranges for its wearer (TAC
 gunshot noise). `visionConeDeg` (Altyn with visor: 90) narrows the wearer's vision cone.
 **Values.** Altyn `visionConeDeg` 90 → data/items.json; hearing factor 0.5 → data/tactical-rules.json.
-**Source.** design/item-list.md › Helmets; design/design.md › Tactical Layer › Gunshot noise
+**Source.** design/item-list.md › Helmets; design/tactical-layer.md › Gunshot noise
 
 ## Body armour
 
@@ -527,7 +527,7 @@ Initial content: design/item-list.md › Body armour (6 items).
 condition % = current / max and drives the TAC penetration rule; at 0 it no longer protects. Wear per hit
 is TAC-051 (blocked and penetrating hits, × the piece's `durabilityLossModifier`).
 **Values.** `armourWear` — `blocked` 0.10, `penetrating` 0.05, `min` 1 (draft) → data/tactical-rules.json (TAC-051).
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); › Tactical Layer › Derived per shot (draft) › Armour wear and weapon condition (draft)
+**Source.** design/data-definitions.md › Soldier equipment slots (draft); design/tactical-layer.md › Derived per shot (draft) › Armour wear and weapon condition (draft)
 
 ## Load-bearing vests
 
@@ -543,7 +543,7 @@ Initial content: design/item-list.md › Load-bearing vests (4 vests).
 `magazine` (`kind: magazine`, DAT-030), `grenade` (`kind: grenade`, ITM-032), `medical` (`kind: medical`),
 `other` (everything else).
 The count per category must stay ≤ its `max…` value, in addition to `capacityKg`.
-**Source.** design/item-list.md › Load-bearing vests; › Weapons (magazines are items); › Grenades; design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits
+**Source.** design/item-list.md › Load-bearing vests; › Weapons (magazines are items); › Grenades; design/data-definitions.md › Soldier equipment slots (draft) › Type limits
 
 ### [ITM-015] Other items
 **Rule.** `other` covers barter goods, operation and faction items and small tools — everything not a
@@ -596,7 +596,7 @@ Initial content: design/item-list.md › Backpacks (4 backpacks).
 
 `weightKg` is required (DAT-002); the item list gives no medical weights, so they are entered as data.
 Initial content: design/item-list.md › Medical items (8 items).
-**Source.** design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft)
+**Source.** design/item-list.md › Medical items; design/tactical-layer.md › Medical system (draft)
 
 ### [ITM-020] Medical item restrictions
 **Rule.** Tourniquet treats heavy bleeding on arms and legs only. Hemostatic dressing treats heavy
@@ -607,7 +607,7 @@ restores more than that per use, from its pool. Painkillers mask pain for
 `restoresToHp`. Medkit is `backpackOnly`.
 **Values.** IFAK `hpPool` 60, `hpPerUse` 15; medkit `hpPool` 300; painkillers `uses` 4,
 `durationTurns` 10; surgical kit `uses` 3, `requiresMedical` 40, `restoresToHp` 1 → data/items.json.
-**Source.** design/item-list.md › Medical items; design/design.md › Tactical Layer › Medical system (draft) › Using medical items
+**Source.** design/item-list.md › Medical items; design/tactical-layer.md › Medical system (draft) › Using medical items
 
 ## Grenades
 

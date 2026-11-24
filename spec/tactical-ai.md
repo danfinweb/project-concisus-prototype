@@ -18,7 +18,7 @@ seeded `rng`. Same view, same data and same seed give the same output. There is 
 AI is handed no functions: everything the player UI would let it ask (path preview, line of sight, shot
 preview) is precomputed by TAC and passed as plain data in the view's `allowedActions` (TAI-004), so the
 view stays serializable, fixture-testable and free of hidden state.
-**Source.** design/design.md › AI › Tactical AI › Controller hand-off; CLAUDE.md › Rules, State ownership
+**Source.** design/ai.md › Tactical AI › Controller hand-off; CLAUDE.md › Rules, State ownership
 
 ### [TAI-002] Invocation
 **Rule.** At an activation of an AI-controlled unit, and when the AI side picks which unit to activate
@@ -30,14 +30,14 @@ with that unit as `activeUnit`. The neutral side (TAC-001) never activates, so i
 invoked for an activation. The controller returns commands; TAC validates and resolves them
 with its normal rules. Reaction settings chosen during an activation are applied by TAC automatically; the
 AI is not called mid-move.
-**Source.** design/design.md › AI › Tactical AI › Controller hand-off; › Tactical Layer › Turn structure › Reactions
+**Source.** design/ai.md › Tactical AI › Controller hand-off; design/tactical-layer.md › Turn structure › Reactions
 
 ### [TAI-003] Pluggable controller
 **Rule.** The game shell plugs `tactical-ai` in as the enemy, allied-AI and neutral-side controller when a
 battle starts. The controller is assigned per unit, so a single unit can be swapped between player input and
 `tactical-ai` (used for the escorted VIP option, TAI-018). The Test Lab can plug in the real AI, a scripted
 stub or a second AI for either side. All controllers use the same view and command interfaces.
-**Source.** design/design.md › AI › Tactical AI (last paragraph); design/design.md › Tactical Layer › Turn structure (neutral side); design/design.md › Management › Contracts and missions (Escort a VIP)
+**Source.** design/ai.md › Tactical AI (last paragraph); design/tactical-layer.md › Turn structure (neutral side); design/management.md › Contracts and missions (Escort a VIP)
 
 ### [TAI-004] Tactical perception view
 **Rule.** The view holds what the unit and its squad know under fog of war; hidden state never appears.
@@ -62,7 +62,7 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 
 An AI soldier knows as much about a seen enemy's gear as the player would: weapon type, helmet and armour
 class (as shown in the shot preview), nothing more (no durability, no carried items).
-**Source.** design/design.md › AI › Tactical AI › Controller hand-off (1); › Unit scoring; › Tactical Layer (Readability, Path preview); › Tactical Layer › Turn structure › Gunshot noise
+**Source.** design/ai.md › Tactical AI › Controller hand-off (1); › Unit scoring; › Tactical Layer (Readability, Path preview); design/tactical-layer.md › Turn structure › Gunshot noise
 
 ### [TAI-005] Tactical command set
 **Rule.** Commands are the ones the player issues; each maps to one tactical action of TAC
@@ -106,14 +106,14 @@ rejected and not resolved. The rejection goes back to the controller with its re
 is asked again, up to `commandRetries` times per activation; after that the activation ends (TAC-005).
 Every rejection is logged in the decision log (TAI-016).
 **Values.** `commandRetries` — 3 (draft) → data/tactical-rules.json
-**Source.** design/design.md › AI › Tactical AI › Controller hand-off (3, 4); design/tactical-actions.md (Hold overwatch, Reload, Carry or drag a body, Pick up or loot, Leave the map)
+**Source.** design/ai.md › Tactical AI › Controller hand-off (3, 4); design/tactical-actions.md (Hold overwatch, Reload, Carry or drag a body, Pick up or loot, Leave the map)
 
 ### [TAI-006] No hidden information, no illegal actions
 **Rule.** The AI reads nothing but its view (including the precomputed `allowedActions`) and `/data`; it
 issues only TAI-005 commands.
 Tests assert that the view contains no unit outside the side's line of sight or hearing except as last-known
 entries.
-**Source.** design/design.md › AI › Tactical AI (last paragraph)
+**Source.** design/ai.md › Tactical AI (last paragraph)
 
 ## Decision structure
 
@@ -125,14 +125,14 @@ fit (TAI-010), coordination (TAI-011). Survival is a multiplier, not a hard rule
 in 0–1 through its response curve. Behaviour comes from the shared blackboard and units reacting to each
 other, not from scripts. Weights and curves come from the doctrine (TAI-015).
 **Values.** `wGoal`, `wFit`, `wCoord`, curves — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI (intro, Data); › AI › Tactical AI › Unit scoring
+**Source.** design/ai.md (intro, Data); design/ai.md › Tactical AI › Unit scoring
 
 ### [TAI-008] Survival
 **Rule.** `survival` (0–1) multiplies the score. Inputs: the unit's exposure, the known threat, its HP and
 its morale (the view's `squadMorale`; morale is squad-wide). Its curve keeps it near 1 when danger is low and lets it dominate the score as danger rises,
 so an exposed, wounded or shaken unit prefers safe actions; it never blocks an action outright.
 **Values.** input weights and curve — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.survival`.
-**Source.** design/design.md › AI › Tactical AI › Unit scoring
+**Source.** design/ai.md › Tactical AI › Unit scoring
 
 ### [TAI-009] Battle goal
 **Rule.** `battleGoal` (0–1) rates the action's progress toward the side's objective (`battleGoal` in the
@@ -144,26 +144,26 @@ reached, the side's battle goal becomes retreat: its units move to an exit and l
 and goal progress is scored toward that exit. A retreating side still fires and reacts.
 **Values.** goal weights per goal type — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.battleGoal.<goal>` (the generic `considerations` map, name → {weight, curve}); `acceptableLoss` per battle goal — not set (draft) → set by the strategic layer in the tactical map request.
 **Status.** open (threshold values)
-**Source.** design/design.md › AI › Tactical AI › Unit scoring
+**Source.** design/ai.md › Tactical AI › Unit scoring
 
 ### [TAI-010] Action fit
 **Rule.** `actionFit` (0–1) rates how effective the action is in the current situation for this unit: its
 role (TAI-014), weapon type (DAT-011 `weaponType` drives AI role), range to target, ammo and AP left.
 **Values.** — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.actionFit`.
-**Source.** design/design.md › AI › Tactical AI › Unit scoring; › Data definitions › Weapon profile (Weapon type → AI role)
+**Source.** design/ai.md › Tactical AI › Unit scoring; design/data-definitions.md › Weapon profile (Weapon type → AI role)
 
 ### [TAI-011] Coordination
 **Rule.** `coordination` (0–1) gives a bonus for actions that answer open squad requests on the blackboard
 and a penalty for actions on tiles or targets a squadmate has claimed (TAI-012).
 **Values.** bonus and penalty sizes — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.requestBonus`, `considerations.claimPenalty` (generic `considerations` entries; no extra doctrine field).
-**Source.** design/design.md › AI › Tactical AI › Unit scoring
+**Source.** design/ai.md › Tactical AI › Unit scoring
 
 ### [TAI-012] Squad blackboard
 **Rule.** Each squad has a shared blackboard of `requests` (e.g. suppress target X, cover sector Y,
 reinforce) and `claims` (unit U claims a tile, a target or request R, until turn T). The AI owns no state:
 the blackboard is stored by TAC in the `battle` slice, passed in the view, and changed only through
 `blackboardWrites` returned by the AI. TAC applies the writes without interpreting them.
-**Source.** design/design.md › AI › Tactical AI › Unit scoring; CLAUDE.md › State ownership
+**Source.** design/ai.md › Tactical AI › Unit scoring; CLAUDE.md › State ownership
 
 ### [TAI-013] Squad leader plan
 **Rule.** The squad leader is the squad's highest-ranked soldier: unit `rank` (integer, higher = senior),
@@ -173,27 +173,27 @@ values leads; if that ties too, the first in the request's unit order. It sets t
 its activation assigns roles (TAI-014) and posts requests to the blackboard; other units read the plan
 from the view. If the leader dies, the next highest-ranked living soldier (same tie-break) becomes leader
 at its next activation and keeps the current plan. Until then the plan stays as it was.
-**Source.** design/design.md › AI › Tactical AI › Unit scoring; › AI › Tactical AI (roles)
+**Source.** design/ai.md › Tactical AI › Unit scoring; design/ai.md › Tactical AI (roles)
 
 ### [TAI-014] Squad roles
 **Rule.** Enemy squads assign units the roles `flank`, `suppress`, `retreat`. A role changes `actionFit` for
 actions that match it. The role `callReinforcements` is OPTIONAL (later build): until it is built, no role
 calls reinforcements and a side fights with the units on the map.
-**Source.** design/design.md › AI › Tactical AI; › Tactical Layer (Enemy AI)
+**Source.** design/ai.md › Tactical AI; › Tactical Layer (Enemy AI)
 
 ### [TAI-015] Doctrines
 **Rule.** `data/ai/doctrines.json` holds records with `layer: "tactical"`; the tactical map request sets one
 doctrine ID per side (`sides[].doctrine`) and
 TAC passes it in the view's `doctrine`. All squads of a side use that doctrine. A doctrine sets weights and curves of TAI-007 to TAI-014.
 **Values.** all — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI (Data); CLAUDE.md (data/ai)
+**Source.** design/ai.md (Data); CLAUDE.md (data/ai)
 
 ### [TAI-016] Decision log
 **Rule.** Every call returns `log` entries: `turn`, `unit`, the chosen command, and the top-scored options
 with total score and the four consideration scores. TAC, the game debug overlay or the Test Lab stores or
 shows them; the AI keeps none.
 **Values.** `logTopN` — not set (design: Open) → data/ai/doctrines.json.
-**Source.** design/design.md › AI (Logging); › Presentation & tech › Prototype tech stack (Debugging)
+**Source.** design/ai.md (Logging); design/presentation-tech.md › Prototype tech stack (Debugging)
 
 ## Faction behaviour in battle
 
@@ -203,7 +203,7 @@ form the neutral side (TAC-001), controlled by `tactical-ai`. Until attacked, ne
 and `tactical-ai` is not called for them: their reactions follow the fixed TAC rule (TAC-001: civilians
 flee to the nearest exit, armed neutrals take cover). Once a neutral faction turns hostile, its units form
 a third side that `tactical-ai` commands like any AI side, with their own activation after the opponent's.
-**Source.** design/design.md › Tactical Layer › Turn structure; › AI › Tactical AI; › AI › Strategic AI › Faction behaviour
+**Source.** design/tactical-layer.md › Turn structure; design/ai.md › Tactical AI; design/ai.md › Strategic AI › Faction behaviour
 
 ### [TAI-018] Allied AI units
 **Rule.** Allied units on the player's side under AI control (defenders in "help defend a territory",
@@ -215,7 +215,7 @@ escorted VIP is a lightly armed allied unit controlled by `tactical-ai` by defau
 VIP is a switchable option for testing, set in the tactical map request (`vipControl`): with `player`, the
 player moves the VIP as part of the player's activations, and the VIP never reacts.
 **Values.** `vipControl` — `ai` (default) or `player` → tactical map request (set from a game/Test Lab setting; not /data).
-**Source.** design/design.md › AI › Tactical AI › Controller hand-off (2); › Management › Contracts and missions (Escort a VIP)
+**Source.** design/ai.md › Tactical AI › Controller hand-off (2); design/management.md › Contracts and missions (Escort a VIP)
 
 ## Open questions
 

@@ -34,7 +34,7 @@ the employer's funds and credited to the player at the next strategic hour, with
 (STR-093). No mission needs the squad back at an FOB. Soldiers of the squad who do not reach an FOB are MIA, captured or dead (MGT);
 gear carried by them is lost to the PMC unless recovered. An op whose squad has no soldier left who
 reaches an FOB fails.
-**Source.** design/design.md › Overview › Core loop; › Management › Gear, loot & return
+**Source.** design/design.md › Overview › Core loop; design/management.md › Gear, loot & return
 
 ### [GEN-003] Op objectives and bundling
 **Rule.** Objectives come from two sources: missions of signed contracts (MGT) and player-set objectives.
@@ -76,7 +76,7 @@ named in any UI text. They hold no reputation value toward the player.
 **Rule.** The civilian population is a non-combat faction. Its loyalty exists only on settlement tiles
 (cities, towns, villages), one value per faction from −100 to 100 (STR-009). Per settlement, loyalty
 drives income, intel and recruitment available there. It has no squads and cannot be fought as a faction.
-**Source.** design/design.md › Factions & campaign › Factions; › Strategic Layer › Map (draft)
+**Source.** design/design.md › Factions & campaign › Factions; design/strategic-layer.md › Map (draft)
 
 ### [GEN-007] Faction relations model
 **Rule.** Every ordered pair of map factions (GEN-004, excluding `player`) holds a relation value, integer
@@ -88,7 +88,7 @@ to every faction.
 **Values.** range and thresholds → see STR-051 (`relationMin` −100, `relationMax` 100, `hostileAt` −50,
 `alliedAt` 50 in data/strategic-rules.json); initial relations per pair `startRelations` — not set (design:
 not stated) → data/factions.json
-**Source.** design/design.md › Strategic layer › World events; › Management › Reputation (draft)
+**Source.** design/strategic-layer.md › World events; design/management.md › Reputation (draft)
 
 ### [GEN-008] Leader effects
 **Rule.** Each leader has exactly one in-play effect:
@@ -146,7 +146,7 @@ leaves, at the player's choice). On end, a score is computed from money, reputat
 **Values.** trigger conditions for `ssvUnited`, `vdkUnited`, `reformed`, `endlessWar` — not set
 (design: not stated)
 **Status.** open
-**Source.** design/design.md › Factions & campaign › Player role; › Strategic Layer › Map (draft); › Management › Base & meta progression
+**Source.** design/design.md › Factions & campaign › Player role; design/strategic-layer.md › Map (draft); design/management.md › Base & meta progression
 
 ## Coups
 
@@ -176,7 +176,7 @@ accepts the new order. Losing the capital before the ending ends the coup attemp
 **Values.** `capitalHoldDays` — 7 (draft) → data/strategic-rules.json (STR-007); acceptance condition,
 consequence of losing the capital — not set (design: not stated)
 **Status.** open
-**Source.** design/design.md › Factions & campaign › Coups; › Strategic Layer › Map (draft)
+**Source.** design/design.md › Factions & campaign › Coups; design/strategic-layer.md › Map (draft)
 
 ### [GEN-016] Coup epilogue
 **Rule.** The `playerCoup` epilogue is selected from three inputs: civilian loyalty, Krug standing and

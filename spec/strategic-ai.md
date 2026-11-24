@@ -17,7 +17,7 @@ is a pure function `decide(view, rng) → { commands, log }`: no DOM, no fetch, 
 modules; data (doctrines) through `shared/registry.js`; randomness only through the passed seeded `rng`
 (`shared/rng.js`). Same view, same data and same seed give the same output. It never changes game state
 directly: its only effect is the commands it returns, which STR validates and resolves.
-**Source.** design/design.md › AI; › AI › Strategic AI › Controller hand-off; CLAUDE.md › Rules, State ownership
+**Source.** design/ai.md; design/ai.md › Strategic AI › Controller hand-off; CLAUDE.md › Rules, State ownership
 
 ### [SAI-002] Invocation
 **Rule.** For every hour that passes (each hour tick, STR-003), the Strategic Layer builds one perception
@@ -26,7 +26,7 @@ once; the controller returns that faction's one command set for the hour (STR-02
 on the state at the start of the hour, and their commands resolve together with the player's. The
 controller is pluggable: the game shell plugs in `strategic-ai`; the Test Lab may plug in a scripted stub
 or another AI.
-**Source.** design/design.md › AI › Strategic AI › Controller hand-off; › Strategic Layer (Time)
+**Source.** design/ai.md › Strategic AI › Controller hand-off; › Strategic Layer (Time)
 
 ### [SAI-003] Strategic perception view
 **Rule.** The view contains only what that faction knows under fog of war (STR fog-of-war rules); hidden
@@ -52,7 +52,7 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `crisisSigns` | Its true crisis signs from the last daily check (STR-069) |
 | `availableMeasures` | Desperate measures it may start now (STR-070, SAI-016) |
 
-**Source.** design/design.md › AI › Strategic AI › Controller hand-off; › Faction AI tiers; › Strategic Layer › Map (Fog of war); › Squads and simulation (Faction funds (draft))
+**Source.** design/ai.md › Strategic AI › Controller hand-off; › Faction AI tiers; design/strategic-layer.md › Map (Fog of war); › Squads and simulation (Faction funds (draft))
 
 ### [SAI-004] Strategic command set
 **Rule.** The controller returns an ordered list of commands of the kinds a player issues on the strategic
@@ -77,12 +77,12 @@ non-adjacent region, contract by a faction that may not post it, a measure not i
 `recruit` or `offerContract` the faction cannot pay for under `hardLimit`) is rejected and not resolved.
 Valid contract offers are forwarded to Management as a `contractOffer` management request (STR-044).
 Trade and buying gear are not commands: AI squads are supplied by the rules of STR-014 and STR-092.
-**Source.** design/design.md › AI › Strategic AI › Controller hand-off; › Faction AI tiers; › AI (intro)
+**Source.** design/ai.md › Strategic AI › Controller hand-off; › Faction AI tiers; › AI (intro)
 
 ### [SAI-005] No hidden information, no illegal actions
 **Rule.** The AI reads nothing but its view and `/data`; it issues only commands from SAI-004. Tests assert
 that a view built with fog of war never contains unseen squads or regions newer than their last observation.
-**Source.** design/design.md › AI (intro); › AI › Tactical AI (last paragraph, applies to both layers)
+**Source.** design/ai.md (intro); design/ai.md › Tactical AI (last paragraph, applies to both layers)
 
 ## Decision structure
 
@@ -93,14 +93,14 @@ through a response curve to 0–1, and picks the highest score (ties broken by `
 the shared situation maps (SAI-007) and from factions reacting to each other, not from scripts. Weights,
 response curves and doctrines are data (SAI-010).
 **Values.** considerations, weights, curves per doctrine — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI (intro, Data)
+**Source.** design/ai.md (intro, Data)
 
 ### [SAI-007] Tier 1 — situation maps
 **Rule.** From the view, the AI first derives per-region situation maps, computed every hour (every call)
 and never stored. Layers: own strength, enemy strength (as known), economic value, threat, frontline,
 supply reach. Only view data may enter them.
 **Values.** formula per layer — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI › Strategic AI › Faction AI tiers
+**Source.** design/ai.md › Strategic AI › Faction AI tiers
 
 ### [SAI-008] Tier 2 — strategist
 **Rule.** The strategist scores candidate objectives (STR goal types with their targets) over the
@@ -119,7 +119,7 @@ player. `ownGain` is rated against the faction's ultimate goal:
 
 How each goal turns into gain terms is doctrine data.
 **Values.** term inputs, curves and weights (`considerations`), `commitmentBonus`, `gainTerms` (ownGain terms per ultimate goal) — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Faction behaviour; › Strategic Layer › Squads and simulation
+**Source.** design/ai.md › Strategic AI › Faction AI tiers; › Faction behaviour; design/strategic-layer.md › Squads and simulation
 
 ### [SAI-009] Tier 3 — operational planner
 **Rule.** The operational planner turns the strategist's objectives into commands: assigns own squads to
@@ -128,7 +128,7 @@ objectives (`setGoal`) and gives each squad its action for the hour (`moveSquad`
 STR-094), or emits `offerContract` (SAI-014) when its own squads can't reach the objective or are worth more
 elsewhere.
 **Values.** assignment scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Controller hand-off; › Management › Contracts and missions › Where contracts come from
+**Source.** design/ai.md › Strategic AI › Faction AI tiers; › Controller hand-off; design/management.md › Contracts and missions › Where contracts come from
 
 ### [SAI-010] Doctrines
 **Rule.** `data/ai/doctrines.json` holds one record per doctrine with `layer: "strategic"`; each faction
@@ -139,21 +139,21 @@ SAI-016 (`considerations`, `commitmentBonus`, `gainTerms`), and the faction's pe
 `personality.hostility` (faction → weight). Faction character from the design (Varyag hunts player ops and
 competes for contracts; the Krug is neutral) is expressed through doctrine data, not code.
 **Values.** all doctrine values — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › AI (Data); › AI › Strategic AI › Faction AI tiers; › Factions & campaign › Factions
+**Source.** design/ai.md (Data); design/ai.md › Strategic AI › Faction AI tiers; design/design.md › Factions & campaign › Factions
 
 ### [SAI-011] Decision log
 **Rule.** Every call returns `log` entries alongside the commands: one per decision, with `time`, `faction`,
 `tier` (situation, strategist, planner), the chosen option, and the top-scored options with their total score
 and per-consideration scores. The caller (game shell, Test Lab) stores or shows the log; the AI keeps none.
 **Values.** `logTopN` (options kept per decision) — not set (design: Open) → data/ai/doctrines.json.
-**Source.** design/design.md › AI (Logging)
+**Source.** design/ai.md (Logging)
 
 ## Faction behaviour
 
 ### [SAI-012] Own goals
 **Rule.** Every AI faction pursues its own goals on the map, not the player. Its squads go about their
 goals on the strategic map and in tactical engagements alike unless SAI-013 makes it hostile.
-**Source.** design/design.md › AI › Strategic AI › Faction behaviour
+**Source.** design/ai.md › Strategic AI › Faction behaviour
 
 ### [SAI-013] Hostility toward the player
 **Rule.** A faction is hostile toward the player only while at least one holds:
@@ -165,7 +165,7 @@ Otherwise it is non-hostile. The AI may only target the player (goal `hunt`/`att
 FOB, `moveSquad` to engage) while hostile. Attacking a non-hostile faction is the player's choice and costs
 reputation (MGT).
 **Values.** standing thresholds → see MGT-054 (data/management-rules.json); no threshold of its own.
-**Source.** design/design.md › AI › Strategic AI › Faction behaviour; › Management › Reputation › Standing
+**Source.** design/ai.md › Strategic AI › Faction behaviour; design/management.md › Reputation › Standing
 
 ### [SAI-014] Contract offers
 **Rule.** A faction posts a contract (`offerContract`) for an objective its own squads can't reach, or
@@ -179,7 +179,7 @@ so the AI should not emit it; in the test mode `fundsMode = scoreTerm` funds onl
 the objectives the new squad can cover. Offers carry the offer fields of SAI-004 (MGT contract terms);
 Management validates pay, filters by reputation and shows them.
 **Values.** offer scoring, deniability thresholds — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › Management › Contracts and missions › Where contracts come from; › AI › Strategic AI › Faction AI tiers; › Controller hand-off
+**Source.** design/management.md › Contracts and missions › Where contracts come from; design/ai.md › Strategic AI › Faction AI tiers; › Controller hand-off
 
 ### [SAI-015] Contract offer evaluation
 **Rule.** Only the rival PMCs (`varyag`, `aegis`) take other factions' contracts, and only offers from
@@ -193,7 +193,7 @@ ways (STR-094): it offers escort contracts for its own convoys, and a faction ca
 one of its shipments (a Krug squad travels with the convoy; price not set).
 **Values.** offer scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
 **Status.** open
-**Source.** design/design.md › AI › Strategic AI › Faction AI tiers; › Management › Contracts and missions › Where contracts come from
+**Source.** design/ai.md › Strategic AI › Faction AI tiers; design/management.md › Contracts and missions › Where contracts come from
 
 ### [SAI-016] Desperate measure choice
 **Rule.** When the view's `availableMeasures` is not empty (STR-070: ≥ `measureSignsMin` true crisis signs,
@@ -203,7 +203,7 @@ measure's typical signs with the view's `crisisSigns`, and returns at most one `
 per hour, or none when no measure scores above its current objectives. STR validates the choice against
 STR-070 and starts the measure. The nuclear strike (STR-080) is picked the same way when STR lists it.
 **Values.** measure scoring — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/design.md › Strategic Layer › World events (Desperate measures); design/world-events.md › Desperate measures; design/design.md › AI › Strategic AI › Faction AI tiers
+**Source.** design/strategic-layer.md › World events (Desperate measures); design/world-events.md › Desperate measures; design/ai.md › Strategic AI › Faction AI tiers
 
 ## Open questions
 
