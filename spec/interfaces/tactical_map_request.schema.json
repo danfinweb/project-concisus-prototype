@@ -3,7 +3,7 @@
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
   "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAI-009, TAI-013, TAI-018.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -28,6 +28,11 @@
         "weather": { "type": "string" },
         "poi": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "type": { "type": "string", "x-ref": "poi" }, "state": { "type": "string" } } },
         "structures": { "type": "array", "items": { "type": "string" }, "description": "Structures on the strategic tile (prefab tags)" },
+        "settlement": { "type": ["string", "null"], "enum": ["town", "smallCity", "largeCity", "capital", null], "description": "TAC-086: settlement on the tile (sets map type town or city)" },
+        "crossing": { "type": "boolean", "description": "TAC-086: the tile is a border crossing" },
+        "neighbours": { "type": "object", "description": "TAC-086 / TAC-087: strategic terrain of the four neighbouring tiles", "properties": { "n": { "type": "string" }, "e": { "type": "string" }, "s": { "type": "string" }, "w": { "type": "string" } } },
+        "roads": { "type": "array", "description": "TAC-086 / TAC-087: roads crossing the tile", "items": { "type": "object", "required": ["kind", "edges"], "properties": { "kind": { "enum": ["track", "road", "highway"] }, "edges": { "type": "array", "items": { "enum": ["n", "e", "s", "w"] } }, "foreign": { "type": "boolean", "description": "leads across the border (paid-crossing exit)" } } } },
+        "approachSide": { "enum": ["n", "e", "s", "w"], "description": "TAC-086: side the player squad arrives from (default: the road it came in on)" },
         "flags": { "type": "array", "items": { "enum": ["hazard", "contaminated", "mined", "ceasefire", "martialLaw"] } }
       }
     },
@@ -57,7 +62,7 @@
       "description": "Per AI side (faction id → goal): the battle goal and acceptable-loss threshold from the strategic layer (TAI-004, TAI-009). A unit's own battleGoal overrides it (TAI-018).",
       "additionalProperties": { "$ref": "#/$defs/battleGoal" }
     },
-    "exits": { "type": "array", "description": "Exits with their conditions (TAC-038, TAC-080); id is reported back as battle_result soldiers[].exitId", "items": { "type": "object", "required": ["id"], "properties": {
+    "exits": { "type": "array", "description": "Exits the strategic layer knows of, with their conditions (TAC-038, TAC-080). All are placed; map generation adds plain exits up to 2–4 (TAC-087). id is reported back as battle_result soldiers[].exitId", "items": { "type": "object", "required": ["id"], "properties": {
       "id": { "type": "string" },
       "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] }, "params": { "type": "object" } } } },
     "vip": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "rank": { "enum": ["major", "colonel", "general", "leader"] } } }

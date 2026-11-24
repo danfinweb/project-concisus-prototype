@@ -170,12 +170,13 @@ change `baseMoa`.
 
 ### [DAT-014] Weapon condition
 **Rule.** Every gun instance tracks `condition`, integer 0–100 (instance state, DAT-004). Wear raises jam
-chance and spread (TAC); repair uses the Technical attribute (MGT). Condition is not part of the profile.
-**Values.** `weaponWearPerShot`, `jamChanceCurve`, `conditionSpreadCurve` — not set (design: Open) →
-data/tactical-rules.json (owned by TAC); repair rate `weaponRepair` — not set (design: Open) →
-data/management-rules.json (MGT-067).
-**Status.** open
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › State, not profile
+chance (TAC-083) and spread (TAC-044); repair uses the Technical attribute (MGT). Condition is not part
+of the profile. A gun loses `weaponWearPerShot` Condition per round fired.
+**Values.** (draft, owned by TAC) `weaponWearPerShot` — 0.02 (1 per 50 rounds), `jamChanceCurve` — `max`
+0.10, `exponent` 2, `conditionSpreadCurve` — `maxExtra` 0.5 → data/tactical-rules.json; repair rate
+`weaponRepair` — not set (design: Open) → data/management-rules.json (MGT-067).
+**Status.** open (repair rate)
+**Source.** design/design.md › Data definitions › Weapon profile (draft) › State, not profile; design/design.md › Tactical Layer › Derived per shot › Armour wear and weapon condition (draft)
 
 ### [DAT-015] Mod slots and handguard sub-slots
 **Rule.** Mod slots of a weapon are its `modSlots`. A fitted handguard decides which sub-slots exist:
@@ -197,7 +198,8 @@ them. Each slot holds at most one mod.
 
 Allowed `modifiers` keys per slot: muzzle — `recoil`, `flash`; stock, pistolGrip, frontGrip — `ergonomics`,
 `recoil`; handguard — `ergonomics` (plus own `weightKg`); magazine — `magazineSize`, `reloadAp`; optic —
-`shooterSpreadAtRange`; tactical — none (its effect is the `module`, DAT-017). The items schema checks the
+`shooterSpreadAtRange` (multiplies the range spread, TAC-044); tactical — `snapShotSpread` for a laser
+(multiplies shooter spread on snap shots, DAT-017), none for a flashlight. The items schema checks the
 `modifiers` keys per `slot` (a key not allowed for the slot is rejected). A fitted magazine mod replaces
 `magazineSize`. Spare magazines are not mods: they are
 `magazine` items (DAT-030) and count as magazines for type limits (ITM-014). The weapon's
@@ -207,13 +209,14 @@ effective weight = `weightKg` + Σ fitted mod `weightKg`.
 **Source.** design/design.md › Data definitions › Weapon profile (draft) › How mods change the profile; design/item-list.md › Weapons (magazines are items)
 
 ### [DAT-017] Tactical modules
-**Rule.** `flashlight`: at night restores the carrier's full day sight and spotting range (TAC time of
-day), can blind enemies in its cone, and reveals the carrier. `laser`: reduces shooter spread for hip and
-snap shots; visible to enemies.
-**Values.** blind effect, laser spread reduction, reveal range — not set (design: Open) →
-data/tactical-rules.json.
-**Status.** open
-**Source.** design/design.md › Data definitions › Weapon profile (draft) › Tactical modules
+**Rule.** `flashlight`: at night restores the carrier's full day sight range (TAC-004), blinds enemies in its cone
+within `blindRangeTiles` (+`blindSpread` MoA until the end of their next activation), and reveals the
+carrier. `laser`: multiplies shooter spread on snap shots by its mod modifier `snapShotSpread` (TAC-044);
+visible to enemies.
+**Values.** `blindRangeTiles` — 10, `blindSpread` — 4 (draft) → data/tactical-rules.json (TAC-004); laser
+`modifiers.snapShotSpread` per item → data/items.json; reveal range — not set (design: Open).
+**Status.** open (reveal range, per-item laser values)
+**Source.** design/design.md › Data definitions › Weapon profile (draft) › Tactical modules; design/design.md › Tactical Layer › Turn structure › Sight and spotting (draft), › Hit model › Shooter spread and recoil (draft)
 
 ### [DAT-018] Suppressors and hearing
 **Rule.** A weapon with a fitted mod with `suppressor: true` fires suppressed shots; hearing ranges for
@@ -425,7 +428,8 @@ Initial content: design/item-list.md › Calibres (8 calibres).
 **Rule.** Every calibre × ammo type combination in the item list is one `kind: "ammo"` record (DAT-021).
 Ammunition is carried as rounds (loose or in magazines); one round weighs the calibre's `roundWeightG`.
 Initial content: design/item-list.md › Ammunition (30 loads); `spreadModifier` from DAT-022 (the item list
-gives no per-load spread).
+gives no per-load spread). Optional `recoilSpreadModifier` (number > 0, default 1) multiplies burst recoil
+spread (TAC-047); tracer loads 0.85 (draft).
 **Source.** design/item-list.md › Ammunition
 
 ### [ITM-004] Standard damage modifiers
@@ -508,21 +512,22 @@ gunshot noise). `visionConeDeg` (Altyn with visor: 90) narrows the wearer's visi
 | `durability` | number | points | > 0 | Maximum durability |
 | `fillsVestSlot` | boolean | — | — | Plate carrier (DAT-009) |
 | `pouches` | object or null | — | — | Required if `fillsVestSlot`: `{ capacityKg, maxMagazines, maxGrenades, maxMedical, maxOther }` (ITM-014) |
-| `durabilityLossModifier` | number | factor | > 0 | Optional; ceramic plates lose durability fast |
+| `durabilityLossModifier` | number | factor | > 0 | Optional; multiplies armour wear (TAC-051); ceramic plates 1.5 |
+| `coversZones` | array of zone | — | — | Optional, unused in the first build: zones the piece protects (later limb armour) |
 | `apPenalty`, `staminaPenalty` | number | AP / stamina | ≥ 0 | Optional; heavy assault armour |
 | `concealable` | boolean | — | — | Soft armour vest |
 
 Initial content: design/item-list.md › Body armour (6 items).
-**Values.** ceramic `durabilityLossModifier`, heavy armour penalties — not set (design: "fast", "large") →
-data/items.json.
+**Values.** ceramic `durabilityLossModifier` — 1.5 (draft) → data/items.json; heavy armour penalties — not
+set (design: "large") → data/items.json.
 **Source.** design/item-list.md › Body armour
 
 ### [ITM-012] Armour durability
 **Rule.** Current durability is instance state, starting at `durability`; it wears with each hit; armour
-condition % = current / max and drives the TAC penetration rule; at 0 it no longer protects.
-**Values.** durability loss per hit — not set (design: Open) → data/tactical-rules.json.
-**Status.** open
-**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); › Tactical Layer › Derived per shot (draft)
+condition % = current / max and drives the TAC penetration rule; at 0 it no longer protects. Wear per hit
+is TAC-051 (blocked and penetrating hits, × the piece's `durabilityLossModifier`).
+**Values.** `armourWear` — `blocked` 0.10, `penetrating` 0.05, `min` 1 (draft) → data/tactical-rules.json (TAC-051).
+**Source.** design/design.md › Data definitions › Soldier equipment slots (draft); › Tactical Layer › Derived per shot (draft) › Armour wear and weapon condition (draft)
 
 ## Load-bearing vests
 
@@ -621,7 +626,9 @@ restores more than that per use, from its pool. Painkillers mask pain for
 
 Grenades go in the vest's or plate carrier's grenade pouches (`grenade` type limit, ITM-014) or the battle
 belt; from the backpack they cost the backpack surcharge (TAC-043, TAC-068). Strength sets the throwing
-distance; a wounded or disabled arm widens the landing scatter (TAC-043).
+distance; a wounded or disabled arm widens the landing scatter (TAC-043). Frag blasts: full cover blocks,
+half cover halves; the damage is split over the six body zones by silhouette share, each checked against
+its own armour (TAC-079).
 Initial content: design/item-list.md › Grenades (2 grenades).
 **Values.** (all draft, placeholder) frag grenade — `weightKg` 0.6, `damage` 100, `radiusTiles` 4,
 `penetrationClass` 2, instant, `loud` true; smoke grenade — `weightKg` 0.5, `damage` 0, `radiusTiles` 3,
@@ -734,7 +741,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 ## Open questions
 
 1. **Resolved (design 8972470):** burst 3 rounds +2 AP, full auto 5 rounds +4 AP on top of the weapon-type default fire AP (draft), per-weapon override `fireApCost`. DAT-012 — Rounds fired by an `"auto"` fire mode and AP per shot action per mode are not designed.
-2. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open (values;
+2. **Resolved (design 75e776f):** wear per shot, jam chance and spread curves are drafted (DAT-014, TAC-083) (part). Still open: the repair rate. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open (values;
    the fields are now named: `weaponWearPerShot`, `jamChanceCurve`, `conditionSpreadCurve` in tactical-rules,
    `weaponRepair` in management-rules).
 3. DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
@@ -745,7 +752,7 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 6. DAT-019 — Design says recoil modifier "about ×0.6–×1.6", the item list uses ×0.5 for 9×18 mm.
 7. **Resolved (design eb072a2):** confirmed — 12 gauge sets damage and projectile count per load (buckshot 8 × 25, slug 1 × 90), kept as overrides on the loads. DAT-019/ITM-008 — The calibre profile has one damage and projectile count, but 12 gauge differs per
    load; this spec adds `damageOverride`/`projectilesOverride` on loads. Confirm.
-8. DAT-021 — HP "higher bleeding chance" and tracer "less recoil spread in bursts; reveals the shooter" have
+8. **Resolved (design 75e776f):** HP ammo bleed modifier 1.5 and tracer recoil spread ×0.85 are drafted (TAC-060, TAC-047) (part). Still open: whether tracers reveal the shooter. DAT-021 — HP "higher bleeding chance" and tracer "less recoil spread in bursts; reveals the shooter" have
    no values; AP "+1 to +2 penetration" is only a description (per-load classes are given).
 9. DAT-022 — Per-load spread modifiers are missing in the item list; spec uses the type defaults.
 10. DAT-002 — No purchase prices for weapons, armour, gear, medical or operation items; only barter goods
@@ -757,10 +764,10 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 13. ITM-017 — Meaning of the battle-belt holster (does weapon 2 or a pistol sit there, does it change swap
     AP?). Does the 1 kg pouch rule (ITM-016) and type limits apply to belts? The item list names only vests
     and plate carriers.
-14. ITM-011 — Values for ceramic fast durability loss, heavy assault armour AP/stamina penalties; whether
+14. **Resolved (design 75e776f):** ceramic wear ×1.5 (ITM-011) (part). Still open: heavy armour penalties, concealable, quiet. ITM-011 — Values for ceramic fast durability loss, heavy assault armour AP/stamina penalties; whether
     "concealable" (soft armour) and "quiet" (recon rig) have a rule.
 15. ITM-009 — "Mounts for night vision": no night-vision item exists. "Visor covers the face": no face zone.
-16. ITM-012 — Durability loss per hit is Open.
+16. **Resolved (design 75e776f):** every hit wears armour: 10% of damage blocked, 5% penetrating, at least 1 (TAC-051). ITM-012 — Durability loss per hit is Open.
 17. ITM-024 — Painted icon (rare) is found in "old houses", which is not in the rare-only location list.
     The full loot location tag list is not designed.
 18. ITM-028 — "Its enemies" for hand-ins: relation ≤ −50 (spec choice) or any faction at war with it?

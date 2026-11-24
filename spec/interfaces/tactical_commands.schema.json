@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_commands.schema.json",
   "title": "Tactical commands",
-  "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. There is no takeCover command: taking cover is move / changeStance, or setReaction with reaction takeCover (TAI-005). Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-074.",
-  "version": "0.3.1",
+  "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. There is no takeCover command: taking cover is move / changeStance, or setReaction with reaction takeCover (TAI-005). Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-084.",
+  "version": "0.4.0",
   "x-producer": "modules/tactical-ai",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -17,7 +17,7 @@
     "command": {
       "type": "object", "required": ["type"],
       "properties": {
-        "type": { "enum": ["activate", "pass", "move", "turn", "changeStance", "vault", "climb", "shoot", "reload", "swapWeapon", "throwGrenade", "setReaction", "holdOverwatch", "useItem", "dropBackpack", "pickUpBackpack", "search", "pickUp", "cutLock", "placeCharge", "restrainVip", "liftBody", "putDownBody", "leaveMap", "endActivation"] },
+        "type": { "enum": ["activate", "pass", "move", "turn", "changeStance", "vault", "climb", "shoot", "reload", "swapWeapon", "throwGrenade", "setReaction", "holdOverwatch", "useItem", "dropBackpack", "pickUpBackpack", "search", "pickUp", "cutLock", "closeDoor", "clearJam", "placeCharge", "restrainVip", "liftBody", "putDownBody", "leaveMap", "endActivation"] },
         "mode": { "enum": ["carry", "drag"], "description": "liftBody (TAC-074)" },
         "magazine": { "type": "string", "description": "reload: magazine item instance" },
         "shells": { "type": "integer", "minimum": 1, "description": "reload, tube-fed: shells to load (partial reload)" },
@@ -28,6 +28,7 @@
         "facing": { "type": "number" },
         "target": { "type": "string", "description": "shoot: target unit ID; search, pickUp, cutLock, placeCharge, pickUpBackpack, liftBody: object or body ID" },
         "tile": { "type": "object", "description": "shoot at a tile, throwGrenade target, vault or climb point" },
+        "edge": { "type": "object", "description": "closeDoor: the door's tile edge {tile, side} (TAC-084); a closed unlocked door on a move path opens as part of the move" },
         "fireMode": { "anyOf": [{ "type": "integer", "minimum": 1 }, { "const": "auto" }] },
         "aimSteps": { "type": "integer", "minimum": 0 },
         "reaction": { "enum": ["fire", "takeCover", "hold"] },

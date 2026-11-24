@@ -3,7 +3,7 @@
   "$id": "data/items.schema.json",
   "title": "Items",
   "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, ITM-001..ITM-032, DAT-030.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -66,7 +66,7 @@
         { "description": "DAT-016 handguard", "properties": { "slot": { "const": "handguard" }, "modifiers": { "$ref": "#/$defs/modifiersHandguard" } } },
         { "description": "DAT-016 magazine", "properties": { "slot": { "const": "magazine" }, "modifiers": { "$ref": "#/$defs/modifiersMagazine" } } },
         { "description": "DAT-016 optic", "properties": { "slot": { "const": "optic" }, "modifiers": { "$ref": "#/$defs/modifiersOptic" } } },
-        { "description": "DAT-016 tactical: no modifiers, effect via module (DAT-017)", "properties": { "slot": { "const": "tactical" }, "modifiers": { "$ref": "#/$defs/modifiersNone" } } }
+        { "description": "DAT-016 tactical: flashlight no modifiers; laser snapShotSpread (DAT-017)", "properties": { "slot": { "const": "tactical" }, "modifiers": { "$ref": "#/$defs/modifiersTactical" } } }
       ]
     },
     "modifiersMuzzle": { "type": "object", "properties": { "recoil": { "type": "number" }, "flash": { "type": "number" } }, "additionalProperties": false },
@@ -75,6 +75,7 @@
     "modifiersMagazine": { "type": "object", "properties": { "magazineSize": { "type": "number" }, "reloadAp": { "type": "number" } }, "additionalProperties": false },
     "modifiersOptic": { "type": "object", "properties": { "shooterSpreadAtRange": { "type": "number" } }, "additionalProperties": false },
     "modifiersNone": { "type": "object", "additionalProperties": false },
+    "modifiersTactical": { "type": "object", "properties": { "snapShotSpread": { "type": "number", "description": "laser: multiplies shooter spread on snap shots (TAC-044)" } }, "additionalProperties": false },
     "calibre": {
       "properties": {
         "kind": { "const": "calibre" },
@@ -98,6 +99,7 @@
         "subsonic": { "type": "boolean" },
         "spreadModifier": { "type": "number", "exclusiveMinimum": 0 },
         "tracer": { "type": "boolean" },
+        "recoilSpreadModifier": { "type": "number", "exclusiveMinimum": 0, "description": "ITM-003 / TAC-047: multiplies burst recoil spread; tracer 0.85, default 1" },
         "bleedChanceModifier": { "type": "number", "exclusiveMinimum": 0 },
         "damageOverride": { "type": "number", "exclusiveMinimum": 0 },
         "projectilesOverride": { "type": "integer", "minimum": 1 }
@@ -125,7 +127,8 @@
           "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
           "maxMagazines": { "type": "integer", "minimum": 0 }, "maxGrenades": { "type": "integer", "minimum": 0 },
           "maxMedical": { "type": "integer", "minimum": 0 }, "maxOther": { "type": "integer", "minimum": 0 } } },
-        "durabilityLossModifier": { "type": "number", "exclusiveMinimum": 0 },
+        "durabilityLossModifier": { "type": "number", "exclusiveMinimum": 0, "description": "ITM-011 / TAC-051: multiplies armour wear; ceramic 1.5" },
+        "coversZones": { "type": "array", "items": { "enum": ["head", "thorax", "leftArm", "rightArm", "leftLeg", "rightLeg"] }, "description": "ITM-011: optional, unused in the first build (later limb armour)" },
         "apPenalty": { "type": "number", "minimum": 0 },
         "staminaPenalty": { "type": "number", "minimum": 0 },
         "concealable": { "type": "boolean" }

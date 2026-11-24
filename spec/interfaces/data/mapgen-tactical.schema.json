@@ -2,17 +2,27 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/mapgen-tactical.schema.json",
   "title": "Tactical map generation rules",
-  "description": "Rules for generating a tactical map from the tactical map request (spec TAC-080, TAC-038). Biome → terrain and prefab tables come from STR-095; exit count and exits are specced; the stage slots (terrain, roads, prefab placement, cover scatter, spawns and objectives, validate) come from the workflow and have no design rules yet (TAC open question 51).",
-  "version": "0.3.0",
+  "description": "Rules for generating a tactical map from the tactical map request (spec TAC-080, TAC-038). Biome → terrain and prefab tables come from STR-095; exit count and exits are specced; map types and stages follow TAC-086..TAC-093.",
+  "version": "0.4.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
-    "pipeline": { "type": "object", "description": "stage order and attempts (not designed)" },
-    "terrain": { "type": "object", "description": "terrain stage rules (not designed)" },
-    "roads": { "type": "object", "description": "roads stage rules (not designed)" },
-    "prefabs": { "type": "object", "description": "prefab placement rules; the prefab table per biome is named by STR-095 (not designed)" },
-    "cover": { "type": "object", "description": "cover scatter rules (not designed)" },
-    "spawns": { "type": "object", "description": "spawns and objectives (not designed)" },
+    "mapTypes": { "type": "object", "description": "TAC-086: type → {size, builtShare, foliageShare}; draft open 80/0.06/0.15, woods 64/0.03/0.50, marsh 64/0.02/0.30, hills 64/0.03/0.25, mountain 48/0.02/0.20, town 72/0.07/0.14, city 96 (small 80)/0.16/0.10, plant 96/0.11/0.10, crossing 64/0.05/0.14, shore 64/0.03/0.15", "additionalProperties": { "type": "object", "properties": { "size": { "type": "integer" }, "smallCitySize": { "type": "integer" }, "builtShare": { "type": "number" }, "foliageShare": { "type": "number" } } } },
+    "zones": { "type": "object", "description": "TAC-087 stage 1: neighbour blend depth (about 0.2 of map size) and noise" },
+    "water": { "type": "object", "description": "TAC-087 stage 2: shore depth, deepFromShoreTiles 4" },
+    "roads": { "type": "object", "description": "TAC-087 stage 3: widths highway 5, road 3, track 2; fords, bridges, village streets, farm track" },
+    "buildings": { "type": "object", "description": "TAC-088: floor-plan rules (room types and size ranges, apartment layouts, shop ground floors) and placement per map type" },
+    "largeBuildingKinds": { "type": "array", "items": { "type": "string" }, "description": "TAC-088: building kinds with a playable roof (apartment blocks, offices, schools, landmarks, large halls)" },
+    "lockedDoorShare": { "type": "object", "description": "TAC-088, draft {poi 0.25, house 0.10}", "properties": { "poi": { "type": "number" }, "house": { "type": "number" } } },
+    "prefabs": { "type": "object", "description": "fixed pieces and props; the prefab table per biome is named by STR-095" },
+    "parcels": { "type": "object", "description": "TAC-087 stage 5: shelterbelt grid and gaps, crop fields; tall-crop share (TAC-090, optional)" },
+    "groundFill": { "type": "object", "description": "TAC-087 stage 6: WFC classes, adjacency rules, weights" },
+    "details": { "type": "object", "description": "TAC-087 stage 7: trunks, wrecks, craters, potholes, scatter props, connection" },
+    "exitSpacingTiles": { "type": "integer", "description": "TAC-087, design 20" },
+    "footExitWidth": { "type": "integer", "description": "TAC-087, design 6 tiles" },
+    "deployment": { "type": "object", "description": "TAC-087 stage 8: player and enemy zone sizes" },
+    "containers": { "type": "object", "description": "TAC-091 (optional): containers per building kind" },
+    "landmarks": { "type": "object", "description": "TAC-092 (optional): landmark kinds, roster sizes, per-map count" },
     "exitCount": { "type": "object", "description": "TAC-080, design 2–4 exits per map", "properties": {
       "min": { "type": "integer", "minimum": 1 }, "max": { "type": "integer", "minimum": 1 } } },
     "exits": { "type": "array", "description": "TAC-038 / TAC-080: exit templates; id is reported back as battle_result soldiers[].exitId", "items": {
@@ -20,7 +30,7 @@
         "id": { "type": "string", "pattern": "^[a-z0-9][a-zA-Z0-9_-]*$" },
         "condition": { "enum": ["none", "fuel", "boatAtTurn", "paidCrossing"] },
         "params": { "type": "object", "description": "condition parameters, e.g. boat turn, crossing price" } } } },
-    "validate": { "type": "object", "description": "playability checks (not designed)" }
+    "validate": { "type": "object", "description": "TAC-089: required and reported checks; draft attempts 6, shareTolerance 0.06", "properties": { "attempts": { "type": "integer" }, "shareTolerance": { "type": "number" } } }
   },
   "additionalProperties": false
 }

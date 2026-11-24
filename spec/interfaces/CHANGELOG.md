@@ -5,6 +5,12 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | tactical_map_request | 0.6.0 | `region.settlement`, `region.crossing`, `region.neighbours`, `region.roads[]`, `region.approachSide` for the map type and stages (TAC-086/TAC-087); exits text: request exits are all placed, generation fills up | strategic, tactical |
+| 2026-11-24 | tactical_commands | 0.4.0 | New command types `closeDoor` (with `edge`, TAC-084) and `clearJam` (TAC-083) | tactical, tactical-ai |
+| 2026-11-24 | data/tactical-rules | 0.6.0 | Sight, spotting, concealment, blinding, reaction modifiers, shooter spread, recoil, cone, preview, stun, pain, bleeding, fracture, armour wear (`armourWear` replaces `durabilityLossPerHit`), grenade distance/scatter/blast, jam and clear-jam, doors, material HP and edge blast; drafted values in descriptions | tools, tactical |
+| 2026-11-24 | data/mapgen-tactical | 0.4.0 | Map types, designed stages (zones, water, roads, buildings, parcels, groundFill, details, deployment), `largeBuildingKinds`, `lockedDoorShare`, exit spacing and width, checks; optional containers and landmarks; `pipeline`, `terrain`, `cover`, `spawns` slots removed | tools, tactical |
+| 2026-11-24 | data/terrain | 0.4.0 | `impassable` (TAC-029), `obscuring` (TAC-082) | tools, tactical |
+| 2026-11-24 | data/items | 0.6.0 | Ammo `recoilSpreadModifier`; body armour `coversZones` (unused yet); laser `snapShotSpread` modifier on tactical mods | tools, tactical |
 | 2026-11-23 | tactical_map_request | 0.5.0 | `region.biome` (STR-095/TAC-080); `exits[].id` required; objective types `killVip`, `captureVip`, `destroyTarget`, `saveCargo` (TAC-076); per-unit `battleGoal` override (TAI-018); stale acceptableLoss text removed | strategic, tactical, tactical-ai |
 | 2026-11-23 | tactical_perception_view | 0.4.0 | `squadMorale`; enemy `facing`/`level`; map tiles, exits, containers, bodies, smoke; structured `allowedActions` with shot previews; no query functions (TAI-001) | tactical, tactical-ai |
 | 2026-11-23 | tactical_commands | 0.3.1 | Field descriptions per command type; no `takeCover` command (TAI-005) | tactical, tactical-ai |

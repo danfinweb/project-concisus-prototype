@@ -333,13 +333,16 @@ STR-026. The encounter tile's terrain sets the tactical map through its biome (S
 **Rule.** A hostile encounter involving a player squad (or a player op objective that requires a
 fight) becomes a tactical engagement. Strategic sends a `tactical_map_request` and waits for the
 `battle_result`; the request carries the encounter tile's terrain and its `biome` (STR-095) in
-`tactical_map_request.region`, which select the tactical map's terrain and prefab tables. The engagement
+`tactical_map_request.region`, which select the tactical map's terrain and prefab tables. The region also
+carries what sets the tactical map type and stages (TAC-086, TAC-087): the tile's settlement and
+crossing, its point of interest, the four neighbours' terrain, the roads crossing it (kind and edges) and
+the side the squad approaches from; `exits[]` lists the exits the strategic layer knows of. The engagement
 takes a fixed amount of strategic time however long it runs: TAC-003 `battleDurationHours` (design 1 hour)
 owns the value, and the result reports it as `battle_result.gameTimeHours`.
 The result updates squads, control, loyalty and MIA/captured/dead soldiers (sent to MGT). Only
 player-attributed fights count for crisis sign 10 (STR-069).
 **Values.** battle duration → see TAC-003 (`battleDurationHours`, data/tactical-rules.json).
-**Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Encounters); design/strategic-actions.md › Movement and operations
+**Source.** design/design.md › Strategic Layer (Time); › Squads and simulation (Encounters); › Tactical Layer › Tactical map generation (draft) › Inputs; design/strategic-actions.md › Movement and operations
 
 ### [STR-024] Evade an encounter
 **Rule.** When a hostile encounter involves a player squad, the player may try to evade instead of

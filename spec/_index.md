@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
+Design baseline: 75e776f (update, 2026-11-24; previous f82ec75)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
 
 ## IDs
 
-392 IDs (first split 2026-11-22, updated from design f82ec75). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+405 IDs (first split 2026-11-22, updated from design 75e776f). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -139,12 +139,13 @@ Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
 | [STR-089] | Stage: war state (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (7) |
 | [STR-090] | Stage: start (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (8) |
 | [STR-091] | Stage: validate (open) | modules/strategic | design/design.md › Strategic Layer › Map generation (draft) (Validation rules) |
-| [TAC-001] | Sides on a map (open (what a neutral unit does once hostile, how its reactions are chosen and paid — see Open questions)) | modules/tactical | design/design.md › Tactical Layer › Turn structure; design/design.md › Tactical Layer (Enemy AI) |
+| [TAC-001] | Sides on a map | modules/tactical | design/design.md › Tactical Layer › Turn structure; design/design.md › Tactical Layer (Enemy AI) |
 | [TAC-002] | Turn-based from the start | modules/tactical | design/design.md › Tactical Layer (Turn structure bullet) |
 | [TAC-003] | Battle duration and day/night | modules/tactical | design/design.md › Tactical Layer › Time of day |
-| [TAC-004] | Night sight reduction (open) | modules/tactical | design/design.md › Tactical Layer › Time of day; design/design.md › Data definitions › Weapon profile (tactical modules) |
+| [TAC-004] | Night sight reduction | modules/tactical | design/design.md › Tactical Layer › Time of day; › Turn structure › Sight and spotting (draft); design/design.md › Data definitions › Weapon profile (tactical modules) |
 | [TAC-076] | Objective met in battle | modules/tactical | design/design.md › Overview › Core loop; design/design.md › Management › Contracts and missions › Mission types |
 | [TAC-078] | Contamination and mines on the tactical map (optional) | modules/tactical | design/world-events.md › Desperate measures (Mining the roads); › Nuclear strike (rare) (Effect) |
+| [TAC-080] | Tactical map from the encounter tile | modules/tactical | design/design.md › Strategic Layer › Map (draft) (biome per strategic terrain type); › Strategic Layer › Squads and simulation (draft) (Encounters: the tile's terrain sets the tactical map); › Management › Gear, loot & return (2–4 exits with conditions); › Tactical Layer › Tactical map generation (draft) |
 | [TAC-005] | Turn order and activation choice | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › Turn and activation |
 | [TAC-006] | Action points per activation | modules/tactical | design/design.md › Tactical Layer (Action points); design/design.md › Management › Soldier attributes › Derived values; design/tactical-actions.md › Turn and activation, AP modifiers on an activation |
 | [TAC-007] | Set facing at end of activation | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing; design/tactical-actions.md › Turn and activation |
@@ -155,59 +156,61 @@ Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
 | [TAC-012] | Exhaustion | modules/tactical | design/design.md › Tactical Layer › Turn structure › Stamina |
 | [TAC-013] | Stall rule | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation |
 | [TAC-014] | Durations in turns | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation |
-| [TAC-015] | Suppression | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation; design/tactical-actions.md › AP modifiers on an activation; design/design.md › Management › Soldier attributes (Nerve) |
+| [TAC-015] | Suppression | modules/tactical | design/design.md › Tactical Layer › Turn structure › Turns and activation; › Hit model › Shooter spread and recoil (draft); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Management › Soldier attributes (Nerve) |
 | [TAC-077] | Morale flight and Nerve in battle (optional) | modules/tactical | design/design.md › Management › Soldiers & progression (Contracts & morale); › Soldier attributes (Nerve) |
 | [TAC-016] | Vision cone | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing; design/design.md › Tactical Layer (Cover & visibility); design/item-list.md › Helmets |
 | [TAC-017] | Turning during an activation | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing; design/tactical-actions.md › Movement |
 | [TAC-018] | Gunshot hearing range | modules/tactical | design/design.md › Tactical Layer › Turn structure › Gunshot noise; design/design.md › Tactical Layer › Derived per shot |
 | [TAC-019] | Reacting to heard shots and noise | modules/tactical | design/design.md › Tactical Layer › Turn structure › Vision and facing, Gunshot noise |
+| [TAC-081] | Sight range and spotting | modules/tactical | design/design.md › Tactical Layer › Turn structure › Sight and spotting (draft); › Tactical map generation (draft) › Concealment (Spotting); design/design.md › Management › Soldier attributes › Derived values |
 | [TAC-020] | Reaction trigger | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation |
 | [TAC-021] | Reaction setting | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation |
 | [TAC-022] | Reaction attempt cost and chance | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation |
-| [TAC-023] | Reaction resolution | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; design/tactical-actions.md › Turn and activation (Hold overwatch) |
+| [TAC-023] | Reaction resolution | modules/tactical | design/design.md › Tactical Layer › Turn structure › Reactions; › Hit model › Shooter spread and recoil (draft); design/tactical-actions.md › Turn and activation (Hold overwatch) |
 | [TAC-075] | Hold overwatch | modules/tactical | design/tactical-actions.md › Turn and activation (Hold overwatch); design/design.md › Tactical Layer › Turn structure › Reactions |
 | [TAC-024] | Action cost composition | modules/tactical | design/design.md › Tactical Layer (Action points), › Actions and costs; design/tactical-actions.md (intro: order of cost calculation) |
-| [TAC-025] | Stun (head hit) (open) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › AP modifiers on an activation |
-| [TAC-026] | Pain AP loss (open) | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; design/tactical-actions.md › AP modifiers on an activation |
+| [TAC-025] | Stun (head hit) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › AP modifiers on an activation |
+| [TAC-026] | Pain AP loss | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; › Hit model › Shooter spread and recoil (draft); design/tactical-actions.md › AP modifiers on an activation |
 | [TAC-027] | Over-encumbrance (open) | modules/tactical | design/design.md › Tactical Layer (Action points); design/tactical-actions.md › AP modifiers on an activation; design/design.md › Data definitions › Soldier equipment slots |
-| [TAC-028] | Tactical grid | modules/tactical | design/design.md › Tactical Layer (Movement) |
-| [TAC-029] | Walk one tile | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement (Walk one tile, Leg wounds) and intro; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; › Medical system › Conditions |
+| [TAC-028] | Tactical grid and levels | modules/tactical | design/design.md › Tactical Layer (Movement); › Tactical map generation (draft) › Stages (Structures, Levels) |
+| [TAC-029] | Walk one tile | modules/tactical | design/design.md › Tactical Layer (Movement); › Tactical map generation (draft) › Tiles, cover and doors; design/tactical-actions.md › Movement (Walk one tile, Leg wounds) and intro; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; › Medical system › Conditions |
 | [TAC-030] | Move crouched | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement |
 | [TAC-031] | Crawl prone | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement |
 | [TAC-032] | Sprint | modules/tactical | design/tactical-actions.md › Movement; design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Backpacks |
 | [TAC-033] | Change stance | modules/tactical | design/design.md › Tactical Layer (Movement); design/tactical-actions.md › Movement (Change stance); design/design.md › Management › Soldier attributes (Agility row) |
-| [TAC-034] | Vault a window, climb a ladder | modules/tactical | design/design.md › Tactical Layer (Movement), Body zones and hitboxes › Stance; design/tactical-actions.md › Movement (Vault a window or low wall, Climb a ladder) |
-| [TAC-035] | Cover per tile edge | modules/tactical | design/design.md › Tactical Layer (Movement, Cover & visibility), Body zones and hitboxes › Stance |
-| [TAC-036] | Destruction recalculation | modules/tactical | design/design.md › Tactical Layer (Movement) |
+| [TAC-034] | Vault a window, climb a ladder | modules/tactical | design/design.md › Tactical Layer (Movement), Body zones and hitboxes › Stance; › Tactical map generation (draft) › Tiles, cover and doors; design/tactical-actions.md › Movement (Vault a window or low wall, Climb a ladder) |
+| [TAC-035] | Cover per tile edge | modules/tactical | design/design.md › Tactical Layer (Movement, Cover & visibility), Body zones and hitboxes › Stance; › Tactical map generation (draft) › Tiles, cover and doors |
+| [TAC-036] | Destruction recalculation | modules/tactical | design/design.md › Tactical Layer (Movement); › Tactical map generation (draft) › Tiles, cover and doors (Destruction) |
 | [TAC-037] | Path preview | modules/tactical | design/design.md › Tactical Layer (Movement) |
-| [TAC-038] | Leave the map at an exit | modules/tactical | design/tactical-actions.md › Turn and activation; design/design.md › Management › Gear, loot & return |
+| [TAC-038] | Leave the map at an exit | modules/tactical | design/tactical-actions.md › Turn and activation; design/design.md › Management › Gear, loot & return; › Tactical Layer › Tactical map generation (draft) › Stages (Exits and deployment) |
 | [TAC-039] | Fire | modules/tactical | design/tactical-actions.md › Weapons (Fire); design/design.md › Data definitions › Weapon profile |
 | [TAC-040] | Aim longer | modules/tactical | design/design.md › Tactical Layer (Action points); design/tactical-actions.md › Weapons (Aim longer) |
 | [TAC-041] | Reload | modules/tactical | design/tactical-actions.md › Weapons (Reload) and intro; design/item-list.md › Weapons (Feed type, magazines are items); design/design.md › Data definitions › Weapon profile, Soldier equipment slots |
 | [TAC-042] | Swap weapon 1 and 2 | modules/tactical | design/tactical-actions.md › Weapons (Swap between weapon 1 and 2); design/design.md › Data definitions › Soldier equipment slots |
-| [TAC-043] | Throw a grenade (open) | modules/tactical | design/tactical-actions.md › Weapons (Throw a grenade); design/item-list.md › Grenades; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes |
-| [TAC-079] | Grenade effects (open) | modules/tactical | design/item-list.md › Grenades |
-| [TAC-080] | Tactical map from the encounter tile (open) | modules/tactical | design/design.md › Strategic Layer › Map; › Tactical Layer |
-| [TAC-044] | Total spread (open) | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Weapon profile |
-| [TAC-045] | Simulated shot trace | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Data definitions › Calibre profile |
-| [TAC-046] | Hit chance and shot preview | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Tactical Layer (Readability) |
-| [TAC-047] | Burst recoil (open) | modules/tactical | design/design.md › Tactical Layer › Hit model; design/design.md › Management › Soldier attributes › Derived values |
+| [TAC-043] | Throw a grenade | modules/tactical | design/tactical-actions.md › Weapons (Throw a grenade); design/item-list.md › Grenades; design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes |
+| [TAC-079] | Grenade effects | modules/tactical | design/item-list.md › Grenades; design/design.md › Tactical Layer › Body zones and hitboxes (share of front silhouette) |
+| [TAC-044] | Total spread | modules/tactical | design/design.md › Tactical Layer › Hit model; › Hit model › Shooter spread and recoil (draft); design/design.md › Data definitions › Weapon profile |
+| [TAC-045] | Simulated shot trace | modules/tactical | design/design.md › Tactical Layer › Hit model (Decision: MoA is simulated); design/design.md › Data definitions › Calibre profile |
+| [TAC-046] | Hit chance and shot preview | modules/tactical | design/design.md › Tactical Layer › Hit model (Shot preview); › Tactical map generation (draft) › Concealment; design/design.md › Tactical Layer (Readability) |
+| [TAC-047] | Burst recoil | modules/tactical | design/design.md › Tactical Layer › Hit model › Shooter spread and recoil (draft); design/item-list.md › Ammunition |
+| [TAC-082] | Concealment (obscuring terrain) | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Concealment |
+| [TAC-083] | Weapon jam and clearing it | modules/tactical | design/design.md › Tactical Layer › Derived per shot › Armour wear and weapon condition (draft); design/tactical-actions.md › Weapons (Clear a jam); design/design.md › Data definitions › Weapon profile (State, not profile) |
 | [TAC-048] | Muzzle damage and falloff | modules/tactical | design/design.md › Tactical Layer › Derived per shot |
 | [TAC-049] | Effective recoil | modules/tactical | design/design.md › Tactical Layer › Derived per shot |
 | [TAC-050] | Penetration check | modules/tactical | design/design.md › Tactical Layer › Derived per shot; design/design.md › Data definitions › Soldier equipment slots |
-| [TAC-051] | Blunt damage and armour wear (open) | modules/tactical | design/design.md › Tactical Layer › Derived per shot; design/design.md › Data definitions › Soldier equipment slots |
+| [TAC-051] | Blunt damage and armour wear | modules/tactical | design/design.md › Tactical Layer › Derived per shot; › Derived per shot › Armour wear and weapon condition (draft); design/item-list.md › Body armour |
 | [TAC-052] | Body zones and upright hitboxes | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes |
 | [TAC-053] | Aiming arm pose (open) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes |
 | [TAC-054] | Crouched hitboxes | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Stance |
 | [TAC-055] | Prone hitboxes and limits | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Stance |
 | [TAC-056] | Cover occlusion | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Stance |
 | [TAC-057] | Zone HP | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Management › Soldier attributes › Derived values |
-| [TAC-058] | Zone damage effects (open) | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › Movement (Leg wounds), Weapons, AP modifiers on an activation |
+| [TAC-058] | Zone damage effects | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › Movement (Leg wounds), Weapons, AP modifiers on an activation |
 | [TAC-059] | Zone at 0 HP | modules/tactical | design/design.md › Tactical Layer › Body zones and hitboxes › Health and effects per zone; design/design.md › Tactical Layer › Medical system › Conditions; design/design.md › Data definitions › Soldier equipment slots |
-| [TAC-060] | Light bleeding | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions, Body zones and hitboxes |
-| [TAC-061] | Heavy bleeding | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions |
-| [TAC-062] | Fracture (open) | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions |
-| [TAC-063] | Pain (open) | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; design/item-list.md › Medical items |
+| [TAC-060] | Light bleeding | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; › Medical system › Chances (draft) |
+| [TAC-061] | Heavy bleeding | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; › Medical system › Chances (draft) |
+| [TAC-062] | Fracture | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; › Medical system › Chances (draft); › Hit model › Shooter spread and recoil (draft) |
+| [TAC-063] | Pain | modules/tactical | design/design.md › Tactical Layer › Medical system › Conditions; › Medical system › Chances (draft); design/item-list.md › Medical items |
 | [TAC-064] | Medical item use permissions | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/tactical-actions.md › Medical |
 | [TAC-065] | Medical AP cost | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/tactical-actions.md › Medical; design/item-list.md › Medical items |
 | [TAC-066] | HP restored | modules/tactical | design/design.md › Tactical Layer › Medical system › Using medical items; design/item-list.md › Medical items (IFAK) |
@@ -215,10 +218,20 @@ Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
 | [TAC-068] | Item access tiers (open) | modules/tactical | design/tactical-actions.md › Gear and interaction, Medical; design/design.md › Data definitions › Soldier equipment slots; design/item-list.md › Backpacks |
 | [TAC-069] | Drop the backpack | modules/tactical | design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots |
 | [TAC-070] | Pick up or loot | modules/tactical | design/tactical-actions.md › Gear and interaction; design/design.md › Data definitions › Soldier equipment slots |
-| [TAC-071] | Cut a lock | modules/tactical | design/tactical-actions.md › Gear and interaction |
+| [TAC-071] | Cut a lock | modules/tactical | design/tactical-actions.md › Gear and interaction; design/design.md › Tactical Layer › Tactical map generation (draft) › Tiles, cover and doors |
 | [TAC-072] | Place a demolition charge | modules/tactical | design/tactical-actions.md › Gear and interaction |
 | [TAC-073] | Restrain a VIP | modules/tactical | design/tactical-actions.md › Gear and interaction |
 | [TAC-074] | Carry or drag a body | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a body) |
+| [TAC-084] | Doors | modules/tactical | design/tactical-actions.md › Gear and interaction (Open a door, Close a door); design/design.md › Tactical Layer › Tactical map generation (draft) › Tiles, cover and doors |
+| [TAC-085] | Cover edge destruction | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Tiles, cover and doors (Destruction) |
+| [TAC-086] | Tactical map types | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Inputs, Map types |
+| [TAC-087] | Map generation stages | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Stages |
+| [TAC-088] | Buildings and levels | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Stages (Structures, Levels), Tiles, cover and doors |
+| [TAC-089] | Map checks and re-roll | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Stages (Checks and re-roll) |
+| [TAC-090] | Tall crops (optional) | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Optional extras |
+| [TAC-091] | Loot containers and mission item (optional) | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Optional extras |
+| [TAC-092] | City landmarks (optional) | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Optional extras, Randomness |
+| [TAC-093] | Generation randomness | modules/tactical | design/design.md › Tactical Layer › Tactical map generation (draft) › Randomness |
 | [MGT-001] | Soldier record | modules/management | design/design.md › Management › Soldiers & progression |
 | [MGT-002] | Hiring pools (open) | modules/management | design/design.md › Management › Soldiers & progression |
 | [MGT-003] | Hire price (open) | modules/management | design/design.md › Management › Soldiers & progression |
@@ -367,7 +380,7 @@ Design baseline: f82ec75 (update + cleanup, 2026-11-23; previous eb072a2)
 | [ITM-009] | Helmet items | /data, tools | design/item-list.md › Helmets |
 | [ITM-010] | Helmet hearing and vision | /data, tools | design/item-list.md › Helmets; design/design.md › Tactical Layer › Gunshot noise |
 | [ITM-011] | Body armour items | /data, tools | design/item-list.md › Body armour |
-| [ITM-012] | Armour durability (open) | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft); › Tactical Layer › Derived per shot (draft) |
+| [ITM-012] | Armour durability | /data, tools | design/design.md › Data definitions › Soldier equipment slots (draft); › Tactical Layer › Derived per shot (draft) |
 | [ITM-013] | Vest items | /data, tools | design/item-list.md › Load-bearing vests |
 | [ITM-014] | Pouch type limits | /data, tools | design/item-list.md › Load-bearing vests; › Weapons (magazines are items); › Grenades; design/design.md › Data definitions › Soldier equipment slots (draft) › Type limits |
 | [ITM-015] | Other items | /data, tools | design/item-list.md › Load-bearing vests |

@@ -243,12 +243,12 @@ values for them:
 
 | Derived value | Main | Minor | Formula owner |
 | --- | --- | --- | --- |
-| Shooter spread | marksmanship | perception (at range) | TAC hit model |
-| Recoil control | marksmanship | strength | TAC hit model |
+| Shooter spread | marksmanship | perception (at range) | TAC-044 |
+| Recoil control | marksmanship | strength | TAC-047 |
 | Reload and weapon swap cost | marksmanship | agility | TAC Tactical actions: reload from Marksmanship and weapon ergonomics; swap from Agility and weapon weight |
-| Spotting and sight range | perception | recon | TAC; night sight TAC-004 |
+| Spotting and sight range | perception | recon | TAC-081; night sight TAC-004 |
 | Reaction chance | perception (reactor) | agility (mover) | TAC-022 |
-| Noise and concealment | recon | agility | TAC |
+| Noise and concealment | recon | agility | TAC-081 (concealment), TAC-022 (noise) |
 | Treatment speed and effect | medical | — | TAC Medical system |
 | Repairs, explosives, piloting | technical | — | TAC; helicopter pilot minimum STR-034 |
 
