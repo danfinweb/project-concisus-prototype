@@ -1,0 +1,6 @@
+{
+  "uaz": { "id": "uaz", "name": "UAZ", "vehicleType": "ground", "costUsd": 8000, "seats": 4, "storageKg": 200, "fuelRangeRegions": 10, "offRoad": "good", "noise": "medium", "features": [] },
+  "truck": { "id": "truck", "name": "Truck", "vehicleType": "ground", "costUsd": 15000, "seats": 8, "storageKg": 1000, "fuelRangeRegions": 8, "offRoad": "poor", "noise": "high", "features": [] },
+  "amphib": { "id": "amphib", "name": "BRDM", "vehicleType": "ground", "costUsd": 40000, "seats": 4, "storageKg": 300, "fuelRangeRegions": 8, "offRoad": "veryGood", "noise": "high", "features": ["amphibious"] },
+  "heli": { "id": "heli", "name": "Mi-8", "vehicleType": "helicopter", "costUsd": 300000, "seats": 10, "storageKg": 1500, "fuelRangeRegions": 6, "offRoad": "ignoresTerrain", "noise": "extreme", "features": [], "requiresPilot": true }
+}

@@ -1,0 +1,6 @@
+{
+  "steppe": { "id": "steppe", "name": "Steppe", "passable": true, "moveHours": 2, "offRoadRated": true, "visibility": "open", "biome": "steppe", "tacticalTerrainTable": "steppe", "prefabTable": "steppe" },
+  "woods": { "id": "woods", "name": "Woods", "passable": true, "moveHours": 3, "offRoadRated": true, "visibility": "low", "biome": "forest", "tacticalTerrainTable": "forest", "prefabTable": "forest" },
+  "mountain": { "id": "mountain", "name": "Mountain", "passable": true, "moveHours": null, "offRoadRated": false, "visibility": "low", "biome": "mountain", "tacticalTerrainTable": "mountain", "prefabTable": "mountain" },
+  "water": { "id": "water", "name": "Water", "passable": false, "moveHours": null, "offRoadRated": false, "visibility": null, "biome": "river", "tacticalTerrainTable": "river", "prefabTable": "river" }
+}

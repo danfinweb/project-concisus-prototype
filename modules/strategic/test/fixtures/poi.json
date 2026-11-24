@@ -1,0 +1,13 @@
+{
+  "gov": { "id": "gov", "name": "Governmental institution", "category": "gov", "settlement": false, "services": ["contracts"], "military": true, "income": 500, "supplyOutput": 5 },
+  "plant_mechanical": { "id": "plant_mechanical", "name": "Mechanical plant", "category": "plant", "plantKind": "mechanical", "services": ["repairs", "vehicleTrade"], "income": 1000, "supplyOutput": 10, "dailyOutput": { "items": [{ "item": "spare_parts", "count": 10 }] } },
+  "plant_chemical": { "id": "plant_chemical", "name": "Chemical plant", "category": "plant", "plantKind": "chemical", "services": [], "income": 1000, "supplyOutput": 10, "dailyOutput": { "items": [{ "item": "medkit", "count": 5 }] } },
+  "plant_oil": { "id": "plant_oil", "name": "Oil plant", "category": "plant", "plantKind": "oil", "services": ["refuel"], "income": 3000, "supplyOutput": 20, "dailyOutput": { "items": [{ "item": "fuel_can", "count": 20 }] } },
+  "plant_arms": { "id": "plant_arms", "name": "Arms plant", "category": "plant", "plantKind": "arms", "services": ["trade"], "military": true, "income": 1500, "supplyOutput": 20, "dailyOutput": { "items": [{ "item": "rifle", "count": 2 }, { "item": "ammo_762", "count": 300 }] } },
+  "plant_minerals": { "id": "plant_minerals", "name": "Mineral plant", "category": "plant", "plantKind": "minerals", "services": [], "income": 1500, "supplyOutput": 5, "dailyOutput": { "amountUsd": 1500 }, "mineralModifier": 0.10, "mineralModifierMax": 0.30 },
+  "town": { "id": "town", "name": "Town", "category": "town", "settlement": true, "services": ["hire"], "krugMarketAllowed": true, "income": 300, "supplyOutput": 5, "recruitOutput": 1 },
+  "village": { "id": "village", "name": "Village", "category": "town", "settlement": true, "services": ["hire"], "krugMarketAllowed": true, "income": 300, "supplyOutput": 5, "recruitOutput": 1 },
+  "small_city": { "id": "small_city", "name": "Small city", "category": "smallCity", "settlement": true, "services": ["trade", "hire", "contracts", "hospital", "fobPurchase"], "krugMarketAllowed": true, "income": 1000, "supplyOutput": 10, "recruitOutput": 2 },
+  "large_city": { "id": "large_city", "name": "Large city", "category": "largeCity", "settlement": true, "services": ["trade", "hire", "contracts", "hospital", "vehicleTrade", "fobPurchase"], "krugMarketAllowed": true, "income": 2000, "supplyOutput": 20, "recruitOutput": 3 },
+  "gas_station": { "id": "gas_station", "name": "Gas station", "category": "gasStation", "settlement": false, "services": ["refuel", "trade"], "income": 300, "supplyOutput": 5 }
+}

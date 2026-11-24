@@ -1,0 +1,9 @@
+{
+  "startFunds": { "ssv": 100000, "vdk": 100000, "varyag": 50000, "aegis": 50000, "krug": 30000 },
+  "incomeFormula": {},
+  "squadUpkeep": {},
+  "salaryFormula": {},
+  "payIntervalHours": 24,
+  "lowLiquidity": {},
+  "fundsMode": "hardLimit"
+}

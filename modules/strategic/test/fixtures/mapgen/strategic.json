@@ -1,0 +1,16 @@
+{
+  "pipeline": { "maxAttempts": 20 },
+  "mapShape": "square",
+  "width": 24,
+  "height": 24,
+  "land": {},
+  "capital": {},
+  "cities": { "largeCities": 2, "smallCities": 4, "minSpacing": 4 },
+  "industry": {},
+  "towns": {},
+  "roads": { "extraLoops": 2, "gasInterval": 5 },
+  "warState": {},
+  "krugMarkets": { "count": 2 },
+  "start": { "startFrontDistance": 4 },
+  "validate": { "startServiceRange": 3, "hiddenRoadDistance": 3 }
+}

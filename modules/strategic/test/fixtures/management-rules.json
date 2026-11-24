@@ -1,0 +1,4 @@
+{
+  "lowRiskContract": { "missionId": "retrieve_deliver", "targetFaction": null, "minFrontDistance": 3 },
+  "standingThresholds": { "hostile": -50, "unfriendly": -20, "friendly": 20, "trusted": 50 }
+}

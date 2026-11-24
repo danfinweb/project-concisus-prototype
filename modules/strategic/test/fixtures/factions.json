@@ -1,0 +1,12 @@
+{
+  "ssv": { "id": "ssv", "name": "SSV", "kind": "employer", "patron": "east", "capitalHolder": true, "doctrine": "ssv", "startRelations": { "vdk": -80, "varyag": 60, "aegis": -60, "krug": 0 }, "measures": ["forced_conscription", "penal_battalions", "paying_any_price", "scorched_earth", "mining_roads", "martial_law", "seize_krug_stocks", "vip_strike", "nuclear_strike"], "squadTemplate": { "size": 6, "gearTier": 2 } },
+  "vdk": { "id": "vdk", "name": "VDK", "kind": "employer", "patron": "west", "doctrine": "vdk", "startRelations": { "ssv": -80, "varyag": -60, "aegis": 60, "krug": 0 }, "measures": ["forced_conscription", "open_call", "paying_any_price", "scorched_earth", "mining_roads", "martial_law", "seize_krug_stocks", "vip_strike", "nuclear_strike"], "squadTemplate": { "size": 6, "gearTier": 2 } },
+  "varyag": { "id": "varyag", "name": "Varyag", "kind": "rivalPmc", "patron": "ssv", "doctrine": "varyag", "rogueDoctrine": "rogue", "startRelations": { "ssv": 60, "vdk": -60, "aegis": -40, "krug": 0 }, "squadTemplate": { "size": 5, "gearTier": 3 } },
+  "aegis": { "id": "aegis", "name": "Aegis", "kind": "rivalPmc", "patron": "vdk", "doctrine": "aegis", "rogueDoctrine": "rogue", "startRelations": { "ssv": -60, "vdk": 60, "varyag": -40, "krug": 0 }, "squadTemplate": { "size": 5, "gearTier": 3 } },
+  "krug": { "id": "krug", "name": "Krug", "kind": "trader", "doctrine": "krug", "startRelations": { "ssv": 0, "vdk": 0, "varyag": 0, "aegis": 0 }, "resentment": { "priceMarkup": 0.10, "escortRefusalChance": 0.20 }, "measures": ["paying_any_price"], "squadTemplate": { "size": 4, "gearTier": 1 } },
+  "pmc": { "id": "pmc", "name": "Player PMC", "kind": "player" },
+  "east": { "id": "east", "name": "Eastern influence", "kind": "influence", "backs": "ssv" },
+  "west": { "id": "west", "name": "Western influence", "kind": "influence", "backs": "vdk" },
+  "civilians": { "id": "civilians", "name": "Civilians", "kind": "civilian" },
+  "resistance": { "id": "resistance", "name": "Resistance", "kind": "resistance", "doctrine": "resistance", "squadTemplate": { "size": 4, "gearTier": 0 } }
+}
