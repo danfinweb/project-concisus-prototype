@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "battle_result.schema.json",
   "title": "Battle result",
-  "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
-  "version": "0.3.1",
+  "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, TAC-095, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
+  "version": "0.4.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/strategic", "modules/management"],
   "type": "object",
@@ -26,15 +26,16 @@
           "zoneHp": { "type": "object" },
           "conditions": { "type": "array", "items": { "type": "object" } },
           "stamina": { "type": "integer" },
-          "equipment": { "type": "object", "description": "Slot → item instance after the battle (ammo used, durability, condition)" },
+          "equipment": { "type": "object", "description": "Slot → item instance after the battle (ammo used, durability, condition); same slots as tactical_map_request, holster included" },
           "skillUse": { "type": "array", "items": { "type": "object" }, "description": "Skill-use events for growth (MGT-023)" },
           "kills": { "type": "array", "items": { "type": "object", "properties": { "faction": { "type": "string" }, "distanceTiles": { "type": "number" }, "activation": { "type": "integer" } } } },
           "deedEvents": { "type": "array", "items": { "type": "object" }, "description": "Optional deeds (MGT-017): rescues, carries under fire, lowest head/thorax HP %" },
-          "underFire": { "type": "boolean" }
+          "underFire": { "type": "boolean" },
+          "morale": { "type": "number", "minimum": 0, "maximum": 100, "description": "The soldier's battle morale at the end (for leftMap: when it left), without the Leadership bonus (TAC-095)" }
         }
       }
     },
-    "squadMorale": { "type": "number" },
+    "squadMorale": { "type": "number", "description": "Average of soldiers[].morale over the player soldiers still alive (TAC-095)" },
     "loot": { "type": "array", "description": "Items carried out (on soldiers or in the vehicle)", "items": { "type": "object", "required": ["item", "count"], "properties": {
       "item": { "type": "string", "x-ref": "items" }, "count": { "type": "integer", "minimum": 1 }, "condition": { "type": "number" }, "carrier": { "type": "string" } } } },
     "leftBehind": { "type": "array", "items": { "type": "object" }, "description": "Gear left on the map or on bodies" },

@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
-  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAI-009, TAI-013, TAI-018.",
-  "version": "0.7.0",
+  "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAC-094, TAC-095, TAI-009, TAI-013, TAI-018.",
+  "version": "0.8.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -46,7 +46,7 @@
           "controller": { "enum": ["player", "ai"] },
           "doctrine": { "type": "string" },
           "role": { "enum": ["attacker", "defender", "convoy", "vip", "neutral", "ally"], "description": "neutral = the third side: never activates, only reacts or turns hostile when attacked (TAC-001)" },
-          "morale": { "type": "number" },
+          "morale": { "type": "number", "minimum": 0, "maximum": 100, "description": "Squad morale: average of its soldiers' morale when the op forms (MGT-008); used only for units sent without their own units[].morale (TAC-095)" },
           "vehicle": { "type": ["object", "null"], "properties": { "id": { "type": "string" }, "storageKg": { "type": "number" }, "fuel": { "type": "number" } } },
           "units": { "type": "array", "items": { "$ref": "#/$defs/unit" } }
         }
@@ -82,15 +82,16 @@
       "properties": {
         "id": { "type": "string", "description": "Roster ID (player) or generated ID (AI)" },
         "presetId": { "type": "string", "x-ref": "presets" },
-        "rank": { "type": "integer", "minimum": 0, "description": "Higher = senior; the highest-ranked living soldier leads the AI squad (TAI-013)" },
+        "rank": { "enum": ["recruit", "regular", "veteran", "elite"], "description": "Management rank = hiring tier (MGT); the highest-ranked soldier on the map leads the side and lends the Leadership bonus (TAC-094, TAI-013)" },
+        "morale": { "type": "number", "minimum": 0, "maximum": 100, "description": "The soldier's own morale at battle start (MGT-008, TAC-095)" },
         "controller": { "enum": ["player", "ai"], "description": "Per-unit override, e.g. an escorted VIP (TAI-018)" },
         "battleGoal": { "$ref": "#/$defs/battleGoal", "description": "Per-unit goal for an AI-controlled unit, e.g. an allied VIP on the player side; overrides the side's battleGoal entry (TAI-018)" },
-        "attributes": { "type": "object" },
+        "attributes": { "type": "object", "description": "All eight attributes (strength, endurance, agility, perception, marksmanship, recon, medical, technical); TAC-094 breaks leader ties by their average" },
         "nerve": { "type": "number" },
         "zoneHp": { "type": "object" },
         "conditions": { "type": "array", "items": { "type": "object" } },
         "stamina": { "type": "integer" },
-        "equipment": { "type": "object", "description": "Slot → item instance (item ID, condition, durability, contents)" },
+        "equipment": { "type": "object", "description": "Slot → item instance (item ID, condition, durability, contents). Slots: weapon1, weapon2, holster (a pistol on the battle belt, extra third weapon, counts toward belt capacity; DAT-005, TAC-042), helmet, bodyArmour, vest, belt, backpack" },
         "tier": { "type": "string", "description": "AI only: strength/gear tier when no full soldier record exists" }
       }
     }

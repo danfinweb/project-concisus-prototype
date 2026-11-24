@@ -28,7 +28,8 @@ rogue PMC, STR-066) and calls the faction's controller with it once; the control
 one command set for the hour (STR-020). All factions are called on the state at the start of the hour, and
 their commands resolve together with the player's. Resistance groups and a rogue PMC get their own
 controller call and their own doctrine (SAI-010); a rogue PMC keeps its faction ID but switches to its
-rogue doctrine. The controller is pluggable: the game shell plugs in `strategic-ai`; the Test Lab may plug
+rogue doctrine. The civilian population (GEN-006) and the off-map influences `east` and `west` (GEN-005)
+are never AI controllers: they get no view and no call. The controller is pluggable: the game shell plugs in `strategic-ai`; the Test Lab may plug
 in a scripted stub or another AI.
 **Source.** design/ai.md › Strategic AI (Controller hand-off; Faction AI tiers); design/strategic-layer.md › Overview (Time)
 
@@ -50,6 +51,7 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `relations` | Its relation to every other faction (range and thresholds → see STR-051) |
 | `reputationWithPlayer` | Its reputation `value` toward the player and the derived `standing` (MGT-054) |
 | `funds` | Its own money (STR-092); other factions' funds are never in the view |
+| `overdraft` | Only under `fundsMode = scoreTerm`: its own hidden deficit (funds then show 0, STR-092); never another faction's |
 | `contracts` | Contracts it has posted, with status (open, accepted, done, failed) |
 | `contractOffers` | Open contract offers of other factions it could take, each with its `id` (SAI-015) |
 | `events` | World events and measures it is aware of that affect it (STR) |
@@ -198,11 +200,13 @@ may post a counter-contract against it (`counterContractOf`). How readily it doe
 The pay is a cost to its funds (STR-092, STR-093). Funds are a hard limit by default: a faction cannot
 offer a contract or raise a squad (`recruit`, STR-096) it cannot pay for, and STR rejects such a command,
 so the AI should not emit it; in the test mode `fundsMode = scoreTerm` funds only weigh in the score
-(STR-092). Raising a squad is scored like any other candidate action of the planner (SAI-009): its gain is
+(STR-092): funds show 0 once spent, and the view's `overdraft` lowers the score of every candidate that
+costs money, through the doctrine consideration `overdraft` (weight and curve in `considerations`). Raising a squad is scored like any other candidate action of the planner (SAI-009): its gain is
 the objectives the new squad can cover. Offers carry the offer fields of SAI-004 (MGT contract terms);
 Management validates pay, filters by reputation and shows them.
-**Values.** offer scoring, deniability thresholds — not set (design: all behaviour values unset) → data/ai/doctrines.json.
-**Source.** design/management.md › Contracts and missions › Where contracts come from; design/ai.md › Strategic AI › Faction AI tiers; › Controller hand-off
+**Values.** offer scoring, deniability thresholds, the `overdraft` consideration — not set (design: all
+behaviour values unset) → data/ai/doctrines.json.
+**Source.** design/management.md › Contracts and missions › Where contracts come from; design/ai.md › Strategic AI › Faction AI tiers; › Controller hand-off; design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft))
 
 ### [SAI-015] Contract offer evaluation
 **Rule.** Only the rival PMCs (`varyag`, `aegis`) take other factions' contracts, and only offers from
@@ -232,8 +236,10 @@ STR-070 and starts the measure. The nuclear strike (STR-080) is picked the same 
 **Rule.** The Krug's controller scores every request in its view's `escortRequests` (STR-094) with the same
 utility scoring as its own objectives (SAI-006, SAI-008): the price as gain, weighed against the
 requester's standing toward the Krug (its `relation`; for the player its Krug `reputation`), the Krug's
-free squads (own squads without a goal that could reach the convoy) and the route's danger (situation
-maps, SAI-007). It returns one `answerEscort { requestId, accept, squad }` per request: `accept = true`
+free squads (own squads without a goal that could reach the convoy; a squad elsewhere travels to the
+convoy's tile first and delays its departure, STR-094) and the route's danger (situation maps, SAI-007).
+It attaches at most one squad per convoy. Requests that Krug resentment refused (GEN-010) never reach its
+view. It returns one `answerEscort { requestId, accept, squad }` per request: `accept = true`
 with the Krug squad it attaches when the score is above its refusal threshold, otherwise
 `accept = false`. Low standing, few free squads or a dangerous route make a refusal likely. A request it
 does not answer in that hour lapses as refused (STR-094).
@@ -268,8 +274,9 @@ values unset) → data/ai/doctrines.json (Krug doctrine).
    SAI-001, GEN-008). SAI-001 — Aegis "learns the player's habits and adapts over time" (GEN leader effect) and hunts need
    memory across calls, but the AI owns no state. Where does that memory live (world slice, passed in the
    view)?
-7. SAI-002 — Is the civilian population (non-combat faction) or the off-map influences ever an AI
-   controller? Spec: no.
+7. **Resolved (2026-11-24, design 06dc2a6):** no — the civilian population and the off-map influences are
+   never AI controllers (SAI-002). SAI-002 — Is the civilian population (non-combat faction) or the
+   off-map influences ever an AI controller? Spec: no.
 8. **Resolved (2026-11-24):** the design drafts each doctrine's character (SAI-010); the numbers stay
    data. SAI-010 — Per-faction doctrines and their character (SSV, VDK, Aegis) are not described beyond the faction
    roles.

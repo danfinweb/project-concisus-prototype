@@ -3,7 +3,7 @@
   "$id": "tactical_commands.schema.json",
   "title": "Tactical commands",
   "description": "Commands a tactical controller returns for an activation: the same set a player issues. The tactical layer validates and resolves each; illegal commands are rejected. There is no takeCover command: taking cover is move / changeStance, or setReaction with reaction takeCover (TAI-005). Spec: TAI-005, TAI-006, TAI-016, TAC-005..TAC-084.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "x-producer": "modules/tactical-ai",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -19,6 +19,7 @@
       "properties": {
         "type": { "enum": ["activate", "pass", "move", "turn", "changeStance", "vault", "climb", "shoot", "reload", "swapWeapon", "throwGrenade", "setReaction", "holdOverwatch", "useItem", "dropBackpack", "pickUpBackpack", "search", "pickUp", "cutLock", "closeDoor", "clearJam", "placeCharge", "restrainVip", "liftBody", "putDownBody", "leaveMap", "endActivation"] },
         "mode": { "enum": ["carry", "drag"], "description": "liftBody (TAC-074)" },
+        "slot": { "enum": ["weapon1", "weapon2", "holster"], "description": "swapWeapon: weapon slot to switch to; holster = the battle belt's pistol (TAC-042)" },
         "magazine": { "type": "string", "description": "reload: magazine item instance" },
         "shells": { "type": "integer", "minimum": 1, "description": "reload, tube-fed: shells to load (partial reload)" },
         "unit": { "type": "string", "description": "activate: unit to activate; useItem: treated soldier (self or adjacent); restrainVip: the VIP" },

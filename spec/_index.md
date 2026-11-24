@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
+Design baseline: 06dc2a6 (update, 2026-11-24; previous 06e571f)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
 
 ## IDs
 
-412 IDs (first split 2026-11-22, updated from design 06e571f). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+419 IDs (first split 2026-11-22, updated from design 06dc2a6). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -43,6 +43,7 @@ Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
 | [GEN-016] | Coup epilogue | all modules | design/design.md › Factions & campaign › Coups |
 | [GEN-017] | Rogue PMC chance (open) | all modules | design/design.md › Factions & campaign › Coups › Rogue PMCs |
 | [GEN-018] | Rogue PMC warning signs and aftermath | all modules | design/design.md › Factions & campaign › Coups › Rogue PMCs |
+| [GEN-019] | Reformed ending: ceasefire peace | all modules | design/design.md › Factions & campaign › Player role |
 | [STR-001] | Strategic clock | modules/strategic | design/strategic-layer.md (Time) |
 | [STR-002] | Action duration | modules/strategic | design/strategic-layer.md (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md (intro) |
 | [STR-003] | Hour tick (open) | modules/strategic | design/strategic-layer.md (Time); › Squads and simulation (Strategic turn); design/ai.md › Strategic AI (Controller hand-off) |
@@ -75,6 +76,7 @@ Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
 | [STR-095] | Strategic terrain table | modules/strategic | design/strategic-layer.md › Map |
 | [STR-096] | Raising a squad | modules/strategic | design/strategic-layer.md; design/ai.md › Strategic AI |
 | [STR-097] | Strategic HP loss on contaminated tiles | modules/strategic | design/world-events.md › Nuclear strike (rare); design/strategic-layer.md › Map (draft) › Points of interest |
+| [STR-098] | Low-risk contract guarantee | modules/strategic | design/strategic-layer.md › Squads and simulation (draft) (Faction funds); design/management.md › Gear, loot & return (Design risk) |
 | [STR-027] | Operation lifecycle | modules/strategic | design/design.md › Overview › Core loop; design/management.md › Gear, loot & return |
 | [STR-028] | Launch an op (open) | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-029] | Return to an FOB | modules/strategic | design/strategic-actions.md › Movement and operations |
@@ -233,11 +235,14 @@ Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
 | [TAC-091] | Loot containers and mission item (optional) | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Optional extras |
 | [TAC-092] | City landmarks (optional) | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Optional extras, Randomness |
 | [TAC-093] | Generation randomness | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Randomness |
+| [TAC-094] | Squad leader and Leadership bonus | modules/tactical | design/management.md › Soldiers & progression (Rank and leadership); design/ai.md › Tactical AI |
+| [TAC-095] | Morale in battle (open) | modules/tactical | design/management.md › Soldiers & progression (Contracts & morale) |
+| [TAC-096] | Perk effects in battle | modules/tactical | design/management.md › Soldier attributes (draft) (Perks) |
 | [MGT-001] | Soldier record | modules/management | design/management.md › Soldiers & progression |
 | [MGT-002] | Hiring pools (open) | modules/management | design/management.md › Soldiers & progression |
 | [MGT-003] | Hire price (open) | modules/management | design/management.md › Soldiers & progression |
 | [MGT-004] | Player-chosen callsign and kit marks | modules/management | design/management.md › Soldiers & progression |
-| [MGT-005] | Salaries and renewals (open) | modules/management | design/management.md › Soldiers & progression › Contracts & morale; design/strategic-layer.md › Squads and simulation (Faction funds (draft)) |
+| [MGT-005] | Fee per op | modules/management | design/management.md › Soldiers & progression › Contracts & morale; design/strategic-layer.md › Squads and simulation (Faction funds (draft)) |
 | [MGT-006] | Service record logging | modules/management | design/management.md › Soldiers & progression › Service record |
 | [MGT-007] | Dossier and after-action report | modules/management | design/management.md › Soldiers & progression › Service record |
 | [MGT-008] | Squad morale persistence (optional (flight rule only)) | modules/management | design/management.md › Soldiers & progression › Contracts & morale |
@@ -306,6 +311,8 @@ Design baseline: 06e571f (update, 2026-11-24; previous 3aac08f)
 | [MGT-071] | Campaign score (open) | modules/management | design/management.md › Base & meta progression |
 | [MGT-072] | Management view | modules/management | design/management.md |
 | [MGT-073] | Shared economy rules for running costs and income | modules/management | design/management.md › Soldiers & progression (Contracts & morale); design/data-definitions.md › Vehicles (draft) |
+| [MGT-074] | Rank and promotion | modules/management | design/management.md › Soldiers & progression (Rank and leadership) |
+| [MGT-075] | Squad leader and Leadership bonus | modules/management | design/management.md › Soldiers & progression (Rank and leadership); design/ai.md › Tactical AI |
 | [SAI-001] | Controller role | modules/strategic-ai | design/ai.md; design/ai.md › Strategic AI › Controller hand-off; CLAUDE.md › Rules, State ownership |
 | [SAI-002] | Invocation | modules/strategic-ai | design/ai.md › Strategic AI › Controller hand-off; › Strategic Layer (Time) |
 | [SAI-003] | Strategic perception view | modules/strategic-ai | design/ai.md › Strategic AI › Controller hand-off; › Faction AI tiers; design/strategic-layer.md › Map (Fog of war); › Squads and simulation (Faction funds (draft)) |

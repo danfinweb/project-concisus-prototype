@@ -5,6 +5,16 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | tactical_map_request | 0.8.0 | **Breaking:** `units[].rank` integer → enum recruit/regular/veteran/elite; new `units[].morale`; `sides[].morale` only a fallback; `attributes` lists all eight; `equipment` slots include `holster` | strategic, tactical, tactical-ai |
+| 2026-11-24 | battle_result | 0.4.0 | `soldiers[].morale` (end of battle, without Leadership); `squadMorale` = average of surviving player soldiers; holster in returned equipment | tactical, strategic, management |
+| 2026-11-24 | tactical_perception_view | 0.6.0 | `squad[].rank` enum; `squad[].morale` (battle morale + Leadership); `squadMorale` = side average | tactical, tactical-ai |
+| 2026-11-24 | tactical_commands | 0.5.0 | `swapWeapon.slot` (weapon1, weapon2, holster) | tactical, tactical-ai |
+| 2026-11-24 | strategic_perception_view | 0.7.0 | Optional `overdraft` (scoreTerm test mode); no view for civilians or influences | strategic, strategic-ai |
+| 2026-11-24 | management_requests | 0.6.0 | New `launchOp` (fees by rank, hired pilot, insurance premium; `ok:false` = no launch); `repayDebt` and `repayment` removed | strategic, management |
+| 2026-11-24 | data/tactical-rules | 0.8.0 | `moraleFlight {chance, nerveDivisor}`; `moraleCasualty` (not set) | tools, tactical |
+| 2026-11-24 | data/strategic-rules, factions, poi, events | 0.6.0 | Reformed ceasefire days, `losing` test; Krug `resentment`, influence `backs`, rogue-chance factors; poi `military`, `supplyOutput` integer; event params for effect sizes, compensation and bounty prices | tools, strategic, management |
+| 2026-11-24 | data/items | 0.8.0 | Belt requires `maxMagazines/maxGrenades/maxMedical/maxOther`; mod `fits` non-empty; barter `refuelUnits`; modifier ranges | tools, tactical, management |
+| 2026-11-24 | data/recruitment, economy-rules, management-rules, traders, presentation | 0.5.0, 0.4.0, 0.7.0, 0.4.0, 0.5.0 | `salaryPerDayUsd` → `feePerOpUsd`, no renewals or non-payment, `hiredPilotFeePerOpUsd`; FOB upkeep removed; `leadershipBonus`, perk effects, `nerve.effectDivisor`, `fobPrices`; gear buy rates; tier detection test | tools, management, tactical, game |
 | 2026-11-24 | strategic_perception_view | 0.6.0 | `escortRequests` for the Krug (SAI-017); views also for spawned factions (resistance, rogue PMC) | strategic, strategic-ai |
 | 2026-11-24 | strategic_commands | 0.6.0 | `answerEscort` (requestId, accept, squad); `hireEscort.route`; `contractOffer.reputationGain` deprecated (MGT-056 derives the gain per mission) | strategic, strategic-ai |
 | 2026-11-24 | management_requests | 0.5.0 | `repayDebt`; `contractEnded` reason `taken`; `fate: returned`; `missionKey`, `outcomeReason: rivalFirst`; result `repayment`; `contaminationTick` (STR-097), `capitalIncome` (STR-007) | strategic, management |

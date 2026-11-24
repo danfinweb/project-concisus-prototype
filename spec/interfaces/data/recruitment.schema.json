@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/recruitment.schema.json",
   "title": "Recruitment",
-  "description": "Hiring pools, price tiers and salaries (spec MGT-002..MGT-005, MGT-022). The pay interval is economy-rules.payIntervalHours.",
-  "version": "0.4.0",
+  "description": "Hiring pools and price tiers (= soldier ranks) with hire price, fee per op and attribute range (spec MGT-002..MGT-005, MGT-022, MGT-074). Fees are paid once per op at launch; there are no salaries.",
+  "version": "0.5.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
@@ -24,13 +24,13 @@
       }
     },
     "tiers": {
-      "type": "array", "description": "MGT-002 / MGT-003 / MGT-005, design draft recruit $1,000 / $50 / 20-45; regular $3,000 / $100 / 35-60; veteran $8,000 / $200 / 50-75; elite $20,000 / $400 / 65-90",
+      "type": "array", "description": "MGT-002 / MGT-003 / MGT-005 / MGT-074, design draft (hire price / fee per op / attribute range) recruit $1,000 / $300 / 20-45; regular $3,000 / $600 / 35-60; veteran $8,000 / $1,200 / 50-75; elite $20,000 / $2,500 / 65-90; attributeRange.max is also the promotion threshold (MGT-074)",
       "items": {
-        "type": "object", "required": ["id", "hirePriceUsd", "salaryPerDayUsd", "attributeRange"],
+        "type": "object", "required": ["id", "hirePriceUsd", "feePerOpUsd", "attributeRange"],
         "properties": {
           "id": { "$ref": "#/$defs/tierId" },
           "hirePriceUsd": { "type": "number", "minimum": 0 },
-          "salaryPerDayUsd": { "type": "number", "minimum": 0 },
+          "feePerOpUsd": { "type": "number", "minimum": 0, "description": "MGT-005: paid per soldier of this rank when an op launches" },
           "attributeRange": {
             "type": "object", "required": ["min", "max"],
             "properties": { "min": { "type": "integer", "minimum": 1, "maximum": 100 }, "max": { "type": "integer", "minimum": 1, "maximum": 100 } },
@@ -42,8 +42,7 @@
     },
     "priceFormula": { "type": "object", "description": "MGT-003: scaling of the hire price with the average attribute within a tier, not set" },
     "attributeDistribution": { "type": "object", "description": "MGT-022: distribution within the tier range, not set" },
-    "contractTermHours": { "type": "integer", "minimum": 1, "description": "MGT-005, design draft 720 (30 days)" },
-    "nonPayment": { "type": "object", "description": "MGT-005: consequence of unpaid salaries, not set (design names the rule without defining it)" }
+    "hiredPilotFeePerOpUsd": { "type": "number", "minimum": 0, "description": "MGT-005 / DAT-028: fee per op of a hired helicopter pilot, not set" }
   },
   "additionalProperties": false
 }

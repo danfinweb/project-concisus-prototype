@@ -25,13 +25,14 @@ fractions of an hour. Advancing from hour 23 sets hour 0 and `day + 1`. Every ti
 ### [STR-002] Action duration
 **Rule.** Every player strategic action has a duration `d`, a whole number of hours ≥ 0, fixed by the
 action type (STR-027…STR-043) or set by the player (Stand by, STR-037). An action may also cost money,
-fuel or standing; costs are applied when the action starts. `d = 0` actions (trade, hire, vehicle trade)
+fuel or standing; costs are applied when the action starts, except the fuel of a move, which is spent on
+arrival (STR-032). `d = 0` actions (trade, hire, vehicle trade)
 resolve at once and pass no time, so no faction acts (STR-003 does not run). An action with `d > 1`
 (travel, standing by, healing) can be interrupted only by what touches the squad: an encounter it is part
 of (STR-022), an attack on it, or an event on its own tile; events elsewhere never interrupt it. The player
 may also cancel it at a planning phase (STR-003). The hours already spent count (progress made stays,
 healing gained is kept), and the rest of the action is dropped. A move that is interrupted or cancelled
-before its last hour leaves the squad on its origin tile.
+before its last hour leaves the squad on its origin tile and spends no fuel.
 **Source.** design/strategic-layer.md › Overview (Time); › Squads and simulation (draft) (Strategic turn); design/strategic-actions.md (intro)
 
 ### [STR-003] Hour tick
@@ -39,7 +40,7 @@ before its last hour leaves the squad on its origin tile.
 - **Planning.** The player chooses an action for each of their squads that has none in progress, then
   commits by ending the turn. A squad in a multi-hour action keeps it, unless the player cancels it now:
   the hours already spent and any healing gained are kept, and a move cancelled midway leaves the squad on
-  its origin tile (STR-002); the squad then takes a new action like any idle squad. Nothing with `d ≥ 1`
+  its origin tile and spends no fuel (STR-002); the squad then takes a new action like any idle squad. Nothing with `d ≥ 1`
   resolves before the commit; `d = 0` actions resolve at once (STR-002). The world state does not change
   while the player plans.
 - **Resolution.** After the commit, hour ticks run. Each tick, in this order:
@@ -68,11 +69,12 @@ before its last hour leaves the squad on its origin tile.
 **Rule.** When a tick lands on hour 0, run once, in this order: (1) crisis-sign check and desperate
 measures for every faction (STR-069, STR-070); (2) world event check (STR-050), including the rogue PMC
 roll (GEN-017), and the flavour event rolls (STR-081); (3) daily plant output to FOBs (STR-015) and the
-capital holder's bonus income (STR-007); (4) campaign checks: faction victory, day limit and cash-out
-offer (GEN-012), coup holding phase (GEN-015); (5) notify MGT that the barter refresh is due (a
+capital holder's bonus income (STR-007); (4) campaign checks: faction victory (SSV, VDK, player, rogue
+PMC), the reformed ceasefire count (GEN-019), day limit and cash-out offer (GEN-012), coup holding phase
+(GEN-015); (5) the low-risk contract check (STR-098); (6) notify MGT that the barter refresh is due (a
 `dailyRollover` management request with its `day`). Each check uses the state after the tick's movement
 and fights.
-**Source.** design/strategic-layer.md › Overview (Time); design/strategic-actions.md › Trade, services, contracts and factions; design/management.md › Base & meta progression; design/design.md › Factions & campaign › Player role, › Coups
+**Source.** design/strategic-layer.md › Overview (Time); design/strategic-actions.md › Trade, services, contracts and factions; design/management.md › Base & meta progression; › Gear, loot & return › Design risk; design/design.md › Factions & campaign › Player role, › Coups
 
 ## Map
 
@@ -153,7 +155,8 @@ occupant that keeps unbroken control for `capitalHoldDays` becomes the holder, a
 longer contested. The holder's effects: it holds the leader seat (its leader stays in the capital,
 STR-045) and receives `capitalBonusIncomeUsd` per day into its funds at the daily check (STR-004, STR-092;
 for the player: a management request to MGT). A rival PMC (or any other faction) that becomes holder just
-holds it, and the campaign goes on (GEN-012). If the player becomes holder this way, that alone is not a
+holds it, and the campaign goes on; only the SSV, the VDK, the player and a rogue PMC can go on to meet the
+victory rule (GEN-012), and a rogue PMC that meets it ends the campaign as a loss for the player. If the player becomes holder this way, that alone is not a
 coup: the `playerCoup` ending needs the coup requirements met and the final operation won (GEN-013,
 GEN-014), then the holding phase (GEN-015). A PMC rushing a capital that has lost its holder is the rogue
 PMC event (GEN-017, STR-066).
@@ -203,14 +206,15 @@ crimes via MGT, off-screen fights) and is clamped to range.
 
 The `services` list of each type (`trade`, `hire`, `contracts`, `hospital`, `repairs`, `refuel`,
 `vehicleTrade`, `fobPurchase`) decides which location-bound actions (STR-039…STR-043) are allowed there. A
-`ruined` POI offers no services and no output.
+`ruined` POI offers no services and no output. POI types flagged `military` (design: arms plants and
+governmental institutions) fire on hostile helicopters (STR-034).
 
 **Krug markets** are not a POI type: a Krug market is the `krugMarket` flag on a town or city tile
 (STR-005), allowed only on tiles whose POI type has `krugMarketAllowed`. A flagged tile adds the Krug
 market's services (Krug trade and barter, local recruits, Krug work and hand-ins, vehicle sales through the
 Krug; STR-039, STR-040, MGT) to those of its POI, and is a no-fire zone (STR-012). Placement: STR-089.
-**Values.** `services`, `krugMarketAllowed` per POI type → data/poi.json; per-type `income` and
-`recruitOutput` → STR-014.
+**Values.** `services`, `krugMarketAllowed`, `military` (design: arms plant and governmental institution
+records true) per POI type → data/poi.json; per-type `income`, `supplyOutput` and `recruitOutput` → STR-014.
 **Source.** design/strategic-layer.md › Map (draft) › Points of interest; › Map (draft) (Krug markets)
 
 ### [STR-011] Mineral plant modifier
@@ -240,26 +244,27 @@ or the first faction to find it.
 **Rule.** A faction controls a POI when it controls its region. Control changes by: winning a tactical
 engagement or off-screen fight for it, defection (STR-061, to the pressing faction or `none`), faction
 dissolution (STR-049 → `none`); for the capital, holding it is STR-007. Holding a POI yields its
-controller income (USD per day, into its funds, STR-092), supplies and recruits (soldiers per day, the
-pool `recruit` draws from, STR-096); losing POIs weakens the faction's squads over time (supply deficit
-reduces squad supplies and reinforcement rate).
+controller income (USD per day, into its funds, STR-092), supplies (supply points per day; one supply
+point keeps one soldier supplied for one day) and recruits (soldiers per day, the pool `recruit` draws
+from, STR-096); losing POIs weakens the faction's squads over time (supply deficit reduces squad supplies
+and reinforcement rate). A faction's daily supply is the sum of `supplyOutput` over the POIs it holds; it
+is short of supply when that sum is below the number of its soldiers.
 
-| POI type (design draft) | `income` USD/day | `recruitOutput`/day |
-| --- | --- | --- |
-| Governmental institution | 500 | — |
-| Plant — mechanical | 1000 | — |
-| Plant — chemical | 1000 | — |
-| Plant — oil | 3000 | — |
-| Plant — arms | 1500 | — |
-| Plant — minerals | 1500 | — |
-| Town (village: town variant) | 300 | 1 |
-| Small city | 1000 | 2 |
-| Large city | 2000 | 3 |
-| Gas station | 300 | — |
+| POI type (design draft) | `income` USD/day | `supplyOutput`/day | `recruitOutput`/day |
+| --- | --- | --- | --- |
+| Governmental institution | 500 | 5 | — |
+| Plant — mechanical | 1000 | 10 | — |
+| Plant — chemical | 1000 | 10 | — |
+| Plant — oil | 3000 | 20 | — |
+| Plant — arms | 1500 | 20 | — |
+| Plant — minerals | 1500 | 5 | — |
+| Town (village: town variant) | 300 | 5 | 1 |
+| Small city | 1000 | 10 | 2 |
+| Large city | 2000 | 20 | 3 |
+| Gas station | 300 | 5 | — |
 
-**Values.** per-type `income`, `recruitOutput` — the table above (design draft); `supplyOutput` — not set
-(design: Open) → data/poi.json; `supplyDeficitEffect` (object) — not set (design: Open) →
-data/strategic-rules.json.
+**Values.** per-type `income`, `supplyOutput`, `recruitOutput` — the table above (design draft) →
+data/poi.json; `supplyDeficitEffect` (object) — not set (design: Open) → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-layer.md › Squads and simulation (draft) (Control); › Map (draft) › Points of interest
 
@@ -327,8 +332,9 @@ actions of one hour resolve together (STR-003, step 2).
 ### [STR-021] Faction controller hand-off
 **Rule.** Strategic decides when a faction acts; `strategic-ai` decides what. For every hour that passes
 (each tick, STR-003), every non-player faction — `ssv`, `vdk`, `varyag`, `aegis`, `krug`, every
-resistance group and a rogue PMC (SAI-002) — receives a `strategic_perception_view` (its fog-of-war view,
-STR-008, including its own funds, STR-092) and returns `strategic_commands`. Commands and how
+resistance group and a rogue PMC (SAI-002); never the civilian population or the off-map influences —
+receives a `strategic_perception_view` (its fog-of-war view,
+STR-008, including its own funds and, under `fundsMode = scoreTerm`, its overdraft, STR-092) and returns `strategic_commands`. Commands and how
 Strategic resolves each:
 
 | Command | Resolves as |
@@ -421,11 +427,13 @@ changes — not set (design: Open) → data/strategic-rules.json.
 `krug`, and any resistance group or rogue PMC that becomes a faction). The player's PMC money is not here:
 it is the MGT `economy` slice (MGT-070). Funds change only by these rules:
 - **Income:** from the regions and plants (STR-010) the faction holds, using the POI income of STR-014;
-  the capital holder's bonus income (STR-007); money the player pays it (a repaid advance, MGT-048;
-  compensation or a bounty pay-off, STR-043; a Krug pass or escort, STR-025, STR-094), credited to the
-  receiving faction's funds when MGT books the payment.
+  the capital holder's bonus income (STR-007); money the player pays it (compensation or a bounty pay-off,
+  STR-043; a Krug pass or escort, STR-025, STR-094), credited to the receiving faction's funds when MGT
+  books the payment. The player never repays an advance: a contract the player fails costs only
+  reputation (MGT-048).
 - **Costs:** upkeep of its squads, its soldiers' salaries, raising squads (STR-096), and the contracts it
-  offers (paid out through STR-093).
+  offers (paid out through STR-093). AI factions keep paying salaries; the fee per op paid at launch
+  (STR-028) is the player's PMC only (MGT).
 - **Start funds:** the factions present at campaign start get `startFunds` (economy-rules). A resistance
   group (STR-067) or a rogue PMC (STR-066) gets `newFactionStartFundsUsd` when it becomes a faction; a
   rogue PMC also keeps the funds it held, including the pay of its last contract.
@@ -438,7 +446,11 @@ Funds never go below zero. `fundsMode` decides how they limit a faction:
   offer's full contract pay (all missions and the advance), and a `recruit` (raising a squad, STR-096) it
   cannot pay for (STR-021).
 - `scoreTerm` (switchable option for testing): such commands are not rejected for funds; funds only weigh
-  in the AI's scoring (SAI-014).
+  in the AI's scoring (SAI-014). A spend the funds cannot cover sets them to 0 and adds the rest to the
+  faction's hidden `overdraft` (world slice); income first pays the overdraft down before funds rise
+  again. The faction's view shows funds 0 and its own `overdraft`, which lowers its AI scores (SAI-014);
+  the overdraft is shown to no other faction and not in the player's UI. Under `hardLimit` the overdraft
+  stays 0.
 A contract payment due that the employer cannot cover fails the contract at once (STR-093).
 Strategic computes all plant and POI income (for AI factions and for plants the player's PMC holds,
 STR-015) with the shared data/economy-rules.json formulas and the per-type values of data/poi.json; for
@@ -460,7 +472,9 @@ same fields and appends a news-feed line (STR-054); this happens wherever the sq
 an FOB. MGT credits the player's `economy` only on that request. If the employer's funds cannot cover a
 payment due, nothing is deducted and the contract fails at once: Strategic sends `contractEnded` (reason
 `employerDefault`); the player keeps the advance already paid, owes no debt and loses no reputation
-(MGT-048). An offer whose advance the employer cannot pay from its current funds cannot be signed:
+(MGT-048). The player never repays an advance: a contract the player fails or breaks costs only
+reputation (MGT), and no money flows back to the employer. An offer whose advance the employer cannot pay
+from its current funds cannot be signed:
 Strategic rejects the player's `acceptContract` (and an AI `acceptContract`) for it. A contract between two
 AI factions (SAI-015) is settled inside the `world` slice: Strategic moves the pay from the employer's
 funds to the contractor's, under the same rule. When a rival PMC takes an offer (SAI-015) that the player
@@ -477,23 +491,31 @@ has not signed, the offer leaves the player's board: Strategic sends `contractEn
      has not left yet (no move since it formed or was loaded there). An AI faction sends
      `hireEscort { escortFor, route }` (STR-021); the player hires through the Krug market (MGT, forwarded
      to Strategic). `route` is the convoy's planned tile path to its destination. Hiring takes
-     `actionHours.krugEscort`.
+     `actionHours.krugEscort`. A convoy has at most one Krug escort squad: a request for a convoy that
+     already has an escort or a pending request is rejected.
+     **Resentment.** When the requester is a foreign PMC (the player's PMC, Varyag, Aegis or a rogue PMC;
+     GEN-010), Strategic first rolls `resentment.escortRefusalChance` (seeded, Krug record of
+     data/factions.json): on success the request is refused at once (a Krug squad resents foreign
+     soldiers), never reaches the Krug's view, and gets a news-feed line for the player.
   2. **Price** = `(krugEscortPrice.baseUsd + krugEscortPrice.perTileUsd × route tiles)`,
      × `krugEscortPrice.dangerFactor` if the route crosses a front tile (STR-059) or a tile controlled by a
      faction hostile to the requester (relation ≤ `hostileAt`; for the player: standing Hostile, MGT-054).
   3. **Answer.** The request is pending until the Krug's controller answers it: it appears in the Krug's
      next perception view (`escortRequests`), and the Krug returns `answerEscort { requestId, accept,
      squad }` (SAI-017); the Krug may refuse. A request not answered in that hour lapses (refused). An
-     accepted answer resolves before the hour's moves, so a player convoy whose escort was hired at a
-     planning phase can leave in the same tick; an AI convoy waits on the tile until the answer.
+     accepted answer resolves before the hour's moves. An AI convoy waits on the tile until the answer.
   4. **On accept:** the price moves from the requester's funds to the Krug's (STR-092; for the player
-     debited through MGT, `payKrugEscort`), and the named Krug squad is attached to the convoy: it moves
-     with the convoy and joins its encounters on the convoy's side. Under `hardLimit` an AI request it
-     cannot pay for is rejected at step 1. The escort ends when the convoy arrives or is destroyed or
-     captured.
+     debited through MGT, `payKrugEscort`), and the named Krug squad (any Krug squad, not only one on the
+     convoy's tile) is assigned to the convoy. If it is not on the convoy's tile, it first travels there by
+     the normal move rules (STR-031, STR-032) and the convoy waits on its tile until the escort arrives,
+     which may delay the departure; if it is already there, the convoy can leave in the same tick. Once
+     joined, it moves with the convoy and joins its encounters on the convoy's side. Under `hardLimit` an AI
+     request it cannot pay for is rejected at step 1. The escort ends when the convoy arrives or is
+     destroyed or captured, or when the escort squad is destroyed on its way to the convoy.
 **Values.** `krugEscortPrice.baseUsd` 200, `krugEscortPrice.perTileUsd` 50, `krugEscortPrice.dangerFactor` 1.5
-(design draft); `actionHours.krugEscort` — 0 (design draft) → data/strategic-rules.json.
-**Source.** design/management.md › Contracts and missions › Where contracts come from; design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft)); design/strategic-actions.md › Trade, services, contracts and factions; design/ai.md › Strategic AI (Faction AI tiers)
+(design draft); `actionHours.krugEscort` — 0 (design draft) → data/strategic-rules.json;
+`resentment.escortRefusalChance` — 0.20 (design draft) → data/factions.json (Krug record, GEN-010).
+**Source.** design/management.md › Contracts and missions › Where contracts come from; design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft)); design/strategic-actions.md › Trade, services, contracts and factions; design/ai.md › Strategic AI (Faction AI tiers); design/design.md › Factions & campaign › The Krug
 
 ### [STR-096] Raising a squad
 **Rule.** An AI faction raises a new squad with the command `recruit { target }` (STR-021): `target` is a
@@ -511,6 +533,23 @@ data) → data/factions.json; `raiseSquad.costPerSoldierUsd` 2000, `raiseSquad.r
 → data/strategic-rules.json.
 **Status.** open
 **Source.** design/strategic-layer.md › Squads and simulation (draft) (Control; Faction funds (draft)); › Overview (Escalation)
+
+### [STR-098] Low-risk contract guarantee
+**Rule.** Strategic makes sure that some faction always has at least one low-risk contract posted, so a
+PMC that lost its gear can rebuild (MGT-038). A low-risk contract is an offer with one mission of
+`lowRiskContract.missionId` (design: Retrieve and deliver items, `retrieve_deliver`), `targetFaction`
+null, whose mission location lies at least `lowRiskContract.minFrontDistance` tiles from every front tile
+(STR-059). At each daily check (STR-004), if no such offer is open on the player's boards and none is
+signed by the player, Strategic posts one through the normal path (STR-044, `contractOffer`), by rule
+and not through an AI command: the employer is a faction that posts contracts (`ssv`, `vdk`, `krug`) whose
+funds cover the full pay (STR-092), picked with the seeded RNG among those that qualify; `sourceGoal`
+`supplyRun`; no reputation gate. Pay inputs follow MGT-046. If no faction can pay, none is posted that day
+and a log line records it. (Employer choice and `sourceGoal` are spec choices; the design says only "some
+faction", Open questions 52.)
+**Values.** `lowRiskContract` (`missionId`, `targetFaction`, `minFrontDistance`) → see MGT-038
+(data/management-rules.json; `minFrontDistance` not set).
+**Status.** open (front distance)
+**Source.** design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft)); design/management.md › Gear, loot & return › Design risk
 
 ## Operations and strategic actions
 
@@ -531,9 +570,12 @@ not return are reported to MGT as MIA, captured or dead.
 ### [STR-028] Launch an op
 **Rule.** At an FOB, the player commits a squad, its loadout and at most one vehicle (none: the squad goes
 on foot, STR-017); they are locked to the op until it ends. Launching takes `actionHours.launch`: with 0
-the squad's first move starts at once in the same planning phase.
-**Values.** `actionHours.launch` — 0 (design draft) → data/strategic-rules.json.
-**Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft)
+the squad's first move starts at once in the same planning phase. Each soldier's fee per op (and a hired
+pilot's, STR-034) is paid at launch: Strategic sends a `launchOp` management request (`squad`,
+`soldiers`, optional `hiredPilot`, optional `insuredItems`; MGT-005); if MGT returns `ok: false` the PMC
+cannot pay and the op does not launch (no fee, no launch). Amounts and booking: MGT.
+**Values.** `actionHours.launch` — 0 (design draft) → data/strategic-rules.json; fees per op → MGT.
+**Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft); design/management.md › Soldiers & progression
 
 ### [STR-029] Return to an FOB
 **Rule.** Arrival of an op squad in a PMC FOB region ends the op (STR-027); no extra time. Squad
@@ -565,11 +607,12 @@ terrains flagged `offRoadRated` (design: steppe and woods): `hours = max(1, move
 offroadReduction[rating][terrain])`. `offRoad = ignoresTerrain` is the helicopter rating and moves by
 STR-034. Fuel: each tile moved costs `fuelPerRegion` fuel units, a flat amount whatever the terrain or
 road; a full tank holds `fuelRangeRegions` units (DAT-024). One fuel unit is one 20-litre fuel can (18 kg,
-the fuel-can item; DAT). A move is rejected if fuel <
-`fuelPerRegion`.
+the fuel-can item; DAT). A move is rejected if fuel < `fuelPerRegion`. The fuel is spent when the squad
+arrives on the destination tile; a move cancelled or interrupted before its last hour spends none
+(STR-002).
 **Values.** `offroadReduction[rating][terrain]` — not set (design: Open); `fuelPerRegion` — 1 (design draft) → data/strategic-rules.json.
 **Status.** open
-**Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft)
+**Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft); design/strategic-layer.md › Map (draft) › Terrain types
 
 ### [STR-033] Vehicle profile (removed)
 **Rule.** Removed (decision 2026-11-24): vehicles have no `profile` field any more; the field is gone from
@@ -579,18 +622,25 @@ data/vehicles.json and no rule reads it.
 ### [STR-034] Fly one region by helicopter
 **Rule.** A helicopter moves to any adjacent region in `heliMoveHours`, any terrain incl. water and
 mountains, costing `fuelPerRegion` fuel. Requires a pilot seat filled by a soldier with Technical ≥
-`pilotTechnicalMin` or a hired pilot (MGT); the pilot counts against seats. Both values are single values
+`pilotTechnicalMin` or a hired pilot (MGT; paid a fee per op at launch, STR-028); the pilot counts against
+seats. Both values are single values
 for every helicopter, owned here (DAT-028 points to them; vehicle records carry no copy). Every faction with
-a squad or POI within the helicopter's noise range notices it (STR-008). **Fire on helicopters:** for each
-hostile military POI on its path (the tile it enters; hostile = its controller's relation toward the
-helicopter's faction ≤ `hostileAt`, for the player: standing Hostile, MGT-054), roll once (seeded) with
-exclusive outcomes: downed with chance `heliFire.downChance`, damaged with chance `heliFire.damageChance`,
-otherwise unharmed. A downed helicopter
-becomes a crash site and its crew starts an emergency op on foot (STR-027). Which POI types count as
-military and what "damaged" does are open.
+a squad or POI within the helicopter's noise range notices it (STR-008). **Fire on helicopters:** military
+points of interest are the POIs of a type flagged `military` (design: arms plants and governmental
+institutions, STR-010) and any tile with a hostile squad on it. For each hostile military point of
+interest on its path (the tile it enters; hostile = the POI's controller, or the squad's faction, has a
+relation toward the helicopter's faction ≤ `hostileAt`, for the player: standing Hostile, MGT-054; a tile
+with both a hostile military POI and a hostile squad rolls once), roll once (seeded) with exclusive
+outcomes: downed with chance `heliFire.downChance`, damaged with chance `heliFire.damageChance`, otherwise
+unharmed. A downed helicopter becomes a crash site and its crew starts an emergency op on foot (STR-027). A
+damaged helicopter (vehicle state `damaged`) completes the move, must then land (STR-035) and cannot fly
+again until it is repaired (STR-041); while damaged its only move is the landing. Where a damaged
+helicopter that cannot land on the tile (water) comes down, and how it is repaired away from a mechanical
+plant, are open (Open questions 49).
 **Values.** `heliMoveHours` — design 1; `pilotTechnicalMin` — design 50; `heliFire.damageChance` 0.10,
-`heliFire.downChance` 0.03 (design draft, data-definitions) → data/strategic-rules.json.
-**Status.** open
+`heliFire.downChance` 0.03 per point of interest (design draft) → data/strategic-rules.json; `military` per
+POI type → data/poi.json.
+**Status.** open (damaged landing on water, field repair)
 **Source.** design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters
 
 ### [STR-035] Land a helicopter
@@ -624,7 +674,8 @@ it at a planning phase (STR-003): the hours already spent count and the healing 
 ### [STR-039] Zero-time trade actions
 **Rule.** Take 0 hours and are forwarded to MGT, which resolves price, stock and reputation:
 - Trade (buy, sell, barter): faction traders in cities, Krug markets.
-- Hire soldiers: at FOBs; local recruits in towns and Krug markets.
+- Hire soldiers: at FOBs; local recruits in towns and Krug markets. Hire price by tier; a fee per op is
+  paid at each launch (STR-028), no salary (MGT).
 - Buy or sell a vehicle: large cities, mechanical plants; some vehicles only at high standing or via the
   Krug (DAT/MGT).
 Strategic checks only that the squad (or FOB) is at a location whose POI type offers that service.
@@ -633,7 +684,8 @@ Strategic checks only that the squad (or FOB) is at a location whose POI type of
 ### [STR-040] Contract actions
 **Rule.** Location-bound, forwarded to MGT:
 - Accept a contract: at an FOB, a city, or a Krug market (Krug work). Not allowed when the employer cannot
-  pay the advance from its funds (STR-093).
+  pay the advance from its funds (STR-093). The advance is paid on signing and kept by the player: a failed
+  contract costs only reputation, never a repayment (MGT-048).
 - Hand over items or a VIP: at the contract's destination region.
 - Hand in faction or operation items: at a POI held by that faction, or at a Krug market.
 Strategic supplies location and time; MGT resolves the contract, money and reputation.
@@ -650,23 +702,31 @@ data/strategic-rules.json.
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions; design/data-definitions.md › Vehicles (draft) › Helicopters
 
 ### [STR-042] Acquire an FOB
-**Rule.** Buy a new FOB at a small or large city POI (price via MGT), or take over an FOB site by force
-through an op (control of the site region passes to the PMC on a won engagement). On success a new FOB
-entity is created (STR-016); a bought FOB can be used only `actionHours.buyFob` hours after the purchase
-(it is not a source of ops, rest or visibility before then). Taking over a site by force takes as long as
-the op. The price is not set.
-**Values.** `actionHours.buyFob` — 24 (design draft) → data/strategic-rules.json; FOB price — MGT (not set).
-**Status.** open
+**Rule.** Buy a new FOB at a small or large city POI (price via MGT, by city size), or take over an FOB
+site by force through an op (control of the site region passes to the PMC on a won engagement). On success
+a new FOB entity is created (STR-016); a bought FOB can be used only `actionHours.buyFob` hours after the
+purchase (it is not a source of ops, rest or visibility before then). Taking over a site by force takes as
+long as the op. FOBs have no upkeep: they cost only their purchase price.
+**Values.** `actionHours.buyFob` — 24 (design draft) → data/strategic-rules.json; FOB price — $25,000 in a
+small city, $50,000 in a large city (design draft) → see MGT-066 (`fobPrices`, data/management-rules.json).
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions; design/management.md › Base & meta progression
 
 ### [STR-043] Payments to factions
 **Rule.** Pay compensation (to the faction hurt in an Operation dispute, STR-058) and pay off a bounty
 (to the faction that set it, STR-064). Money and reputation through MGT; the money is credited to the
 receiving faction's funds (STR-092). Ends the related event's effect toward the player. Each takes
-`actionHours.payFaction`. Where it is paid and the price are not set.
-**Values.** `actionHours.payFaction` — 0 (design draft) → data/strategic-rules.json; `params.compensationPrice`,
-`params.bountyPayoffPrice` — not set (design: Open) → data/events.json (records of STR-058 and STR-064).
-**Status.** open
+`actionHours.payFaction`. Prices:
+- Compensation = `max(params.compensationPrice.minUsd, params.compensationPrice.perSoldierUsd × soldiers
+  of the hurt faction killed)` in the fight that triggered the dispute.
+- Bounty pay-off = `params.bountyPayoffPrice.baseUsd`, or `params.bountyPayoffPrice.highUsd` while the
+  player's reputation with the faction is ≤ `bountyDoubleAt` (STR-064).
+Where it is paid (design: "the hurt faction", "the faction that set it", no place named) is not set (Open
+questions 50).
+**Values.** `actionHours.payFaction` — 0 (design draft) → data/strategic-rules.json;
+`params.compensationPrice` — `perSoldierUsd` 1000, `minUsd` 2000 (design draft) → data/events.json (STR-058
+record); `params.bountyPayoffPrice` — `baseUsd` 10000, `highUsd` 20000 (design draft) → data/events.json
+(STR-064 record).
+**Status.** open (place of payment)
 **Source.** design/strategic-actions.md › Trade, services, contracts and factions
 
 ### [STR-044] Contract postings from goals
@@ -785,41 +845,49 @@ entry (STR-081) is appended to the intel log as `{ time, type, text, eventId? }`
 **Rule.** Trigger: a high-value POI (oil or arms plant, or a Krug hub: a tile flagged `krugMarket`,
 STR-010) is weakly held — at most `params.weakGuardSquads` squads of its controller on its tile — and both
 Varyag and Aegis have no active attack/hunt goals. Effect: both attack it together with their strongest squads.
-Ends when the assault ends. Afterwards Varyag↔Aegis relation drops by `jointAssaultRelationDrop`.
+Ends when the assault ends. Afterwards the Varyag↔Aegis relation (both directions) changes by
+`params.jointAssaultRelationDrop` (clamped, STR-051).
 Hooks: contracts to defend or to join; Varyag and Aegis invite the player only if Friendly or better
 with both.
-**Values.** `params.weakGuardSquads` 2 (design draft); `jointAssaultRelationDrop` ("sharply") — not set (design: Open) → data/events.json.
-**Status.** open
+**Values.** `params.weakGuardSquads` 2, `params.jointAssaultRelationDrop` −30 (design draft) → data/events.json.
 **Source.** design/world-events.md › Events; › Reputation in the event system
 
 ### [STR-056] Event: Weapon shipment
 **Rule.** Trigger: a faction lost tiles on at least `params.lossDaysMin` of the last
 `params.lossWindowDays` days (from the faction history, STR-068). Effect: a convoy
-from its influence travels on the map; on arrival, for `shipmentDays` that faction's new squads have a
-higher elite share and better gear. Hooks: intercepting the convoy gives loot and a large reputation
-loss with that faction; escort contracts only to Friendly or better.
-**Values.** `params.lossDaysMin` 3, `params.lossWindowDays` 5 (design draft); `shipmentDays` — design 10; elite share and gear bonus — not set (design: Open) → data/events.json.
-**Status.** open
+from its influence travels on the map; on arrival, for `shipmentDays` that faction's new squads (STR-096
+and squads spawned by rule) have an elite share raised by `params.eliteShareBonus` (percentage points of
+the squad's rank mix, as a share) and a gear tier raised by `params.gearTierBonus`. Hooks: intercepting the
+convoy gives loot and a large reputation loss with that faction; escort contracts only to Friendly or
+better.
+**Values.** `params.lossDaysMin` 3, `params.lossWindowDays` 5 (design draft); `shipmentDays` — design 10;
+`params.eliteShareBonus` 0.20 (+20 percentage points), `params.gearTierBonus` 1 (design draft) →
+data/events.json.
 **Source.** design/world-events.md › Events; › Reputation in the event system
 
 ### [STR-057] Event: Rising hostility
 **Rule.** Trigger: faction A lost at least `params.lostFightsMin` fights against faction B in the last
 `params.windowDays` days.
-Effect: relation A→B drops; A shifts squads to attack B and hunts anyone working for B. Ends when the
-relation recovers above `hostilityRecoverAt`. The player can be the target when A's reputation with the
-player is ≤ −30 and falling; A at Unfriendly or worse may set hunt goals against the player.
-**Values.** `params.lostFightsMin` 3, `params.windowDays` 7 (design draft); relation drop, `hostilityRecoverAt` — not set (design: Open); player target threshold — design −30 → data/events.json.
-**Status.** open
+Effect: relation A→B changes by `params.relationDrop` (the value before the drop is kept with the event
+instance); A shifts squads to attack B and hunts anyone working for B. At each daily check without a new
+fight A lost against B that day, A→B rises by `params.recoveryPerDay`; the event ends when A→B is back at
+its value before the drop (`hostilityRecoverAt` removed). The player can be the target when A's
+reputation with the player is ≤ −30 and falling; A at Unfriendly or worse may set hunt goals against the
+player.
+**Values.** `params.lostFightsMin` 3, `params.windowDays` 7, `params.relationDrop` −20,
+`params.recoveryPerDay` 2 (design draft); player target threshold — design −30 → data/events.json.
 **Source.** design/world-events.md › Events; › Reputation in the event system
 
 ### [STR-058] Event: Operation dispute
 **Rule.** Trigger: a fight (player op or any) kills soldiers of an uninvolved faction, or hits a Krug
 convoy in crossfire. Effect: the hurt faction blames another faction or the player — the candidate with
 the lowest standing toward the player is most likely to blame the PMC (weighted roll) — and relations
-between hurt and blamed collapse; the Krug may suspend trade with both. Duration
-`disputeDays` (7–14). Hooks: pay compensation (STR-043), hand over evidence documents to redirect the
-blame, or exploit. A dispute can attribute an otherwise unwitnessed act (MGT attribution).
-**Values.** `disputeDays` — design 7–14; relation collapse amount, Krug suspension chance — not set (design: Open) → data/events.json.
+between hurt and blamed collapse: both directions change by `params.relationDrop` (clamped, STR-051);
+the Krug may suspend trade with both.
+Duration `disputeDays` (7–14). Hooks: pay compensation (STR-043), hand over evidence documents to redirect
+the blame, or exploit. A dispute can attribute an otherwise unwitnessed act (MGT attribution).
+**Values.** `disputeDays` — design 7–14; `params.relationDrop` −40 (design draft); compensation price →
+STR-043; Krug suspension chance — not set (design: Open) → data/events.json.
 **Status.** open
 **Source.** design/world-events.md › Events; › Reputation in the event system
 
@@ -846,45 +914,54 @@ breaks it (fights there) loses heavy reputation with both (MGT).
 
 ### [STR-061] Event: Defection
 **Rule.** Trigger: a garrison of a losing faction has supply below `params.defectionSupply` (share of its
-full supply). Effect (instant), one of two outcomes (seeded roll, join with `params.defectionJoinChance`):
+full supply). A faction is **losing** while it lost tiles on at least `losing.lossDaysMin` of the last
+`losing.windowDays` days (faction history, STR-068); the rogue PMC chance uses the same test (GEN-017). Effect (instant), one of two outcomes (seeded roll, join with `params.defectionJoinChance`):
 - **Joins the faction pressing it:** the enemy faction that attacked it last, or else the nearest enemy
   faction; the garrison and its POI tile pass to that faction.
 - **Disbands:** the garrison is removed and its POI tile becomes uncontrolled (`controller = none`).
 Handover contracts only to Friendly or better with the faction involved.
-**Values.** `params.defectionSupply` 0.25, `params.defectionJoinChance` 0.6 (design draft) → data/events.json; what makes a faction "losing" — not set (design: Open).
-**Status.** open
+**Values.** `params.defectionSupply` 0.25, `params.defectionJoinChance` 0.6 (design draft) → data/events.json;
+`losing.lossDaysMin` 3, `losing.windowDays` 5 (design draft) → data/strategic-rules.json (this section owns
+them).
 **Source.** design/world-events.md › Events; › Reputation in the event system; design/strategic-layer.md › World events (draft) (How events work: Fronts, areas and defection)
 
 ### [STR-062] Event: Fuel shortage
 **Rule.** Trigger: an oil plant is ruined or cut off (no road path to its controller's other
-regions). Effect: fuel prices ×2 (sent to MGT as a price modifier) and faction squads move less
-(`shortageMoveFactor`). Ends when supply is restored.
-**Values.** `fuelPriceFactor` — design 2; `shortageMoveFactor` — not set (design: Open) → data/events.json.
-**Status.** open
+regions). Effect: fuel prices ×2 (sent to MGT as a price modifier) and faction squads move less: each move
+takes `ceil(hours × params.shortageMoveFactor)` hours. Which factions' squads are slowed is not stated
+(Open questions 51). Ends when supply is restored.
+**Values.** `fuelPriceFactor` — design 2; `params.shortageMoveFactor` 1.5 (design draft; hours rounded up)
+→ data/events.json.
+**Status.** open (factions affected)
 **Source.** design/world-events.md › Events
 
 ### [STR-063] Event: Chemical leak
 **Rule.** Trigger: a fight takes place at a chemical plant. Effect: the plant region and its adjacent
-regions get the `hazard` flag; medical prices rise (MGT modifier). Duration `leakDays`. While flagged,
-squads on a `hazard` tile lose HP each strategic hour as on a contaminated tile (STR-097; design: the
-chemical plant's "contaminated tile" risk).
-**Values.** `leakDays` — design 5; HP loss → STR-097; `medicalPriceFactor` — not set (design: Open) → data/events.json.
-**Status.** open
+regions get the `hazard` flag; medical prices × `params.medicalPriceFactor` (MGT modifier). Duration
+`leakDays`. While the leak lasts, squads on a `hazard` tile lose HP each strategic hour as on a
+contaminated tile (STR-097). Unlike contaminated loot (STR-080), loot from a leak tile can still be sold.
+**Values.** `leakDays` — design 5; HP loss → STR-097; `params.medicalPriceFactor` 1.5 (design draft) →
+data/events.json.
 **Source.** design/world-events.md › Events; design/strategic-layer.md › Map (draft) › Points of interest
 
 ### [STR-064] Event: Bounty on the PMC
 **Rule.** Trigger: player reputation with a faction ≤ −50; chance ×2 at ≤ −75. Effect: that faction
-adds hunt squads targeting the player; rival PMCs join. Ends when reputation recovers above −50 or the
-bounty is paid off (STR-043).
-**Values.** `bountyAt` −50, `bountyDoubleAt` −75, extra hunt squads — not set (design: Open) → data/events.json.
-**Status.** open
+sends `params.huntSquads` extra hunt squads after the player (`params.huntSquadsHigh` while the
+reputation is ≤ `bountyDoubleAt`): new squads with the goal `hunt` and the player as target, spawned by
+rule (STR-096), not through `recruit`; each rival PMC (Varyag, Aegis) joins with
+`params.rivalHuntSquads` hunt squad(s). Ends when reputation recovers above −50 or the bounty is paid off
+(STR-043).
+**Values.** `bountyAt` −50, `bountyDoubleAt` −75; `params.huntSquads` 2, `params.huntSquadsHigh` 3,
+`params.rivalHuntSquads` 1 (design draft) → data/events.json.
 **Source.** design/world-events.md › Events; › Reputation in the event system
 
 ### [STR-065] Event: Refugee movement
-**Rule.** Trigger: a city (small, large or capital) changes controller. Effect: loyalty shifts in
-neighbouring regions and cheap local recruits appear there (sent to MGT). Duration `refugeeDays`.
-**Values.** `refugeeDays` — design 10; loyalty shift, recruit discount — not set (design: Open) → data/events.json.
-**Status.** open
+**Rule.** Trigger: a city (small, large or capital) changes controller. Effect: in each neighbouring
+region with a settlement, loyalty toward the new controller changes by `params.loyaltyShift` (once, at the
+start, clamped); for `refugeeDays`, each neighbouring town or city gets `params.extraRecruitsPerDay` extra
+local recruit(s) per day whose fee is `params.recruitFeeDiscount` lower (sent to MGT).
+**Values.** `refugeeDays` — design 10; `params.loyaltyShift` −10, `params.extraRecruitsPerDay` 1,
+`params.recruitFeeDiscount` 0.30 (design draft) → data/events.json.
 **Source.** design/world-events.md › Events
 
 ### [STR-066] Event: Rogue PMC
@@ -896,7 +973,9 @@ last contract's pay) and gets `newFactionStartFundsUsd` on top (STR-092). From t
 its own rogue controller and doctrine (`rogueDoctrine` of its faction record, SAI-002, SAI-010), whose
 ultimate goal is to seize and hold the capital or plants (SAI-008); the event's effect is that it rushes
 the capital. A PMC rushing a capital that has lost its holder (STR-007) is this event. A rogue PMC with
-Trusted player reputation approaches the player as an ally.
+Trusted player reputation approaches the player as an ally. A rogue PMC is the only faction besides the
+SSV, the VDK and the player that can meet the victory rule; if it does, the campaign ends as
+`rogueVictory`, a loss for the player (GEN-012).
 **Values.** `newFactionStartFundsUsd` → STR-092; `rogueDoctrine` → data/factions.json.
 **Source.** design/world-events.md › Events; › Reputation in the event system; design/design.md › Factions & campaign › Coups; design/strategic-layer.md › Squads and simulation (draft) (Faction funds (draft)); design/ai.md › Strategic AI (Faction AI tiers)
 
@@ -921,9 +1000,11 @@ relations (STR-051) but does not count toward the isolation crisis sign (STR-069
 **Rule.** For each faction the world state keeps: regions held at campaign start; oil and arms plants
 held at campaign start; a per-day history of regions held and soldiers alive for the last 7 days; and
 every fight it took part in during the last 7 days, with time, tile, opponent, outcome, soldiers lost and
-whether it is attributed to the player. This feeds STR-069 and the event triggers that count losses
-(STR-056, STR-057, STR-060).
-**Values.** `historyDays` — design 7 → data/strategic-rules.json.
+whether it is attributed to the player; and, for the rival PMCs, every contract payment owed to it that
+went unpaid (employer default, STR-093) during the last `rogueChance.unpaidWindowDays` days. This feeds
+STR-069, the "losing" test (STR-061), the rogue PMC chance (GEN-017) and the event triggers that count
+losses (STR-056, STR-057, STR-060).
+**Values.** `historyDays` — design 7 → data/strategic-rules.json; `rogueChance.unpaidWindowDays` → GEN-017.
 **Source.** design/world-events.md › Desperate measures (Crisis signs)
 
 ### [STR-069] Crisis signs
@@ -1047,12 +1128,13 @@ loyalty collapses; Refugee movement fires for neighbours. Escort contracts only 
 
 ### [STR-097] Strategic HP loss on contaminated tiles
 **Rule.** In each hour tick (STR-003, step 2), every soldier of every squad on a tile flagged
-`contaminated` (STR-080) or `hazard` (STR-063) loses `contaminationHpPerHour` HP; a squad in transit
+`contaminated` (STR-080) or `hazard` (STR-063, while the chemical leak lasts) loses
+`contaminationHpPerHour` HP; a squad in transit
 counts as on its origin tile (STR-020). For AI squads the loss is applied in the `world` slice; for player
 squads Strategic sends it to MGT, which owns soldier HP (roster), as a management request naming the squad,
 the soldiers and the HP lost. Healing in the same tick (STR-037) is computed by MGT on top.
 **Values.** `contaminationHpPerHour` — 2 HP per soldier per hour (design draft) → data/strategic-rules.json.
-**Source.** design/world-events.md › Nuclear strike (rare); design/strategic-layer.md › Map (draft) › Points of interest (Industrial plant — chemical); › World events (draft) (Desperate measures (draft))
+**Source.** design/world-events.md › Nuclear strike (rare); › Events (Chemical leak); design/strategic-layer.md › Map (draft) › Points of interest (Industrial plant — chemical); › World events (draft) (Desperate measures (draft))
 
 ### [STR-081] Flavour events
 **Rule.** Flavour events have no gameplay effect. They are entries shown only in the news feed
@@ -1175,8 +1257,10 @@ road, each with a non-water landable neighbour.
    −100…100; the start value stays unset (STR-009). STR-009: civilian loyalty range, start value, and whether it is per faction or one value toward the
    controller.
 8. **Resolved (2026-11-24):** the design drafts every action time, the evade formula and the Krug pass
-   price (STR-015, STR-024, STR-025, STR-028, STR-035, STR-038, STR-040…STR-043, STR-048). Still open: the
-   FOB price (STR-042) and the compensation and bounty prices (STR-043). STR-024/STR-025/STR-028/STR-035/STR-038/STR-040…STR-043: times not stated (design: Open), plus evade
+   price (STR-015, STR-024, STR-025, STR-028, STR-035, STR-038, STR-040…STR-043, STR-048). **Resolved
+   (2026-11-24, design 06dc2a6):** FOB $25,000 / $50,000 with no upkeep (STR-042, MGT-066), compensation
+   $1,000 per soldier killed (at least $2,000), bounty $10,000 or $20,000 at −75 (STR-043), all drafts.
+   Formerly still open: the FOB price (STR-042) and the compensation and bounty prices (STR-043). STR-024/STR-025/STR-028/STR-035/STR-038/STR-040…STR-043: times not stated (design: Open), plus evade
    formula and Krug pass price.
 9. **Resolved (2026-11-24):** fuel is a flat amount per tile moved, whatever the terrain (STR-032). Still
    open: the off-road reduction per rating. STR-032: off-road rating reduction per rating not set; is fuel spent per region (fuel range in
@@ -1190,15 +1274,21 @@ road, each with a non-water landable neighbour.
     for a set time (STR-007, STR-049); the scatter split stays open. STR-049: when a leader dies, can the capital become `none`? This contradicts STR-007 (capital always
     SSV or VDK). Also: share of scattered squads becoming resistance vs Krug recruits.
 13. **Resolved (2026-11-24):** income and recruits per POI type and the auto-resolve shape are drafted
-    (STR-014, STR-026). Still open: supply output per POI type, the supply-deficit effect, and the loyalty
-    and supply changes of an off-screen fight. STR-014/STR-026: income, supply and recruit outputs per POI type and the auto-resolve formula are not
+    (STR-014, STR-026). **Resolved (2026-11-24, design 06dc2a6):** supply output per POI type is drafted
+    (20 / 10 / 5 per day; one point supplies one soldier for a day; STR-014). Still open: the
+    supply-deficit effect, and the loyalty and supply changes of an off-screen fight. STR-014/STR-026: income, supply and recruit outputs per POI type and the auto-resolve formula are not
     given.
 14. **Resolved (design eb072a2):** the cap of 3 counts world events and desperate measures together
     (STR-050, STR-070); event chances and whether one event may run twice for different subjects stay
     open. STR-050: event chances not given; does the cap of 3 include desperate measures? Can the same event run
     twice for different subjects?
-15. **Partly resolved (2026-11-24):** drafted: weakly held (STR-055), several days (STR-056), repeated
-    losses (STR-057), strength advantage (STR-059), heavy losses (STR-060), low supply (STR-061). Still
+15. **Resolved (2026-11-24):** drafted: weakly held (STR-055), several days (STR-056), repeated
+    losses (STR-057), strength advantage (STR-059), heavy losses (STR-060), low supply (STR-061).
+    **Resolved (2026-11-24, design 06dc2a6):** joint assault −30, shipment +20 percentage points elite and
+    gear one tier better, rising hostility −20 recovering +2 per day to the value before, dispute −40,
+    losing = lost tiles on 3 of the last 5 days, fuel shortage moves ×1.5 rounded up, leak medical ×1.5,
+    bounty 2 (3 at −75) hunt squads plus 1 per rival PMC, refugees −10 loyalty and +1 recruit per day at a
+    30% lower fee, all drafts (STR-055…STR-065). Formerly still
     open: the joint-assault relation drop, the weapon-shipment bonus, the rising-hostility relation drop and
     recovery, the dispute relation collapse, "losing faction", and the effect sizes of STR-062…STR-065.
     STR-055…STR-065: many trigger thresholds are qualitative ("weakly held", "several days", "heavy
@@ -1224,7 +1314,7 @@ road, each with a non-water landable neighbour.
     switchable test option (STR-005, STR-082); the grid size stays unset. STR-082: region count, map size and region shape (grid, hex, Voronoi) not stated.
 24. **Resolved (2026-11-24):** a small random daily chance per eligible tile or situation, text only
     (STR-081). STR-081: flavour event triggers not defined in the GDD (lore only).
-25. Workflow starting pipeline (regions → cities → roads → resources → frontline → validate) differs from
+25. **Resolved (2026-11-24):** keep the design order, industry before roads (STR-082). Workflow starting pipeline (regions → cities → roads → resources → frontline → validate) differs from
     the design order (industry before roads). Spec follows the design order.
 26. **Resolved (design eb072a2):** on its origin tile until the move's last hour, then on the
     destination; the encounter tile's terrain sets the tactical map (STR-020, STR-022). STR-003/STR-022: where is a squad during a multi-hour move for encounter purposes (origin,
@@ -1270,7 +1360,9 @@ road, each with a non-water landable neighbour.
     (STR-061). STR-061: which comes first when choosing the pressing faction — the last attacker or the nearest enemy
     (spec: last attacker, else nearest)? The chance of joining vs disbanding is not set.
 38. **Resolved (2026-11-24):** the full contract pay; raising a squad costs a drafted amount per soldier
-    (STR-092, STR-096). Still open: how spending beyond the funds is booked under `scoreTerm`.
+    (STR-092, STR-096). **Resolved (2026-11-24, design 06dc2a6):** under `scoreTerm` funds show 0 and a
+    hidden overdraft counts the deficit and lowers the faction's AI scores (STR-092, SAI-014). Formerly
+    still open: how spending beyond the funds is booked under `scoreTerm`.
     STR-092: under `hardLimit`, must a faction hold the full contract pay when it offers a contract, or
     only the advance? What does raising a squad cost? Under `scoreTerm`, how is spending beyond the funds
     booked when funds still never go below zero?
@@ -1293,15 +1385,31 @@ road, each with a non-water landable neighbour.
 44. **Resolved (2026-11-24):** no supplies store beyond the soldiers' gear; loot only what fits in their
     backpacks and rigs (STR-017, STR-031). STR-031: does carrying "only what its soldiers carry" leave a squad on foot any supplies store
     (ammunition, medical) beyond the soldiers' own gear, and how does an on-foot squad bring loot home?
-45. STR-034: which POI types count as "military" for fire on helicopters (governmental institutions with
+45. **Resolved (2026-11-24, design 06dc2a6):** military = arms plants, governmental institutions and any
+    tile with a hostile squad; a damaged helicopter must land and be repaired before it flies on; both docs
+    now say 10% damaged, 3% downed per point of interest (STR-034); see question 49. STR-034: which POI types count as "military" for fire on helicopters (governmental institutions with
     police posts, arms plants, garrisoned tiles, any POI with a hostile squad)? What does "damaged" do to a
     helicopter (speed, fuel, repair need)? The two design docs differ slightly: Strategic actions says
     "10% each", Data definitions "10% damaged, 3% downed per point of interest"; the spec follows the
     latter.
-46. STR-002: is the fuel of a move that is cancelled or interrupted before its last hour spent (split from
+46. **Resolved (2026-11-24, design 06dc2a6):** no — fuel is spent on arrival (STR-002, STR-032). STR-002: is the fuel of a move that is cancelled or interrupted before its last hour spent (split from
     question 36)?
-47. STR-063, STR-097: the spec applies the strategic HP loss to the chemical leak's `hazard` tiles, reading
+47. **Resolved (2026-11-24, design 06dc2a6):** confirmed — leak tiles lose HP per hour as contaminated
+    tiles while the leak lasts (5 days); leak loot stays sellable (STR-063, STR-097). STR-063, STR-097: the spec applies the strategic HP loss to the chemical leak's `hazard` tiles, reading
     the chemical plant row ("squads in a contaminated tile lose HP every strategic hour") as the leak
     effect. Confirm, and say whether loot from a leak tile can be sold.
-48. STR-094: how many Krug escorts may one convoy hire, and may the Krug attach a squad that is not on the
-    convoy's tile (does the escort squad have to travel there first)?
+48. **Resolved (2026-11-24, design 06dc2a6):** one Krug escort squad per convoy; if it is not on the
+    convoy's tile it travels there first, which may delay the departure (STR-094). STR-094: how many Krug
+    escorts may one convoy hire, and may the Krug attach a squad that is not on the convoy's tile (does the
+    escort squad have to travel there first)?
+49. STR-034: a damaged helicopter "must land and be repaired before it flies on". Where does it come down
+    when the tile it entered is water (no landing allowed, STR-035), and how is it repaired when it lands
+    away from a mechanical plant (repairs are a mechanical-plant service, STR-041; a landed helicopter
+    cannot reach one)? Field repair by a Technical soldier, recovery, or abandonment?
+50. STR-043: where are compensation and a bounty pay-off paid (any POI of that faction, an FOB, a Krug
+    market)? The design names only the receiving faction.
+51. STR-062: "faction squads move less" during a fuel shortage — all non-player squads, only the squads of
+    the faction whose oil plant was lost, or player squads too?
+52. STR-098: "some faction always has at least one low-risk contract posted" — the spec picks the employer
+    among the SSV, the VDK and the Krug by funds and seeded RNG, with `sourceGoal` `supplyRun`, checked at
+    each daily check. Confirm, or say which faction posts it.

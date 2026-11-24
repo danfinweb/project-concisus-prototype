@@ -3,7 +3,7 @@
   "$id": "data/items.schema.json",
   "title": "Items",
   "description": "All carried and tradeable things, keyed by ID: weapons, mods, calibres, ammunition loads, helmets, body armour, vests, belts, backpacks, medical, barter and operation/faction items. Calibres and ammo loads live here with a kind field (DAT-001). Spec: DAT-001..DAT-023, DAT-030, ITM-001..ITM-034. valueUsd is the full faction-trader price (ITM-034).",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/item" },
   "$defs": {
@@ -19,7 +19,7 @@
         "kind": { "enum": ["weapon", "mod", "calibre", "ammo", "helmet", "bodyArmour", "vest", "belt", "backpack", "medical", "barter", "opItem", "magazine", "grenade"] },
         "name": { "type": "string", "minLength": 1 },
         "weightKg": { "type": "number", "minimum": 0 },
-        "valueUsd": { "type": "number", "minimum": 0, "description": "DAT-002 / ITM-034: full price at a faction trader = full barter value; base price at Krug markets" },
+        "valueUsd": { "type": "number", "minimum": 0, "description": "DAT-002 / ITM-034: full price at a faction trader = full barter value; base price at Krug markets; ammo: price per round (ITM-003); opItem: only the four items traders sell" },
         "rarity": { "$ref": "#/$defs/rarity" },
         "notes": { "type": "string" }
       },
@@ -53,8 +53,8 @@
       "properties": {
         "kind": { "const": "mod" },
         "slot": { "enum": ["muzzle", "stock", "pistolGrip", "optic", "handguard", "frontGrip", "tactical"] },
-        "fits": { "type": "array", "items": { "$ref": "#/$defs/ref" } },
-        "modifiers": { "type": "object", "description": "Allowed keys per slot: see the oneOf below (DAT-016)" },
+        "fits": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ref" }, "description": "DAT-016: the weapons this mod fits" },
+        "modifiers": { "type": "object", "description": "Allowed keys per slot: see the oneOf below (DAT-016); spread and recoil modifiers multiply, ergonomics adds" },
         "suppressor": { "type": "boolean" },
         "subSlots": { "type": "object", "properties": { "frontGrip": { "type": "integer", "minimum": 0, "maximum": 1 }, "tactical": { "type": "integer", "minimum": 1, "maximum": 2 } } },
         "module": { "enum": ["flashlight", "laser"] }
@@ -68,8 +68,8 @@
         { "description": "DAT-016 tactical: optional small ergonomics modifier (flashlight or laser); laser snapShotSpread (DAT-017)", "properties": { "slot": { "const": "tactical" }, "modifiers": { "$ref": "#/$defs/modifiersTactical" } } }
       ]
     },
-    "modifiersMuzzle": { "type": "object", "properties": { "recoil": { "type": "number" }, "flash": { "type": "number" } }, "additionalProperties": false },
-    "modifiersGrip": { "type": "object", "properties": { "ergonomics": { "type": "number" }, "recoil": { "type": "number" } }, "additionalProperties": false },
+    "modifiersMuzzle": { "type": "object", "properties": { "recoil": { "type": "number", "exclusiveMinimum": 0, "description": "factor" }, "flash": { "type": "number", "minimum": 0, "description": "factor on how far the muzzle flash reveals the shooter (DAT-016)" } }, "additionalProperties": false },
+    "modifiersGrip": { "type": "object", "properties": { "ergonomics": { "type": "number", "description": "added" }, "recoil": { "type": "number", "exclusiveMinimum": 0, "description": "factor" } }, "additionalProperties": false },
     "modifiersHandguard": { "type": "object", "properties": { "ergonomics": { "type": "number" } }, "additionalProperties": false },
     "modifiersOptic": { "type": "object", "properties": { "shooterSpreadAtRange": { "type": "number" } }, "additionalProperties": false },
     "modifiersNone": { "type": "object", "additionalProperties": false },
@@ -96,7 +96,7 @@
         "penetrationClass": { "type": "integer", "minimum": 0, "maximum": 6 },
         "subsonic": { "type": "boolean" },
         "spreadModifier": { "type": "number", "exclusiveMinimum": 0 },
-        "tracer": { "type": "boolean" },
+        "tracer": { "type": "boolean", "description": "Less burst recoil spread (recoilSpreadModifier); does not reveal the shooter (ITM-003)" },
         "recoilSpreadModifier": { "type": "number", "exclusiveMinimum": 0, "description": "ITM-003 / TAC-047: multiplies burst recoil spread; tracer 0.85, default 1" },
         "bleedChanceModifier": { "type": "number", "exclusiveMinimum": 0 },
         "damageOverride": { "type": "number", "exclusiveMinimum": 0 },
@@ -146,13 +146,13 @@
       "properties": {
         "kind": { "const": "belt" },
         "capacityKg": { "type": "number", "exclusiveMinimum": 0 },
-        "holsters": { "type": "integer", "minimum": 0, "description": "ITM-017: each holster holds one sidearm (weaponType pistol)" },
-        "maxMagazines": { "type": "integer", "minimum": 0, "description": "ITM-014 / ITM-017: belt pouch type limits; absent = no count limit for that category" },
+        "holsters": { "type": "integer", "minimum": 0, "description": "ITM-017 / DAT-005: each holster holds one pistol as an extra third weapon beside weapon1 and weapon2; it counts toward capacityKg, not toward the type limits" },
+        "maxMagazines": { "type": "integer", "minimum": 0, "description": "ITM-014 / ITM-017: belt pouch type limits, design draft leather 2/2/1/1, padded 3/2/2/1, heavy 4/2/2/2 (magazines/grenades/medical/other)" },
         "maxGrenades": { "type": "integer", "minimum": 0, "description": "ITM-017, design draft 2" },
         "maxMedical": { "type": "integer", "minimum": 0 },
         "maxOther": { "type": "integer", "minimum": 0 }
       },
-      "required": ["capacityKg", "holsters", "weightKg"]
+      "required": ["capacityKg", "holsters", "maxMagazines", "maxGrenades", "maxMedical", "maxOther", "weightKg"]
     },
     "backpack": {
       "properties": {
@@ -185,6 +185,7 @@
         "kind": { "const": "barter" },
         "foundIn": { "type": "array", "items": { "type": "string" } },
         "barterClass": { "enum": ["tobacco", "alcohol", "valuable", "general"] },
+        "refuelUnits": { "type": "integer", "minimum": 1, "description": "ITM-021 / DAT-025: fuel units this item refills into a ground vehicle tank when used (diesel canister 1)" },
         "contains": { "type": "array", "items": { "type": "object", "required": ["item", "chance"], "properties": { "item": { "$ref": "#/$defs/ref" }, "chance": { "type": "number", "minimum": 0, "maximum": 1 } } } }
       },
       "required": ["weightKg", "valueUsd", "rarity", "foundIn", "barterClass"]

@@ -61,10 +61,16 @@ time of day (day or night battle).
 
 ### [TEC-007] Quality tiers
 **Rule.** Effects scale by quality tier. At least two tiers: `phone` (baked lighting, few shadow casters) and
-`desktop` (full effects). The tier is chosen at start (device detection) and can be changed in settings.
+`desktop` (full effects). The tier is picked automatically at start: first from the device type (a phone or
+tablet starts as `phone`, anything else as `desktop`; spec reading of "device type"), then a short frame-time
+test confirms it: if the mean frame time over the test is above the picked tier's threshold, the next lower
+tier is used. The player can override the tier in the settings; the override is a player setting stored with
+the settings (not data) and replaces the automatic pick until it is cleared.
 **Values.** `qualityTiers` (`{ id, bakedLighting, shadowCasters }` per tier) — `phone` baked lighting, 2
 shadow casters; `desktop` full effects, 8 shadow casters (design draft) → data/presentation.json;
-`tierDetection` — not set (design: not stated) → data/presentation.json.
+`tierDetection.testDurationMs` (length of the frame-time test) and `tierDetection.maxFrameTimeMs` (per tier
+ID, the mean frame time above which the next lower tier is used) — not set (design: names the test, no
+values) → data/presentation.json.
 **Source.** design/presentation-tech.md › Art direction › Why it fits the browser
 
 ### [TEC-008] Rendering never drives rules
@@ -242,7 +248,9 @@ migration step, is not loaded (error shown, save kept untouched).
    laptop at 1080p (TEC-026). TEC-026 — Reference devices for "mid-range phone" and desktop are not named.
 5. **Resolved (2026-11-24):** design drafts 15-bit colour (32 levels per channel), 4×4 Bayer, 320×240 vertex
    grid, fog from 60 m, 2/8 shadow casters, 400 ms tap-hold, 48 px tap targets (TEC-004, TEC-005, TEC-007,
-   TEC-022, TEC-025). Still open: `tierDetection` rule. TEC-004/TEC-005/TEC-007/TEC-022/TEC-025 — Palette
+   TEC-022, TEC-025). **Resolved (2026-11-24):** the tier is picked automatically from the device type and
+   a short frame-time test at start; the player can override it in the settings (TEC-007); test length and
+   frame-time thresholds stay unset (`tierDetection.testDurationMs`, `tierDetection.maxFrameTimeMs`). TEC-004/TEC-005/TEC-007/TEC-022/TEC-025 — Palette
    size, dither matrix, PSX quirk strengths, shadow casters per tier, tap-hold duration, tap target size are
    not set.
 6. **Resolved (2026-11-24):** Preact + htm through the import map (TEC-011, TEC-013). TEC-011 — Preact or

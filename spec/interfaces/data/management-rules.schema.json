@@ -3,13 +3,34 @@
   "$id": "data/management-rules.schema.json",
   "title": "Management rules",
   "description": "Global management constants (spec MGT). The weight to AP/stamina penalty is TAC-027 (tactical-rules); the pay interval and running-cost formulas are economy-rules (MGT-073).",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
     "intRange": { "type": "object", "properties": { "min": { "type": "integer" }, "max": { "type": "integer" } }, "additionalProperties": false },
     "fraction": { "type": "number", "minimum": 0, "maximum": 1 },
-    "usd": { "type": "number", "minimum": 0 }
+    "usd": { "type": "number", "minimum": 0 },
+    "perkEffect": {
+      "type": "object", "description": "MGT-009 perk effect parameters (design draft values in the spec table); each key is read by the owner of the rule it changes",
+      "properties": {
+        "shooterSpreadFactor": { "type": "number", "exclusiveMinimum": 0, "description": "steadyAim 0.9 (TAC-044)" },
+        "minAimSteps": { "type": "integer", "minimum": 0, "description": "steadyAim 1" },
+        "snapShotPenaltyMoa": { "type": "number", "minimum": 0, "description": "snapShooter 1.5, replaces the normal snap-shot penalty (TAC-044)" },
+        "noticeDistanceFactor": { "type": "number", "exclusiveMinimum": 0, "description": "quietStep 0.8 (TAC-081)" },
+        "reactionChanceAgainst": { "type": "number", "description": "ghost -10 (TAC-022)" },
+        "whileStance": { "type": "array", "items": { "enum": ["upright", "crouched", "prone"] }, "description": "ghost [crouched, prone]" },
+        "medicalApReduction": { "type": "integer", "minimum": 0, "description": "fieldMedic 1" },
+        "medicalApMin": { "type": "integer", "minimum": 1, "description": "fieldMedic 1" },
+        "hpRestoreFactor": { "type": "number", "exclusiveMinimum": 0, "description": "traumaSurgeon 1.25 for the listed items" },
+        "items": { "type": "array", "items": { "type": "string", "x-ref": "items" }, "description": "traumaSurgeon: IFAK and medkit" },
+        "fobHealFactor": { "type": "number", "exclusiveMinimum": 0, "description": "traumaSurgeon 1.25 (TAC recovery)" },
+        "weaponWearFactor": { "type": "number", "exclusiveMinimum": 0, "description": "armourer 0.75 (TAC-083)" },
+        "repairFactor": { "type": "number", "exclusiveMinimum": 0, "description": "armourer 1.25 (MGT-067)" },
+        "boltCutterAp": { "type": "integer", "minimum": 1, "description": "sapper 5 (ITM-026)" },
+        "vehicleRepairFactor": { "type": "number", "exclusiveMinimum": 0, "description": "sapper 1.25 (MGT-067)" }
+      },
+      "additionalProperties": false
+    }
   },
   "properties": {
     "moraleStart": { "type": "integer", "minimum": 0, "maximum": 100, "description": "MGT-008, design 80 (per soldier at hiring)" },
@@ -50,14 +71,14 @@
     },
     "perkThresholds": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 100 }, "description": "MGT-009, design draft [50, 80] (one perk per skill at each)" },
     "perks": {
-      "type": "array", "description": "MGT-009: perk list, not set",
+      "type": "array", "description": "MGT-009: perk list, design draft steadyAim, snapShooter (marksmanship 50/80), quietStep, ghost (recon), fieldMedic, traumaSurgeon (medical), armourer, sapper (technical); effects applied by the rule owners (TAC-096, MGT-067)",
       "items": {
         "type": "object", "required": ["id", "attribute", "threshold"],
         "properties": {
           "id": { "type": "string" },
           "attribute": { "enum": ["marksmanship", "recon", "medical", "technical"] },
           "threshold": { "type": "integer", "minimum": 1, "maximum": 100 },
-          "effect": { "type": "object" }
+          "effect": { "$ref": "#/$defs/perkEffect" }
         },
         "additionalProperties": false
       }
@@ -68,13 +89,14 @@
       "additionalProperties": false
     },
     "nerve": {
-      "type": "object", "description": "MGT-031, design draft 0..100, start 0, +2 per deployment survived, +1 per fight under fire",
+      "type": "object", "description": "MGT-031, design draft 0..100, start 0, +2 per deployment survived, +1 per fight under fire, effect divisor 200",
       "properties": {
         "min": { "type": "integer" },
         "max": { "type": "integer" },
         "start": { "type": "integer" },
         "perDeployment": { "type": "number", "minimum": 0 },
-        "perFightUnderFire": { "type": "number", "minimum": 0 }
+        "perFightUnderFire": { "type": "number", "minimum": 0 },
+        "effectDivisor": { "type": "number", "exclusiveMinimum": 0, "description": "MGT-031 (effect deferred): suppression spread penalty and each casualty morale loss x (1 - nerve / effectDivisor), design draft 200" }
       },
       "additionalProperties": false
     },
@@ -149,7 +171,21 @@
     },
     "unfriendlyContractShare": { "$ref": "#/$defs/fraction", "description": "MGT-051, share of basic offers shown at Unfriendly, design draft 0.5" },
     "unfriendlyPriceMarkup": { "type": "number", "minimum": 0, "description": "MGT-039, price x (1 + markup) at Unfriendly, design draft 0.25" },
-    "fobPrices": { "type": "object", "description": "MGT-066, per city size, not set", "additionalProperties": { "$ref": "#/$defs/usd" } },
+    "fobPrices": {
+      "type": "object", "description": "MGT-066: purchase price per city size, design draft small city $25,000, large city $50,000; FOBs have no upkeep",
+      "properties": { "smallCity": { "$ref": "#/$defs/usd" }, "largeCity": { "$ref": "#/$defs/usd" } },
+      "additionalProperties": false
+    },
+    "leadershipBonus": {
+      "type": "object", "description": "MGT-075: bonus by the leader's rank to the other soldiers' morale and reaction chance, battle only, never stored (applied by TAC-094); design draft recruit 0, regular 2, veteran 4, elite 6",
+      "properties": {
+        "recruit": { "type": "number", "minimum": 0 },
+        "regular": { "type": "number", "minimum": 0 },
+        "veteran": { "type": "number", "minimum": 0 },
+        "elite": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
     "servicePrices": {
       "type": "object", "description": "MGT-067, design draft hospital $300 per wound, repair $20 per condition point, fuel $50 per unit",
       "properties": {

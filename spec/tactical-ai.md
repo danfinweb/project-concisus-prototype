@@ -48,8 +48,8 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 | `side`, `faction`, `doctrine` | Controlled side, faction ID, doctrine ID of the side (TAI-015) |
 | `turn`, `timeOfDay` | Turn number; `day` or `night` battle (TAC-003) |
 | `activeUnit` | Unit to act (null when choosing which unit to activate) |
-| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank`, `role` (TAI-014), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
-| `squadMorale` | The side's squad morale (from the tactical map request `sides[].morale`; input to survival, TAI-008) |
+| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank` (`recruit`, `regular`, `veteran`, `elite`; TAI-013), `morale` (the unit's battle morale, TAC-095, plus the Leadership bonus while its leader is alive, TAC-094), `role` (TAI-014), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
+| `squadMorale` | Average battle morale of the side's units still on the map (TAC-095, without the Leadership bonus); at battle start the request's `sides[].morale` for units sent without their own |
 | `squadPlan` | Current plan set by the squad leader (TAI-013) and the current leader's unit ID |
 | `blackboard` | Squad requests and claims (TAI-012) |
 | `knownEnemies[]` | Opposing units: `id`, `position`, `level`, `seenTurn`, `visibleNow`; while `visibleNow`, also `stance`, `facing` and `visibleGear` (the gear the player would see: `weaponType`, `helmetClass`, `armourClass`); otherwise the last seen or heard position and turn |
@@ -129,7 +129,7 @@ other, not from scripts. Weights and curves come from the doctrine (TAI-015).
 
 ### [TAI-008] Survival
 **Rule.** `survival` (0–1) multiplies the score. Inputs: the unit's exposure, the known threat, its HP and
-its morale (the view's `squadMorale`; morale is squad-wide). Its curve keeps it near 1 when danger is low and lets it dominate the score as danger rises,
+its morale (the active unit's `squad[].morale`, which already includes the Leadership bonus, TAC-094; morale is per soldier). Its curve keeps it near 1 when danger is low and lets it dominate the score as danger rises,
 so an exposed, wounded or shaken unit prefers safe actions; it never blocks an action outright.
 **Values.** input weights and curve — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.survival`.
 **Source.** design/ai.md › Tactical AI › Unit scoring
@@ -166,14 +166,16 @@ the blackboard is stored by TAC in the `battle` slice, passed in the view, and c
 **Source.** design/ai.md › Tactical AI › Unit scoring; CLAUDE.md › State ownership
 
 ### [TAI-013] Squad leader plan
-**Rule.** The squad leader is the squad's highest-ranked soldier: unit `rank` (integer, higher = senior),
-set per unit by the strategic layer in the tactical map request (`sides[].units[].rank`) and passed in the
-view (`squad[].rank`, TAI-004). On a tie in rank, the soldier with the highest average of its attribute
+**Rule.** The squad leader is the squad's highest-ranked soldier (TAC-094): unit `rank`, one of the Management
+ranks `recruit` < `regular` < `veteran` < `elite` (the hiring tiers, MGT), set per unit in the tactical map
+request (`sides[].units[].rank`) and passed in the view (`squad[].rank`, TAI-004). On a tie in rank, the soldier with the highest average of its attribute
 values leads; if that ties too, the first in the request's unit order. It sets the squad plan and roles:
 its activation assigns roles (TAI-014) and posts requests to the blackboard; other units read the plan
 from the view. If the leader dies, the next highest-ranked living soldier (same tie-break) becomes leader
-at its next activation and keeps the current plan. Until then the plan stays as it was.
-**Source.** design/ai.md › Tactical AI › Unit scoring; design/ai.md › Tactical AI (roles)
+at its next activation and keeps the current plan. Until then the plan stays as it was. The leader also lends
+the other units a Leadership bonus to morale and reaction chance; TAC applies it (TAC-094) and the view's
+`squad[].morale` already includes it, so the AI adds nothing itself.
+**Source.** design/ai.md › Tactical AI › Unit scoring; design/ai.md › Tactical AI (roles, squad leader); design/management.md › Soldiers & progression (Rank and leadership)
 
 ### [TAI-014] Squad roles
 **Rule.** Enemy squads assign units the roles `flank`, `suppress`, `retreat`. A role changes `actionFit` for
@@ -240,7 +242,9 @@ player moves the VIP as part of the player's activations, and the VIP never reac
 9. **Resolved (design eb072a2):** the threshold is the share of the side's soldiers out of action (dead, disabled or fled); once reached, the side retreats to an exit and leaves the map; the value per battle goal comes from the strategic layer (draft, not set). TAI-009 — What does the acceptable-loss threshold do once reached (forced retreat, retreat role, only a
    weight shift), and in what unit is it measured (soldiers lost, share of strength)? Who sets it: SAI, or
    STR by rule?
-10. **Resolved (cleanup 2026-11-23):** the view carries `squadMorale` (squad-wide, from the request's
+10. **Resolved (2026-11-24):** morale is per soldier: the view carries each unit's `squad[].morale`
+    (battle morale plus Leadership, TAC-094/TAC-095), read by survival; `squadMorale` stays as the side's
+    average (TAI-004, TAI-008). **Resolved (cleanup 2026-11-23):** the view carries `squadMorale` (squad-wide, from the request's
     `sides[].morale`), read by survival (TAI-004, TAI-008). TAI-008 — Morale is an input to survival, but the tactical morale model for AI units is not in the
     view yet (TAI-004 lists no morale field). Add one?
 11. **Resolved (design 3aac08f):** before turning hostile, neutrals react by a fixed TAC rule (TAC-001); afterwards tactical-ai commands them as a third side (TAI-017). TAI-017 — The neutral side never activates, yet `tactical-ai` controls it. How is a neutral unit's
@@ -249,7 +253,9 @@ player moves the VIP as part of the player's activations, and the VIP never reac
 12. **Resolved (design 3aac08f):** only dead soldiers and soldiers who left the map count; a retreating side still fires (TAI-009). TAI-009 — "Disabled" in the out-of-action share: TAC has disabled limbs (TAC-059) but no whole-soldier
     disabled state. Does a soldier with a disabled limb count, or only one unable to act (e.g. 0 stamina)? Do
     soldiers who left the map by an exit count as fled? Does a retreating side still fire on the way?
-13. **Resolved (design 3aac08f):** rank ties go to the highest average attribute value, then the request's unit order (TAI-013). **Resolved (cleanup 2026-11-23)** (part): the rank is the per-unit integer `rank` the strategic layer sets in
+13. **Resolved (2026-11-24):** rank is the Management rank (Recruit, Regular, Veteran, Elite = the hiring
+    tier), sent per unit as an enum instead of an integer (TAI-013, TAC-094). Nothing left open.
+    **Resolved (design 3aac08f):** rank ties go to the highest average attribute value, then the request's unit order (TAI-013). **Resolved (cleanup 2026-11-23)** (part): the rank is the per-unit integer `rank` the strategic layer sets in
     the tactical map request (TAI-013). Still open: how equal ranks are broken. TAI-013 — Where does an AI soldier's rank come from (tactical map request per unit, e.g. the STR squad
     ranks Elite/Veteran/Regular/Recruit, or a per-soldier rank), and how are equal ranks broken (seeded roll,
     unit order)?

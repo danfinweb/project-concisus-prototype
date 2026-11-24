@@ -3,7 +3,7 @@
   "$id": "data/traders.schema.json",
   "title": "Traders",
   "description": "Trader stock and barter rates (spec MGT-039/MGT-040, ITM-022/ITM-023, ITM-034). Item prices are items.valueUsd.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -11,6 +11,8 @@
     "cityBarterRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 0.5" },
     "krugBarterRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 0.7" },
     "krugPremiumRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022, design 1.0 for tobacco, alcohol, valuables" },
+    "gearBuyRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022: share of the trader price a faction trader pays for gear, design draft 0.4" },
+    "krugGearBuyRate": { "type": "number", "minimum": 0, "maximum": 1, "description": "ITM-022: share of the current Krug price a Krug market pays for gear, design draft 0.5" },
     "barterDealsMin": { "type": "integer", "minimum": 0, "description": "ITM-023, design 1" },
     "barterDealsMax": { "type": "integer", "minimum": 0, "description": "ITM-023, design 3" },
     "barterDealValueRate": { "type": "number", "minimum": 0, "description": "ITM-023, design 1.0" },

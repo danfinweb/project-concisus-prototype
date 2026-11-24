@@ -81,12 +81,18 @@ contents and damage (DAT-029). Owners: `roster`/`economy` (MGT) between ops, `ba
 | `helmet` | `helmet` | — | Armour class for the head zone; may narrow hearing (ITM-010) |
 | `bodyArmour` | `bodyArmour` | — | Armour class for the thorax zone; durability wears per hit (ITM-012) |
 | `vest` | `vest`, or the plate carrier in `bodyArmour` (DAT-009) | quick | Item list with weight and type limits |
-| `belt` | `belt` | quick | Item list with weight limit |
+| `belt` | `belt` | quick | Item list with weight and type limits; its holster holds a pistol as an extra third weapon (below) |
 | `backpack` | `backpack` | slow | Item list with weight limit; can be dropped in combat (TAC) |
+
+**Holster.** The battle belt's holster (ITM-017) holds one pistol (`weaponType: pistol`) as an extra third
+weapon, in addition to `weapon1` and `weapon2`; it is not one of the two weapon slots. The holstered pistol's
+`weightKg` (with its fitted mods and loaded magazine) counts toward the belt's `capacityKg`, but it is not a
+pouch item (no 1 kg rule, no type limit, ITM-016). Drawing or holstering it in battle is a weapon swap with a
+pistol involved (TAC-042). The loadout stores it as `holster` (the belt's content, spec name).
 
 The loadout is part of the soldier record (MGT) and of the unit in `battle` (TAC).
 **Status.** Draft (design: "Draft — not final").
-**Source.** design/data-definitions.md › Soldier equipment slots (draft); design/tactical-actions.md › Weapons (Swap between weapon 1 and 2)
+**Source.** design/data-definitions.md › Soldier equipment slots (draft); design/item-list.md › Battle belts; design/tactical-actions.md › Weapons (Swap between weapon 1 and 2)
 
 ### [DAT-006] Access tiers
 **Rule.** Items used from a quick container (vest, belt) cost their normal AP. Items used from the backpack
@@ -190,7 +196,7 @@ them. Each slot holds at most one mod.
 | Field | Type | Unit | Range | Meaning |
 | --- | --- | --- | --- | --- |
 | `slot` | enum | — | `muzzle`, `stock`, `pistolGrip`, `optic`, `handguard`, `frontGrip`, `tactical` | Slot it fits (the `magazine` slot is removed: an extended magazine is a `magazine` item, DAT-030) |
-| `fits` | array of ID → items (`weapon`) | — | — | Weapons it fits (compatibility rule not stated in design) |
+| `fits` | array of ID → items (`weapon`) | — | non-empty | Weapons it fits: each mod lists them (set in the item editor); a mod can be fitted only to a weapon in its `fits` that has the slot |
 | `modifiers` | object | per key | see below | Changes to the weapon profile |
 | `suppressor` | boolean | — | — | Muzzle only: shots count as suppressed for hearing (TAC gunshot noise) |
 | `subSlots` | object `{ frontGrip: 0–1, tactical: 1–2 }` | — | — | Handguard only (DAT-015) |
@@ -204,7 +210,17 @@ mod (design decision 2026-11-24; a tactical module's weight is its own `weightKg
 the `modifiers` keys per `slot` (a key not allowed for the slot is rejected). Magazines are not mods: there
 is no magazine slot; spare and extended magazines are `magazine` items (DAT-030) and count as magazines for
 type limits (ITM-014). The weapon's effective weight = `weightKg` + Σ fitted mod `weightKg`.
-**Values.** all mod values; whether modifiers add or multiply — not set (design: Open) → data/items.json.
+
+**Modifier arithmetic.** Spread and recoil modifiers multiply, ergonomics and weight modifiers add (design):
+effective `recoil` = weapon `recoil` × Π fitted `modifiers.recoil`; `shooterSpreadAtRange` and
+`snapShotSpread` are factors on the TAC-044 spread parts (Π over fitted mods); effective `ergonomics` =
+weapon `ergonomics` + Σ fitted `modifiers.ergonomics`, clamped to 1–100 (spec choice); weight adds through
+each mod's own `weightKg`. The muzzle `flash` value is how far the muzzle flash reveals the shooter; it is a
+factor on the TAC muzzle-flash reveal distance (spec reading: a muzzle device scales it, like the other
+muzzle modifier; without a muzzle device the factor is 1). The reveal distance itself is TAC (not set there,
+design: not stated).
+**Values.** all mod values → data/items.json; arithmetic as above (design); the base muzzle-flash reveal
+distance — not set (design: not stated) → TAC (data/tactical-rules.json).
 **Status.** Draft; initial content: design/item-list.md › Mods (ITM-033).
 **Source.** design/data-definitions.md › Weapon profile (draft) › Mod slots; › How mods change the profile; design/item-list.md › Weapons (magazines are items); › Mods
 
@@ -245,7 +261,7 @@ A magazine instance (DAT-004) counts its rounds and holds **one load type at a t
 `{ rounds, load }` with one load ID for the whole fill. It is refilled from loose ammunition of its calibre
 **only between fights, never in battle** (out of battle: from the soldier's containers, vehicle storage or
 the FOB stash); refilling a partly filled magazine with a different load first empties it back into loose
-rounds of the old load (spec rule, follows from one load per magazine). In battle a reload swaps magazines
+rounds of the old load (design: its rounds go back to loose ammunition first). In battle a reload swaps magazines
 (TAC-041); no rounds move between magazines. Tube-fed weapons use no magazine item: they load loose shells
 (TAC-041).
 **Values.** magazine records, `capacity`, `fits`, empty weights and prices — design drafts → data/items.json
@@ -262,7 +278,7 @@ rounds of the old load (spec rule, follows from one load per magazine). In battl
 | `designation` | string | — | unique among calibres | Cartridge name, e.g. `5.56×45 mm` |
 | `damage` | number | HP | > 0 | Base damage per projectile at the muzzle with barrel multiplier 1.0 |
 | `projectiles` | integer | count | ≥ 1 | 1 for bullets, several for buckshot; each traced separately |
-| `recoilModifier` | number | factor | design: about 0.6–1.6 (item list goes down to 0.5) | Effective recoil = weapon `recoil` × this |
+| `recoilModifier` | number | factor | design: about 0.5–1.6 | Effective recoil = weapon `recoil` (after mods) × this |
 | `roundWeightG` | number | g | > 0 | Weight per cartridge |
 
 A load may override `damage` and `projectiles` (ITM-008); 12 gauge sets them per load.
@@ -291,7 +307,7 @@ filled only with loads of its own `calibre`.
 | `penetrationClass` | integer | class | 0–6 | Highest armour class defeated (ITM-006) |
 | `subsonic` | boolean | — | — | Subsonic load (ITM-007) |
 | `spreadModifier` | number | factor | > 0 | × weapon `baseMoa` (TAC hit model) |
-| `tracer` | boolean | — | — | Less recoil spread in bursts; reveals the shooter |
+| `tracer` | boolean | — | — | Less recoil spread in bursts (`recoilSpreadModifier`); tracers do not reveal the shooter |
 | `bleedChanceModifier` | number | factor | > 0 | Optional; HP loads raise bleeding chance (TAC medical) |
 | `damageOverride` | number | HP | > 0 | Optional, ITM-008 |
 | `projectilesOverride` | integer | count | ≥ 1 | Optional, ITM-008 |
@@ -354,8 +370,9 @@ The former `profile` field (`civilian` / `military`) is removed (design 06e571f:
 STR-033).
 
 **Values.** (design drafts) upkeep 0.2% of `costUsd` per day plus fuel → data/economy-rules.json
-`vehicleUpkeepPerDayFraction` (MGT-073; the player's running cost); one fuel unit = one 20-litre fuel can of
-18 kg (the fuel item's weight → data/items.json); noise → notice distance Low 1 tile, Medium 2, High 3,
+`vehicleUpkeepPerDayFraction` (MGT-073; the player's running cost); the tank is a counter of fuel units
+(0…`fuelRangeRegions`, instance state DAT-029), one unit = 20 litres, not an item; spare fuel is carried as
+diesel canister items (DAT-025); noise → notice distance Low 1 tile, Medium 2, High 3,
 Very high 4, Extreme 6 → data/strategic-rules.json `noiseRange` (STR-008); off-road → travel time — STR-032.
 Mi-8 armour: class 2, cockpit only (`armourClass` 2, `armourCockpitOnly` true). Field names and the schema
 are owned by STR (vehicles.schema.json); `armourCockpitOnly` is proposed here.
@@ -366,14 +383,18 @@ Initial content: design/data-definitions.md › Vehicles (14 vehicles).
 ### [DAT-025] A squad has at most one vehicle
 **Rule.** A strategic squad has at most one vehicle. With a vehicle, `seats` caps its soldiers (plus any VIP
 seat a mission takes, MGT) and the vehicle storage is one item list ≤ `storageKg` holding supplies
-(ammunition, fuel cans, medical supplies, spare parts) and loot alike; soldiers restock from it between
-engagements. A squad without a vehicle travels on foot (`onFootHours` per tile, mountains separate,
+(ammunition, diesel canisters, medical supplies, spare parts) and loot alike; soldiers restock from it between
+engagements. Spare fuel travels as diesel canister items (the item list's "Diesel canister (20 l)", 18 kg,
+`kind: barter` with `refuelUnits` 1): using one out of battle consumes it and adds `refuelUnits` to the
+vehicle's tank counter, never above `fuelRangeRegions` (spec choice: it is not used while the tank has less
+than one unit free). Using a canister takes no game time (spec choice; design: not stated). Helicopters
+refuel only at FOBs and oil plants (DAT-028), so canisters refill ground vehicles only (spec reading). A squad without a vehicle travels on foot (`onFootHours` per tile, mountains separate,
 data/strategic-rules.json, STR-031) and carries only what its soldiers carry (their seven slots and
 containers, DAT-005, DAT-007); it has no storage list and no supplies store beyond its soldiers' gear, and
 loot it brings home must fit in their backpacks, vests and belts (container limits, DAT-008). Vehicles are
 not upgraded. Several vehicles allow
 several vehicle squads to run ops at the same time.
-**Source.** design/data-definitions.md › Vehicles (draft)
+**Source.** design/data-definitions.md › Vehicles (draft) (Storage, Fuel range); design/item-list.md › Barter goods (Diesel canister)
 
 ### [DAT-026] Vehicle features
 **Rule.** `features` enum and effect owner:
@@ -414,7 +435,7 @@ civilian Robinson R44 needs no standing (`standing: null`).
 ### [DAT-028] Helicopter data
 **Rule.** `vehicleType: "helicopter"` implies: travel `heliMoveHours` per region over any terrain incl.
 water; landing on any open, non-water tile; one seat is the pilot, who needs Technical ≥
-`pilotTechnicalMin` or is a hired pilot on salary; refuel only at FOBs and oil plants; noticed by every
+`pilotTechnicalMin` or is a hired pilot, paid a fee per op like a soldier (MGT-005, `launchOp` `hiredPilot`); refuel only at FOBs and oil plants; noticed by every
 faction in range; each hostile military point of interest on its path rolls a chance to damage or down it
 (STR-034); a downed helicopter becomes a crash site and starts an emergency op (STR). Hidden cities are
 reachable only this way (optional feature).
@@ -459,8 +480,30 @@ Initial content: design/item-list.md › Calibres (8 calibres).
 Ammunition is carried as rounds (loose or in magazines); one round weighs the calibre's `roundWeightG`.
 Initial content: design/item-list.md › Ammunition (30 loads); `spreadModifier` from DAT-022 (the item list
 gives no per-load spread). Optional `recoilSpreadModifier` (number > 0, default 1) multiplies burst recoil
-spread (TAC-047); tracer loads 0.85 (draft).
-**Source.** design/item-list.md › Ammunition
+spread (TAC-047); tracer loads 0.85 (draft). Tracers do not reveal the shooter (design decision 2026-11-24).
+
+**Prices.** Ammunition is priced per round: a load's `valueUsd` is the price of one round at a faction trader
+(ITM-034), bought and sold by the round. It is the calibre's base price per round (FMJ; buckshot for 12 gauge)
+times the load's price multiplier; the item editor pre-fills it from these drafts and stores the result per
+load:
+
+| Calibre | Base price per round (FMJ / buckshot) |
+| --- | --- |
+| 9×18 mm | $0.30 |
+| 9×19 mm | $0.40 |
+| 5.45×39 mm | $0.50 |
+| 5.56×45 mm | $0.60 |
+| 7.62×39 mm | $0.50 |
+| 7.62×51 mm | $1.20 |
+| 7.62×54R | $1.00 |
+| 12 gauge | $0.80 |
+
+Load price multipliers: FMJ ×1, buckshot ×1, AP ×3, HP ×1.5, Subsonic ×2, Tracer ×1.2, Slug ×1.5 (applied to
+the base price, so e.g. 5.56×45 mm AP = $1.80 per round; no rounding stated, spec: whole cents).
+**Values.** per-load `valueUsd` per round (design draft, from the table and multipliers above) →
+data/items.json; the base prices and multipliers are editor defaults (like DAT-022), not separate fields.
+**Status.** Draft
+**Source.** design/item-list.md › Ammunition (Ammunition prices (draft))
 
 ### [ITM-004] Standard damage modifiers
 **Rule.** A load's `damageModifier` is the standard modifier of its ammo type unless the item editor sets
@@ -595,8 +638,8 @@ vest $250, low-profile recon rig $200 → data/items.json (ITM-034).
 **Rule.** Every item placed in a vest, plate-carrier or battle-belt pouch counts in exactly one type
 category: `magazine` (`kind: magazine`, DAT-030), `grenade` (`kind: grenade`, ITM-032), `medical`
 (`kind: medical`), `other` (everything else).
-The count per category must stay ≤ its `max…` value, in addition to `capacityKg`. On a belt (ITM-017) a
-`max…` field that is not set means no count limit for that category (only the weight limit applies).
+The count per category must stay ≤ its `max…` value, in addition to `capacityKg`. Belts set all four
+`max…` values like vests (ITM-017, design draft); the holstered pistol is not counted in any category.
 **Source.** design/item-list.md › Load-bearing vests; › Battle belts; › Weapons (magazines are items); › Grenades; design/data-definitions.md › Soldier equipment slots (draft) › Type limits
 
 ### [ITM-015] Other items
@@ -616,14 +659,15 @@ only item records).
 ### [ITM-017] Battle belt items
 **Rule.** `kind: "belt"` adds `capacityKg` (number > 0), `holsters` (integer ≥ 0) and optional type limits
 `maxMagazines`, `maxGrenades`, `maxMedical`, `maxOther` (integers ≥ 0); own weight is `weightKg`. Belts
-have quick access (DAT-006). Each holster holds one sidearm (`weaponType: pistol`). Belt pouches follow the
-vest rules: the 1 kg pouch item limit (ITM-016) and the type limits (ITM-014); a belt holds at most
-`maxGrenades` grenades.
+have quick access (DAT-006). Each holster holds one sidearm (`weaponType: pistol`) as an extra third weapon,
+beside weapons 1 and 2 (DAT-005); the holstered pistol counts toward the belt's `capacityKg`. Belt pouches
+follow the vest rules: the 1 kg pouch item limit (ITM-016) and the type limits of the belt (ITM-014).
 Initial content: design/item-list.md › Battle belts (3 belts).
-**Values.** `maxGrenades` — 2 for every belt (design draft, Grenades); `maxMagazines`, `maxMedical`,
-`maxOther` — not set (design: "the same type limits", no counts); `valueUsd` (design draft trader prices):
-leather belt $20, padded battle belt $90, heavy battle belt $150 → data/items.json (ITM-034).
-**Status.** open (holster vs. `weapon2` slot; belt counts other than grenades)
+**Values.** (design drafts) holsters / capacity kg / max magazines / max grenades / max medical / max other /
+own weight kg: leather belt 1 / 1.5 / 2 / 2 / 1 / 1 / 0.3; padded battle belt 1 / 3 / 3 / 2 / 2 / 1 / 0.7; heavy
+battle belt 1 / 4.5 / 4 / 2 / 2 / 2 / 1.1; `valueUsd` (trader prices): leather belt $20, padded battle belt
+$90, heavy battle belt $150 → data/items.json (ITM-034).
+**Status.** Draft
 **Source.** design/item-list.md › Battle belts; › Grenades
 
 ## Backpacks
@@ -712,12 +756,12 @@ drafts): frag grenade `valueUsd` $60, `rarity` uncommon; smoke grenade $30, comm
 `modifiers.shooterSpreadAtRange` (multiplies the range spread, TAC-044); the laser (`slot: tactical`,
 `module: laser`) carries `modifiers.snapShotSpread` (multiplies shooter spread on snap shots) and is
 visible to enemies (DAT-017). Tactical modules (laser, flashlight) may also carry a small `ergonomics`
-modifier set per mod (DAT-016). Which weapons each mod fits (`fits`) is set in the item editor.
+modifier set per mod (DAT-016). Each mod lists the weapons it fits (`fits`, set in the item editor).
 Initial content: design/item-list.md › Mods (4 mods).
-**Values.** (all draft, placeholder) red dot sight — optic, range spread 0.8, 0.2 kg; 4× scope — optic,
-0.5, 0.5 kg; sniper scope — optic, 0.3, 0.7 kg; laser module — tactical, snap-shot spread 0.8, 0.15 kg →
-data/items.json; tactical-module `ergonomics` — not set per mod (design: "may", no values); mod prices — not
-set (design: not stated).
+**Values.** (all draft, placeholder) red dot sight — optic, range spread 0.8, 0.2 kg, $250; 4× scope —
+optic, 0.5, 0.5 kg, $600; sniper scope — optic, 0.3, 0.7 kg, $1,200; laser module — tactical, snap-shot
+spread 0.8, 0.15 kg, $300 (prices = `valueUsd`, ITM-034) → data/items.json; tactical-module `ergonomics` — not
+set per mod (design: "may", no values); `fits` per mod — not set (design: set in the item editor).
 **Status.** Draft (design: "Draft — placeholder values").
 **Source.** design/item-list.md › Mods
 
@@ -729,12 +773,13 @@ item at a faction trader costs `valueUsd`, times `unfriendlyPriceMarkup` at Unfr
 at a Krug market `valueUsd` is the base price that fluctuates (MGT-040). The same value counts in barter
 deals (ITM-023). The design drafts prices for weapons (ITM-001), magazines and belts (ITM-031), helmets
 (ITM-009), body armour (ITM-011), vests (ITM-013), battle belts (ITM-017), backpacks (ITM-018), medical items
-(ITM-019) and grenades (ITM-032); barter goods keep their barter value (ITM-021). An item without
-`valueUsd` (ammunition loads, mods, operation items) cannot be bought or sold at a trader until a price is
-set. What a trader pays when the player sells gear (not barter goods, ITM-022) is not stated.
+(ITM-019), grenades (ITM-032), ammunition per round (ITM-003), mods (ITM-033) and four operation items
+(ITM-025); barter goods keep their barter value (ITM-021). Traders sell only those four operation items; an
+item without `valueUsd` (the other operation items) cannot be bought at a trader and is only found. What a
+trader pays when the player sells gear is ITM-022 (40% of the trader price, Krug 50%).
 **Values.** draft prices as listed in the referenced sections → data/items.json `valueUsd`.
-**Status.** Draft; open (ammunition and mod prices; sell-back rate for gear)
-**Source.** design/item-list.md › Weapons (Trader prices (draft)); › Helmets; › Body armour; › Load-bearing vests; › Battle belts; › Backpacks; › Medical items; › Grenades
+**Status.** Draft
+**Source.** design/item-list.md › Weapons (Trader prices (draft)); › Ammunition (Ammunition prices (draft)); › Helmets; › Body armour; › Load-bearing vests; › Battle belts; › Backpacks; › Medical items; › Grenades; › Mods; › Operation and faction items; › Barter goods (Trading rules)
 
 ## Barter goods
 
@@ -743,7 +788,7 @@ set. What a trader pays when the player sells gear (not barter goods, ITM-022) i
 `valueUsd` (full barter value), `rarity`, `foundIn` (array of loot location tags, ITM-024) and
 `barterClass` (enum `tobacco`, `alcohol`, `valuable`, `general`; drives ITM-022). Optional `contains`
 (array of `{ item: ID → items, chance: 0–1 }`): searching the item may yield another item (old laptop →
-hard drive with data, 0.10).
+hard drive with data, 0.10). Optional `refuelUnits` (integer ≥ 1): the item refills that many fuel units of a ground vehicle tank when used (diesel canister: 1, DAT-025).
 Initial content: design/item-list.md › Barter goods (23 goods). `barterClass`: cigarettes → tobacco;
 vodka → alcohol; wristwatch, foreign banknotes, painted icon, wedding ring, gold chain → valuable; rest
 general.
@@ -752,8 +797,15 @@ general.
 ### [ITM-022] Trader buy rates
 **Rule.** Selling a barter good pays `valueUsd × rate`: city traders `cityBarterRate`; Krug markets
 `krugBarterRate`, or `krugPremiumRate` for `barterClass` tobacco, alcohol or valuable.
-**Values.** `cityBarterRate` — design 0.5; `krugBarterRate` — 0.7; `krugPremiumRate` — 1.0 →
-data/traders.json.
+Selling gear — weapons, magazines, ammunition (per round), helmets, body armour, vests, belts, backpacks,
+mods, medical items, grenades and the operation items traders sell (those with a `valueUsd`, ITM-025) — pays
+its trader price × `gearBuyRate` at a faction trader, or × `krugGearBuyRate` at a Krug market. The trader
+price is the item's `valueUsd` at a faction trader (without the Unfriendly markup, spec choice) and the
+current fluctuating price at a Krug market (MGT-040). Operation items without a `valueUsd` cannot be sold to a
+trader (only handed in, ITM-027). Instance condition (weapons, armour) does not change the rate (design: not
+stated). Selling takes no game time (MGT-039).
+**Values.** `cityBarterRate` — design 0.5; `krugBarterRate` — 0.7; `krugPremiumRate` — 1.0;
+`gearBuyRate` — 0.4; `krugGearBuyRate` — 0.5 (design draft) → data/traders.json.
 **Source.** design/item-list.md › Barter goods › Trading rules
 
 ### [ITM-023] Daily barter deals
@@ -792,6 +844,11 @@ data/loot.json (listed in data/tables.json).
 
 Initial content: design/item-list.md › Operation and faction items (13 items; the checkpoint pass was
 deleted from the design together with checkpoints).
+Traders sell only four operation items, which carry a `valueUsd` (ITM-034); every other operation item has
+no `valueUsd` and is found, never bought.
+**Values.** (design drafts) `valueUsd`: demolition charge $400, bolt cutters $60, medical supply crate $150,
+ammunition crate $500 → data/items.json; no `valueUsd` on the other nine.
+**Status.** Draft
 **Source.** design/item-list.md › Operation and faction items
 
 ### [ITM-026] Operation effects
@@ -849,24 +906,24 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 2. **Resolved (design 75e776f):** wear per shot, jam chance and spread curves are drafted (DAT-014, TAC-083) (part). Still open: the repair rate. DAT-014 — Weapon condition: wear per shot, jam chance and spread curves, repair rate are Open (values;
    the fields are now named: `weaponWearPerShot`, `jamChanceCurve`, `conditionSpreadCurve` in tactical-rules,
    `weaponRepair` in management-rules).
-3. DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
+3. **Resolved (2026-11-24):** each mod lists the weapons it fits; spread and recoil modifiers multiply, ergonomics and weight add; muzzle `flash` = how far the muzzle flash reveals the shooter, a factor on the TAC reveal distance (DAT-016). DAT-016 — No weapon mods exist in the item list; mod compatibility (`fits` per weapon, per type or per
    calibre), modifier arithmetic (add vs multiply) and the meaning of the muzzle `flash` value are not stated.
 4. **Resolved (design eb072a2):** magazines are items with calibre, capacity, weight and fitting weapons, their rounds are counted, and they are refilled from loose ammunition (DAT-030, ITM-031). DAT-016/ITM-014 — Are spare magazines separate items (magazine mods) with loaded rounds tracked per
    magazine, or abstract? The ammunition crate restocks "loose ammo", which suggests loose rounds exist too.
 5. **Resolved (design eb072a2):** the item list adds a Grenades section — frag and smoke grenades with draft weight, radius, damage, penetration and duration (ITM-032). ITM-014 — Grenades have a type limit but no grenade items or grenade profile exist in the design.
-6. DAT-019 — Design says recoil modifier "about ×0.6–×1.6", the item list uses ×0.5 for 9×18 mm.
+6. **Resolved (2026-11-24):** the range is widened to about ×0.5–×1.6 (DAT-019). DAT-019 — Design says recoil modifier "about ×0.6–×1.6", the item list uses ×0.5 for 9×18 mm.
 7. **Resolved (design eb072a2):** confirmed — 12 gauge sets damage and projectile count per load (buckshot 8 × 25, slug 1 × 90), kept as overrides on the loads. DAT-019/ITM-008 — The calibre profile has one damage and projectile count, but 12 gauge differs per
    load; this spec adds `damageOverride`/`projectilesOverride` on loads. Confirm.
-8. **Resolved (design 75e776f):** HP ammo bleed modifier 1.5 and tracer recoil spread ×0.85 are drafted (TAC-060, TAC-047) (part). Still open: whether tracers reveal the shooter. DAT-021 — HP "higher bleeding chance" and tracer "less recoil spread in bursts; reveals the shooter" have
+8. **Resolved (design 75e776f):** HP ammo bleed modifier 1.5 and tracer recoil spread ×0.85 are drafted (TAC-060, TAC-047) (part). **Resolved (2026-11-24):** tracers do not reveal the shooter (DAT-021, ITM-003). DAT-021 — HP "higher bleeding chance" and tracer "less recoil spread in bursts; reveals the shooter" have
    no values; AP "+1 to +2 penetration" is only a description (per-load classes are given).
 9. **Resolved (2026-11-24):** the item list drafts spread modifiers by ammo type (Subsonic ×1.1, Slug ×0.5, others ×1.0), matching DAT-022. DAT-022 — Per-load spread modifiers are missing in the item list; spec uses the type defaults.
-10. **Resolved (2026-11-24):** draft trader prices for weapons, magazines, armour, gear, medical items and grenades are `valueUsd` (ITM-034). Still open: prices for ammunition, mods and operation items; the rate a trader pays for gear. DAT-002 — No purchase prices for weapons, armour, gear, medical or operation items; only barter goods
+10. **Resolved (2026-11-24):** draft trader prices for weapons, magazines, armour, gear, medical items and grenades are `valueUsd` (ITM-034). **Resolved (2026-11-24):** ammunition per round by calibre with load multipliers (ITM-003), mod prices (ITM-033), four operation items sold (ITM-025); traders pay 40% for gear, the Krug 50% (ITM-022). DAT-002 — No purchase prices for weapons, armour, gear, medical or operation items; only barter goods
     have `valueUsd`. Trader prices are needed for MGT trading.
 11. **Resolved (2026-11-24):** draft weights for all medical items; medkit 40 HP per use (ITM-019, ITM-020). ITM-019 — Medical items have no weights (`weightKg` is required, DAT-002; values to be entered as data); medkit "large; backpack item" cannot be checked against the
     1 kg pouch rule. Medkit HP per use is not stated.
 12. **Resolved (design 8972470):** the note now reads "Light and quick; the medkit also stops heavy bleeding in any zone" — both treat heavy bleeding in every zone. ITM-020 — Hemostatic dressing is called "the only fix for thorax and head bleeding in the field", yet the
     medkit also stops heavy bleeding.
-13. **Partly resolved (2026-11-24):** the holster holds the sidearm (a pistol); the 1 kg rule and type limits apply to belt pouches; belts hold at most 2 grenades (ITM-016, ITM-017). Still open: is the holstered pistol the `weapon2` slot (DAT-005) or an extra weapon, and does it count toward `capacityKg`; belt counts for magazines, medical and other items ("the same type limits" gives no numbers). ITM-017 — Meaning of the battle-belt holster (does weapon 2 or a pistol sit there, does it change swap
+13. **Partly resolved (2026-11-24):** the holster holds the sidearm (a pistol); the 1 kg rule and type limits apply to belt pouches; belts hold at most 2 grenades (ITM-016, ITM-017). **Resolved (2026-11-24):** the holstered pistol is an extra third weapon and counts toward the belt's capacity; belt limits leather 2/2/1/1, padded 3/2/2/1, heavy 4/2/2/2 (magazines/grenades/medical/other) (DAT-005, ITM-014, ITM-017). ITM-017 — Meaning of the battle-belt holster (does weapon 2 or a pistol sit there, does it change swap
     AP?). Does the 1 kg pouch rule (ITM-016) and type limits apply to belts? The item list names only vests
     and plate carriers.
 14. **Resolved (design 3aac08f):** heavy assault armour −5 AP per activation, no stamina penalty (ITM-011, TAC-027) (part). Still open: concealable, quiet. **Resolved (design 75e776f):** ceramic wear ×1.5 (ITM-011) (part). ITM-011 — Values for ceramic fast durability loss, heavy assault armour AP/stamina penalties; whether
@@ -913,8 +970,14 @@ and plate carriers (ITM-014); items above the pouch weight limit (ITM-016) need 
 32. **Resolved (2026-11-24):** tactical mods may carry small modifiers set per mod; the schema allows `ergonomics` besides the laser's `snapShotSpread` (weight is the mod's own `weightKg`) (DAT-016). DAT-016 — The tactical sub-slot has no `modifiers` keys in the design (only its `module`); the schema
     accepts only an empty `modifiers` object there. Confirm that flashlight and laser mods never change
     profile values.
-33. DAT-024 — One fuel unit is "one 20-litre fuel can, 18 kg" (design draft). Is a fuel unit a carried item
+33. **Resolved (2026-11-24):** the tank is a counter of fuel units; spare fuel is carried as diesel canister items (20 l, 18 kg) that refill 1 unit each (`refuelUnits`, DAT-024, DAT-025, ITM-021). DAT-024 — One fuel unit is "one 20-litre fuel can, 18 kg" (design draft). Is a fuel unit a carried item
     (a fuel-can item in vehicle storage, like the barter "Diesel canister (20 l)", 18 kg, $60) or only a tank
     counter? Refuel price is $50 per unit (MGT-067), the diesel canister's barter value $60.
-34. DAT-030 — With one load per magazine, refilling a partly filled magazine with a different load: the
+34. **Resolved (2026-11-24):** confirmed by the design — the old rounds go back to loose ammunition first (DAT-030). DAT-030 — With one load per magazine, refilling a partly filled magazine with a different load: the
     spec empties it back to loose rounds first. Confirm.
+35. DAT-025, DAT-028: helicopters "refuel only at FOBs and oil plants", while diesel canisters refill a
+    vehicle's tank anywhere. Spec reads canisters as ground vehicles only; confirm, or may a landed helicopter
+    refuel from canisters?
+36. DAT-016: the muzzle `flash` modifier scales "how far the muzzle flash reveals the shooter", but no base
+    reveal distance exists in the tactical rules (design: not stated). TAC needs the base distance (and a
+    rule for when a flash reveals: night only, or always).

@@ -3,7 +3,7 @@
   "$id": "data/factions.schema.json",
   "title": "Factions",
   "description": "The armed powers and their starting relations (spec GEN-004..GEN-018, STR-051, STR-066, STR-067, STR-096, SAI-010). Relation range and thresholds are strategic-rules (STR-051), not faction fields. A record of kind resistance is the template every resistance group spawned during play uses (doctrine, squadTemplate); groups get their own IDs at creation (STR-067).",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -33,7 +33,16 @@
         },
         "additionalProperties": false
       },
+      "resentment": {
+        "type": "object", "description": "GEN-010 (Krug record): Krug members resenting foreign soldiers",
+        "properties": {
+          "priceMarkup": { "type": "number", "minimum": 0, "description": "extra share on Krug recruits and Krug deals for the player (price × (1 + priceMarkup), applied by MGT), design draft 0.10" },
+          "escortRefusalChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "STR-094: chance per paid escort request by a foreign PMC that it is refused outright, design draft 0.20" }
+        },
+        "additionalProperties": false
+      },
       "patron": { "type": "string", "x-ref": "factions", "description": "GEN-005, patron faction or influence" },
+      "backs": { "type": "string", "x-ref": "factions", "description": "GEN-005, GEN-015 (influence records): the state this influence backs, design east → ssv, west → vdk" },
       "startRelations": { "type": "object", "description": "GEN-007 / STR-051: faction id → relation at campaign start, symmetric (design draft table in GEN-007)", "additionalProperties": { "type": "integer", "minimum": -100, "maximum": 100 } },
       "doctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "SAI-010" },
       "rogueDoctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "SAI-002 / SAI-010 (rival PMC records): doctrine used once this PMC has gone rogue (STR-066)" },
@@ -53,10 +62,13 @@
         "properties": {
           "base": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.01" },
           "perSign": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.02" },
-          "patronLosingBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "not set" },
-          "unpaidContractsBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "not set" },
-          "nearCapitalBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "not set" },
-          "nearCapitalRange": { "type": "integer", "minimum": 0, "description": "tiles from the capital, design draft 3" }
+          "patronLosingBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "while the patron is losing (strategic-rules losing, STR-061), design draft 0.03" },
+          "unpaidContractsBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "per unpaid contract payment owed to it in the last unpaidWindowDays, design draft 0.02" },
+          "unpaidWindowDays": { "type": "integer", "minimum": 1, "description": "design draft 14" },
+          "unpaidContractsMax": { "type": "number", "minimum": 0, "maximum": 1, "description": "cap of the unpaid-contracts rise, design draft 0.06" },
+          "nearCapitalBonus": { "type": "number", "minimum": 0, "maximum": 1, "description": "per region it controls within nearCapitalRange of the capital, design draft 0.01" },
+          "nearCapitalRange": { "type": "integer", "minimum": 0, "description": "tiles from the capital, design draft 3" },
+          "nearCapitalMax": { "type": "number", "minimum": 0, "maximum": 1, "description": "cap of the near-capital rise, design draft 0.05" }
         },
         "additionalProperties": false
       },

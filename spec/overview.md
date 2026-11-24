@@ -68,14 +68,17 @@ one reputation value toward the player (MGT). Every AI faction's money is held b
 ### [GEN-005] Off-map influences
 **Rule.** Two off-map powers, `east` and `west`, exist without map presence, squads or territory. They act
 only through deliveries, intelligence and escalation, triggered by world events (STR). They are never
-named in any UI text. They hold no reputation value toward the player.
-**Values.** influence definitions → data/factions.json
+named in any UI text. They hold no reputation value toward the player. Each backs one state: `east` the
+SSV, `west` the VDK (used by the holding phase, GEN-015). They are never AI controllers (SAI-002).
+**Values.** influence definitions; `backs` — `east` → `ssv`, `west` → `vdk` (design) → data/factions.json
+(influence records)
 **Source.** design/design.md › Factions & campaign › Factions
 
 ### [GEN-006] Civilian population
 **Rule.** The civilian population is a non-combat faction. Its loyalty exists only on settlement tiles
 (cities, towns, villages), one value per faction from −100 to 100 (STR-009). Per settlement, loyalty
-drives income, intel and recruitment available there. It has no squads and cannot be fought as a faction.
+drives income, intel and recruitment available there. It has no squads, cannot be fought as a faction and
+is never an AI controller (SAI-002).
 **Source.** design/design.md › Factions & campaign › Factions; design/strategic-layer.md › Map (draft)
 
 ### [GEN-007] Faction relations model
@@ -129,12 +132,18 @@ hostile to the player.
 ### [GEN-010] Krug standing unlocks
 **Rule.** Krug reputation is raised only by keeping deals (MGT reputation acts). Each Krug unlock is
 available while the player's Krug reputation ≥ its required standing; in order of standing: local recruits
-(MGT hiring pool), better market stock, smuggling routes usable by ops (STR), safe houses (STR). Some Krug
-members resent all foreign soldiers including the player's, independent of standing (gameplay effect not
-designed, see Open questions 7).
+(MGT hiring pool), better market stock, smuggling routes usable by ops (STR), safe houses (STR).
+**Krug resentment.** Some Krug members resent all foreign soldiers, the player's included, independent of
+standing. Two effects:
+- Krug recruits and Krug deals (trade, barter and services bought from the Krug) cost the player
+  `resentment.priceMarkup` more (price factor `1 + priceMarkup`, applied by MGT when it prices them).
+- Each paid escort request a foreign PMC makes to the Krug (STR-094) is refused outright with chance
+  `resentment.escortRefusalChance` (seeded, rolled by Strategic before the request reaches the Krug AI): a
+  Krug squad that resents foreign soldiers refuses the work. Foreign PMCs are the player's PMC, Varyag and
+  Aegis (a rogue PMC included); the states and resistance groups are not (Open questions 14).
 **Values.** `standingUnlocks` — `localRecruits` 0, `marketStock` 20, `smugglingRoutes` 35, `safeHouses` 50
-(design draft) → data/factions.json (Krug record)
-**Status.** open
+(design draft); `resentment.priceMarkup` 0.10, `resentment.escortRefusalChance` 0.20 (design draft) →
+data/factions.json (Krug record)
 **Source.** design/design.md › Factions & campaign › The Krug
 
 ## Campaign
@@ -150,24 +159,28 @@ stories only from service records (MGT).
 
 ### [GEN-012] Campaign end states
 **Rule.** The campaign ends in exactly one of: `ssvUnited` (Veligrad united under the SSV),
-`vdkUnited` (united under the VDK), `reformed`, `endlessWar` (locked into an endless proxy war),
-`playerCoup` (seized by the player's PMC, GEN-013…GEN-016), `cashOut` (the player cashes out and
-leaves, at the player's choice). There is no Krug ending. On end, a score is computed from money,
-reputation and surviving soldiers (MGT). Checked at each daily check (STR-004):
-- **Faction victory** (`ssvUnited`, `vdkUnited`): a faction wins when it is the capital's holder
-  (STR-007) and controls at least `campaign.victoryTileShare` of all tiles, both held without a break for
-  `campaign.victoryHoldDays` days; the count restarts whenever either condition fails.
+`vdkUnited` (united under the VDK), `rogueVictory` (a rogue PMC wins: a loss for the player), `reformed`
+(ceasefire peace, GEN-019), `endlessWar` (locked into an endless proxy war), `playerCoup` (seized by the
+player's PMC, GEN-013…GEN-016), `cashOut` (the player cashes out and leaves, at the player's choice).
+There is no Krug ending. On end, a score is computed from money, reputation and surviving soldiers (MGT).
+Checked at each daily check (STR-004):
+- **Faction victory:** a faction meets the victory rule when it is the capital's holder (STR-007) and
+  controls at least `campaign.victoryTileShare` of all tiles, both held without a break for
+  `campaign.victoryHoldDays` days; the count restarts whenever either condition fails. Only the SSV
+  (`ssvUnited`), the VDK (`vdkUnited`), the player's PMC and a rogue PMC (STR-066; `rogueVictory`) can
+  meet it, and Strategic keeps the count only for them: Varyag and Aegis while they serve a patron, the
+  Krug and resistance groups cannot. `rogueVictory` ends the campaign as a loss for the player. Which
+  ending the player's PMC reaches by meeting the rule is not named (Open questions 13).
+- **`reformed`:** GEN-019.
 - **`endlessWar`:** no faction has won when the day counter reaches `campaign.endlessWarDay`.
 - **`cashOut`:** offered to the player (a choice, not forced) once the PMC's money (MGT `economy`) exceeds
   `campaign.cashOutFundsUsd`; taking it ends the campaign.
 - **`playerCoup`:** GEN-015.
-- **`reformed`:** trigger not designed.
-For now the only campaign-ending coup is the player's: a rival PMC that comes to hold the capital
-(STR-007) just becomes its holder, and the campaign goes on.
+A rogue PMC that only holds the capital (STR-007) is its holder and the campaign goes on; it ends the
+campaign only by meeting the victory rule.
 **Values.** `campaign.victoryTileShare` 0.6, `campaign.victoryHoldDays` 14, `campaign.endlessWarDay` 120,
-`campaign.cashOutFundsUsd` 2000000 (design draft) → data/strategic-rules.json; `reformed` trigger — not set
-(design: not stated)
-**Status.** open
+`campaign.cashOutFundsUsd` 2000000 (design draft) → data/strategic-rules.json; `reformed` → GEN-019.
+**Status.** open (the ending of the player's own victory)
 **Source.** design/design.md › Factions & campaign › Player role; design/strategic-layer.md › Map (draft); design/management.md › Base & meta progression
 
 ## Coups
@@ -199,15 +212,14 @@ holding phase starts (GEN-015).
 **Rule.** After a won coup operation (GEN-014) the holding phase runs:
 - Both `east` and `west` turn against the PMC and drive counter-attacks on the capital (STR).
 - **Success:** the phase ends, and the `playerCoup` ending is reached, as soon as one patron accepts the
-  new order: at a daily check (STR-004), a patron accepts once the PMC's reputation with it is Friendly or
-  better (MGT-054), or once the PMC has held the capital for `coup.acceptDays` days since the coup.
-  Who "the patron" is for the reputation test is open (Open questions 11).
+  new order: at a daily check (STR-004), a patron accepts once the PMC's reputation with the state it
+  backs is Friendly or better (MGT-054) — the eastern influence backs the SSV, the western the VDK
+  (`backs`, GEN-005) — or once the PMC has held the capital for `coup.acceptDays` days since the coup.
 - **Failure:** losing control of the capital tile ends the holding phase in failure; the campaign goes on
   (STR-007: the capital becomes contested).
 The capital's own hold timer (STR-007, `capitalHoldDays`) runs as for any occupant; it does not by itself
 end the campaign for the player.
-**Values.** `coup.acceptDays` 30 (design draft) → data/strategic-rules.json
-**Status.** open
+**Values.** `coup.acceptDays` 30 (design draft) → data/strategic-rules.json; `backs` → GEN-005.
 **Source.** design/design.md › Factions & campaign › Coups; design/strategic-layer.md › Map (draft)
 
 ### [GEN-016] Coup epilogue
@@ -219,17 +231,26 @@ the number of soldiers lost during the campaign.
 **Rule.** Once per day (daily check, STR-004), while no rogue PMC has appeared yet, for each candidate
 (`varyag`, `aegis`) roll (seeded) whether it stops serving its patron (Varyag: SSV, Aegis: VDK) and
 attempts a coup of its own. Chance per day = `rogueChance.base` + `rogueChance.perSign` × the number of
-true crisis signs its patron shows (any of the ten, STR-069), plus a further rise for each of: its patron is
-losing, its contracts go unpaid, it controls a region within `rogueChance.nearCapitalRange` tiles of the
-capital. A success schedules the rogue PMC event (STR-066) with its warning signs first (GEN-018,
+true crisis signs its patron shows (any of the ten, STR-069), plus:
+- `rogueChance.patronLosingBonus` while its patron is losing: the patron lost tiles on at least
+  `losing.lossDaysMin` of the last `losing.windowDays` days (the same "losing" test as Defection, STR-061;
+  faction history, STR-068);
+- `rogueChance.unpaidContractsBonus` per contract payment owed to it that went unpaid (employer default,
+  STR-093) in the last `rogueChance.unpaidWindowDays` days, at most `rogueChance.unpaidContractsMax` in all;
+- `rogueChance.nearCapitalBonus` per region it controls within `rogueChance.nearCapitalRange` tiles of the
+  capital, at most `rogueChance.nearCapitalMax` in all.
+
+A success schedules the rogue PMC event (STR-066) with its warning signs first (GEN-018,
 STR-052). The rogue event's effect is the PMC rushing the capital; a PMC rushing a capital that has lost
 its holder (STR-007) is this same event, not a separate move. At most one rogue PMC per campaign. A rogue
-PMC that comes to hold the capital just becomes its holder; it does not end the campaign (GEN-012).
-**Values.** `rogueChance.base` 0.01, `rogueChance.perSign` 0.02, `rogueChance.nearCapitalRange` 3 (design
-draft) → data/factions.json (Varyag and Aegis records); the rise per factor (`patronLosingBonus`,
-`unpaidContractsBonus`, `nearCapitalBonus`) and what "patron is losing" means — not set (design: not
-stated) → data/factions.json `rogueChance`; warning lead time → STR-052.
-**Status.** open
+PMC that comes to hold the capital just becomes its holder; if it meets the victory rule, the campaign ends
+as `rogueVictory`, a loss for the player (GEN-012).
+**Values.** `rogueChance.base` 0.01, `rogueChance.perSign` 0.02, `rogueChance.patronLosingBonus` 0.03,
+`rogueChance.unpaidContractsBonus` 0.02, `rogueChance.unpaidWindowDays` 14,
+`rogueChance.unpaidContractsMax` 0.06, `rogueChance.nearCapitalBonus` 0.01, `rogueChance.nearCapitalRange`
+3, `rogueChance.nearCapitalMax` 0.05 (design draft) → data/factions.json (Varyag and Aegis records);
+`losing.lossDaysMin` 3, `losing.windowDays` 5 (design draft) → data/strategic-rules.json (owned by STR-061);
+warning lead time → STR-052.
 **Source.** design/design.md › Factions & campaign › Coups › Rogue PMCs; design/world-events.md › Events (Rogue PMC)
 
 ### [GEN-018] Rogue PMC warning signs and aftermath
@@ -238,8 +259,27 @@ movements, large arms purchases reported by the Krug, contractors pulled off the
 it happens the rogue PMC becomes a new power with no patron, with its own controller and doctrine (SAI-002,
 SAI-010) and its own funds (STR-092); the SSV and the VDK may post contracts to stop it (MGT); the player
 may side with it or stay out. If it holds the capital it is the main antagonist for the rest of the
-campaign.
+campaign; if it meets the victory rule, the campaign ends as a loss for the player (`rogueVictory`,
+GEN-012).
 **Source.** design/design.md › Factions & campaign › Coups › Rogue PMCs; design/ai.md › Strategic AI (Faction AI tiers)
+
+### [GEN-019] Reformed ending: ceasefire peace
+**Rule.** The `reformed` ending is a ceasefire peace between the SSV and the VDK:
+- **General ceasefire.** While it holds, every SSV–VDK encounter on any tile never turns hostile (as the
+  local ceasefire flag does, STR-060, but across the whole front and the whole map). The player can broker
+  it while both the SSV and the VDK are exhausted (GEN-013: at least `coup.exhaustedSigns` true crisis
+  signs at the last daily check) and the player's reputation with both is Trusted (MGT-054). How the player
+  brokers it (where, how long it takes) and whether it can also start without the player are not designed
+  (Open questions 15).
+- **Ending.** At a daily check (STR-004), the campaign ends as `reformed` once the general ceasefire has
+  held without a break for `campaign.reformedCeasefireDays` days while both stayed exhausted. A fight
+  between SSV and VDK squads breaks it; when either state is no longer exhausted at a daily check the
+  count restarts.
+- **Epilogue.** The `reformed` epilogue makes clear that the peace is only temporary.
+**Values.** `campaign.reformedCeasefireDays` 14 (design draft) → data/strategic-rules.json; exhaustion →
+`coup.exhaustedSigns` (GEN-013).
+**Status.** open (brokering action)
+**Source.** design/design.md › Factions & campaign › Player role
 
 ## Open questions
 
@@ -248,7 +288,10 @@ campaign.
    reaching an FOB), failure only if none returns.
 2. **Resolved (2026-11-24):** a faction wins by holding the capital and a share of all tiles for a number of
    days; the war locks into `endlessWar` at a day limit; cashing out is offered once funds pass a target
-   (GEN-012). Still open: the trigger of `reformed`. GEN-012: trigger conditions for the four non-coup endings and for when `cashOut` is offered are not
+   (GEN-012). **Resolved (2026-11-24, design 06dc2a6):** `reformed` is a ceasefire peace held across the
+   whole front for 14 days (draft) while both states are exhausted, brokered by a player Trusted with both;
+   it ends the campaign with an epilogue that shows the peace as temporary (GEN-019; the brokering action
+   itself moves to question 15). GEN-012: trigger conditions for the four non-coup endings and for when `cashOut` is offered are not
    designed.
 3. **Resolved (2026-11-24):** exhausted = at least `coup.exhaustedSigns` crisis signs; key regions = the
    capital and the oil and arms plant tiles; approaches = every tile next to the capital (GEN-013). Still
@@ -263,26 +306,45 @@ campaign.
 6. **Resolved (2026-11-24):** start relations and the Orlov and Sokolov numbers are drafted in the design
    (GEN-007, GEN-008); Rook's adaptation is deferred (optional). GEN-007: initial relation values between factions are not given; Rook/Orlov/Sokolov effects (GEN-008)
    have no numbers.
-7. GEN-010: standing levels per unlock are now drafted (**resolved 2026-11-24**); still open: the gameplay
-   effect of Krug members resenting foreign soldiers.
+7. **Resolved (2026-11-24, design 06dc2a6):** Krug recruits and deals cost the player +10% (draft), and a
+   Krug squad refuses paid escort work for a foreign PMC with 20% chance per request (draft) (GEN-010,
+   STR-094); see question 14. GEN-010: standing levels per unlock are now drafted (**resolved
+   2026-11-24**); still open: the gameplay effect of Krug members resenting foreign soldiers.
 8. **Resolved (2026-11-24):** no Krug ending for now (GEN-012). Design open: could the Krug be an ending of its own (rule by the Code)? Not in GEN-012 until decided.
 9. **Resolved (2026-11-24):** the coup needs the requirements met and the final operation won; the holding
    phase follows; holding the capital alone is not a coup (GEN-013…GEN-015, STR-007). GEN-013, GEN-015: the player holding the capital for the hold time "counts as the coup ending" — must
    the coup requirements (GEN-013) be met and the final operation (GEN-014) run first, and does the
    holding-on phase until east or west accepts the new order still follow?
 10. **Resolved (2026-11-24):** base chance plus a step per true crisis sign of the patron, any of the ten;
-    a PMC rushing the capital is the rogue event itself, once per campaign (GEN-017). Still open: how much
+    a PMC rushing the capital is the rogue event itself, once per campaign (GEN-017). **Resolved
+    (2026-11-24, design 06dc2a6):** patron losing +3% (lost tiles on 3 of the last 5 days, the Defection
+    test), +2% per unpaid contract payment in 14 days (at most +6%), +1% per region within 3 tiles of the
+    capital (at most +5%), all drafts (GEN-017, STR-061 `losing`). Formerly still open: how much
     each raising factor (patron losing, unpaid contracts, near the capital) adds, and what "losing" means.
     GEN-017: how does the daily chance grow with the patron's crisis signs (per sign, curve)? Which
     signs count (the design names low funds, troop losses, lost territory)? Is a "PMC rushing the
     capital" the rogue-PMC event itself (counting toward the once-per-campaign limit) or a separate move
     by any PMC?
-11. GEN-015: "a patron accepts once the PMC's reputation with it is Friendly or better" — the patrons are
+11. **Partly resolved (2026-11-24, design 06dc2a6):** the test uses the reputation with the state each
+    influence backs (east: SSV, west: VDK), Friendly or better (GEN-005, GEN-015). Still open: the event
+    stances on top of 0 for new factions (second part below). GEN-015: "a patron accepts once the PMC's reputation with it is Friendly or better" — the patrons are
     the off-map `east` and `west`, which hold no reputation toward the player (GEN-005). Is the test the
     reputation with the state each influence backs (east: SSV, west: VDK), or do the influences get a
     reputation value? Also GEN-007: new factions "start at 0 toward everyone", but the resistance event
     makes a group hostile to the tile's controller and a rogue PMC turns on its patron (STR-066, STR-067):
     the spec applies those event stances on top of 0. Confirm.
-12. GEN-012: may a faction other than the SSV or the VDK (a rival or rogue PMC, the Krug) meet the victory
-    condition, and what happens then (no ending is named for it)? Must the capital and the tile share be
-    held without a break for the whole period (spec: yes, the count restarts)?
+12. **Partly resolved (2026-11-24, design 06dc2a6):** besides the SSV, the VDK and the player only a rogue
+    PMC can meet the victory rule, which ends the campaign as a loss for the player (`rogueVictory`);
+    Varyag and Aegis while serving a patron and the Krug cannot (GEN-012). Still open: must the capital and
+    the tile share be held without a break (spec: yes, the count restarts)? GEN-012: may a faction other
+    than the SSV or the VDK (a rival or rogue PMC, the Krug) meet the victory condition, and what happens
+    then (no ending is named for it)?
+13. GEN-012: the design lets the player's PMC meet the victory rule (capital and tile share held), but names
+    no ending for it. Is it `playerCoup` (and must the coup requirements, final operation and holding phase
+    of GEN-013…GEN-015 still come first), or a separate ending? The spec keeps the count but ends nothing.
+14. GEN-010, STR-094: "some Krug squads refuse escort work for a foreign PMC" — the spec rolls the refusal
+    for the player's PMC, Varyag and Aegis (a rogue PMC included), not for the states or resistance groups.
+    Confirm which requesters count as foreign PMCs.
+15. GEN-019: how does the player broker the general ceasefire (a strategic action: where, how long, at what
+    cost), and can the SSV and the VDK fall into it without the player? Until decided, the spec has no
+    command or action that starts it.

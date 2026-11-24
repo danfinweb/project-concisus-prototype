@@ -2,25 +2,26 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "data/strategic-rules.schema.json",
   "title": "Strategic rules",
-  "description": "Global strategic and campaign constants (spec STR, GEN-012..GEN-015). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules. Roads have no visibility of their own (STR-006).",
-  "version": "0.5.0",
+  "description": "Global strategic and campaign constants (spec STR, GEN-012..GEN-015, GEN-019). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules. Roads have no visibility of their own (STR-006).",
+  "version": "0.6.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design drafts listed in the spec.",
   "type": "object",
   "properties": {
     "capitalHoldDays": { "type": "integer", "minimum": 1, "description": "STR-007, design draft 7" },
     "capitalBonusIncomeUsd": { "type": "number", "minimum": 0, "description": "STR-007: the capital holder's bonus income per day, design draft 3000" },
     "campaign": {
-      "type": "object", "description": "GEN-012: campaign end conditions",
+      "type": "object", "description": "GEN-012, GEN-019: campaign end conditions",
       "properties": {
         "victoryTileShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "share of all tiles a faction must control together with the capital, design draft 0.6" },
         "victoryHoldDays": { "type": "integer", "minimum": 1, "description": "days both must be held without a break, design draft 14" },
         "endlessWarDay": { "type": "integer", "minimum": 1, "description": "day on which the war locks into endlessWar if no one has won, design draft 120" },
-        "cashOutFundsUsd": { "type": "number", "minimum": 0, "description": "PMC money above which cash-out is offered, design draft 2000000" }
+        "cashOutFundsUsd": { "type": "number", "minimum": 0, "description": "PMC money above which cash-out is offered, design draft 2000000" },
+        "reformedCeasefireDays": { "type": "integer", "minimum": 1, "description": "GEN-019: days the general SSV–VDK ceasefire must hold, both exhausted, for the reformed ending, design draft 14" }
       },
       "additionalProperties": false
     },
     "coup": {
-      "type": "object", "description": "GEN-013, GEN-015: player coup requirements and holding phase",
+      "type": "object", "description": "GEN-013, GEN-015: player coup requirements and holding phase (exhaustedSigns is also the exhaustion test of GEN-019)",
       "properties": {
         "keyRegions": { "type": "integer", "minimum": 0, "description": "GEN-013, design draft 4" },
         "minSoldiers": { "type": "integer", "minimum": 0, "description": "GEN-013, design draft 12" },
@@ -50,6 +51,14 @@
     "startHour": { "type": "integer", "minimum": 0, "maximum": 23, "description": "STR-001, hour of Day 1, design default 6 (06:00)" },
     "factionTickOrder": { "type": "array", "items": { "type": "string", "x-ref": "factions" }, "description": "STR-003, order in which factions act each hour" },
     "historyDays": { "type": "integer", "minimum": 1, "description": "STR-068, design 7" },
+    "losing": {
+      "type": "object", "description": "STR-061 (owner; GEN-017 uses it): a faction is losing while it lost tiles on at least lossDaysMin of the last windowDays days",
+      "properties": {
+        "lossDaysMin": { "type": "integer", "minimum": 1, "description": "design draft 3" },
+        "windowDays": { "type": "integer", "minimum": 1, "description": "design draft 5" }
+      },
+      "additionalProperties": false
+    },
     "roadMoveHours": {
       "type": "object", "description": "STR-006: hours per tile along a road (asphalt = dirt)",
       "properties": {
@@ -72,11 +81,11 @@
       },
       "additionalProperties": false
     },
-    "fuelPerRegion": { "type": "integer", "minimum": 0, "description": "STR-032: fuel units per tile moved, flat for every terrain, design draft 1 (1 unit = one 20-litre fuel can)" },
+    "fuelPerRegion": { "type": "integer", "minimum": 0, "description": "STR-032: fuel units per tile moved, flat for every terrain, spent on arrival (a cancelled or interrupted move spends none), design draft 1 (1 unit = one 20-litre fuel can)" },
     "heliMoveHours": { "type": "integer", "minimum": 1, "description": "STR-034, design 1 (single value for every helicopter)" },
     "pilotTechnicalMin": { "type": "integer", "minimum": 0, "maximum": 100, "description": "STR-034, design 50 (single value for every helicopter)" },
     "heliFire": {
-      "type": "object", "description": "STR-034: one roll per hostile military POI on the helicopter's path, exclusive outcomes",
+      "type": "object", "description": "STR-034: one roll per hostile military point of interest on the helicopter's path (POI types flagged military in data/poi.json, or a tile with a hostile squad), exclusive outcomes; damaged = must land and be repaired before flying on",
       "properties": {
         "damageChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.10" },
         "downChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "design draft 0.03" }

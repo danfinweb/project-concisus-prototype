@@ -3,7 +3,7 @@
   "$id": "data/poi.schema.json",
   "title": "Points of interest",
   "description": "Point-of-interest types with their services and output (spec STR-009..STR-016, STR-096, MGT-068). A Krug market is not a POI category: it is the krugMarket flag on a town or city tile (STR-005, STR-010). A village is a record of category town (STR-009).",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "object",
   "additionalProperties": {
     "type": "object",
@@ -17,7 +17,8 @@
       "services": { "type": "array", "items": { "enum": ["trade", "hire", "contracts", "hospital", "repairs", "refuel", "vehicleTrade", "fobPurchase"] }, "description": "STR-010, STR-039..STR-042. Krug market services come from the tile flag krugMarket, not from this list" },
       "krugMarketAllowed": { "type": "boolean", "description": "STR-010: a tile with this POI type may carry the krugMarket flag (design: towns and cities)" },
       "income": { "type": "number", "minimum": 0, "description": "STR-014: USD per day to the controller (design draft: gov 500, mechanical 1000, chemical 1000, oil 3000, arms 1500, minerals 1500, town 300, small city 1000, large city 2000, gas station 300)" },
-      "supplyOutput": { "type": "object", "description": "STR-014, not set" },
+      "supplyOutput": { "type": "integer", "minimum": 0, "description": "STR-014: supply points per day to the controller, one point supplies one soldier for one day (design draft: oil, arms, large city 20; mechanical, chemical, small city 10; minerals, gov, town, gas station 5)" },
+      "military": { "type": "boolean", "description": "STR-010 / STR-034: fires on hostile helicopters (design: arms plants and governmental institutions)" },
       "recruitOutput": { "type": "integer", "minimum": 0, "description": "STR-014: recruits per day (design draft: town 1, small city 2, large city 3)" },
       "dailyOutput": { "type": "object", "description": "STR-015 / MGT-068: what a PMC-held plant delivers per day (drafts in MGT-068)" },
       "mineralModifier": { "type": "number", "minimum": 0, "description": "STR-011 (minerals record): output bonus per mineral plant held, design draft 0.10" },

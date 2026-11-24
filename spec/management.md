@@ -15,8 +15,8 @@ rules in TAC.
 generation, never changes); `callsign` (current displayed callsign); `callsignSource` (`generated` |
 `earned` | `player`); `callsignPrestige` (0 for generated, 1–5 for earned); the eight attributes
 (MGT-021); `nerve` (MGT-031); `morale` (MGT-008); `wounds` (per body zone, structure per TAC Medical
-system); `tier` (MGT-002) and `salary` (per day, MGT-005); `contractEnds` (game time of the next renewal,
-MGT-005); `deeds` (IDs of deeds already earned, MGT-018); `status` (`active` | `mia` | `captured` |
+system); `rank` (a tier ID, MGT-002: the hiring tier at hiring, rising by MGT-074, never dropping; the fee per
+op follows it, MGT-005); `deeds` (IDs of deeds already earned, MGT-018); `status` (`active` | `mia` | `captured` |
 `dead`); `hiredSkills` (the four skill values at hiring, the drift floor of MGT-025); `serviceRecord`
 (MGT-006); `kitMarks` (cosmetic patches and colours). No name, portrait, voice, backstory or personality is generated or stored. Derived
 values (MGT-026…MGT-030) are never stored. A `battle_result` soldier status `leftMap` (left through an
@@ -28,20 +28,20 @@ exit) is stored as `active`; `battle_result` `mia`, `captured` and `dead` are pr
 ### [MGT-002] Hiring pools
 **Rule.** Soldiers are hired from hiring pools of four kinds: `agency`, `local`, `defector`,
 `freedPrisoner`. Each pool offers generated candidates in price tiers. There are four tiers, each with a
-base hire price, a salary per day and an attribute range:
+base hire price, a fee per op and an attribute range. The tiers are also the soldier ranks (MGT-074):
 
-| Tier (`tiers[].id`) | Hire price | Salary per day | Attribute range |
+| Tier (`tiers[].id`) | Hire price | Fee per op | Attribute range |
 | --- | --- | --- | --- |
-| `recruit` | $1,000 | $50 | 20–45 |
-| `regular` | $3,000 | $100 | 35–60 |
-| `veteran` | $8,000 | $200 | 50–75 |
-| `elite` | $20,000 | $400 | 65–90 |
+| `recruit` | $1,000 | $300 | 20–45 |
+| `regular` | $3,000 | $600 | 35–60 |
+| `veteran` | $8,000 | $1,200 | 50–75 |
+| `elite` | $20,000 | $2,500 | 65–90 |
 
 Hiring happens at an FOB (MGT-066); local recruits also come from Krug standing (GEN-010) and civilian
 loyalty (GEN-006). Every FOB always offers at least one affordable candidate, so a replacement is always
 available. Hiring takes no game time (STR time rules).
 **Values.** the tier table (design draft) → data/recruitment.json `tiers[]` (`id`, `hirePriceUsd`,
-`salaryPerDayUsd`, `attributeRange`); tiers per pool, candidates per pool, refresh interval — not set
+`feePerOpUsd`, `attributeRange`); tiers per pool, candidates per pool, refresh interval — not set
 (design: not stated) → data/recruitment.json `pools[]`
 **Status.** open (pools)
 **Source.** design/management.md › Soldiers & progression (Recruitment)
@@ -51,11 +51,16 @@ available. Hiring takes no game time (STR time rules).
 candidate's average attribute within the tier (price follows stats): a candidate at the middle of the tier's
 attribute range pays the tier price, a better one more, a worse one less. The exact scaling (e.g. ±
 `priceFormula.spread` of the tier price from the bottom to the top of the attribute range) is not designed.
+Price modifiers, applied after the scaling: a Krug recruit (local recruit from Krug standing, GEN-010) costs
+× (1 + `resentment.priceMarkup`) (Krug resentment, GEN overview); an extra refugee recruit (STR-065, sent in a
+`localRecruits` request) costs × (1 − `params.recruitFeeDiscount`) — spec reading: the design's "fee 30% lower"
+applies to the hire price of these cheap recruits, not to the fee per op (see Open questions 50).
 **Values.** tier hire prices (design draft, MGT-002) → data/recruitment.json `tiers[].hirePriceUsd`;
 scaling within a tier `priceFormula` — not set (design: "scales with the average attribute") →
-data/recruitment.json
+data/recruitment.json; `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json (Krug record,
+schema owned by STR/GEN); `params.recruitFeeDiscount` — 0.30 (design draft) → data/events.json (STR-065)
 **Status.** open (scaling)
-**Source.** design/management.md › Soldiers & progression (Recruitment)
+**Source.** design/management.md › Soldiers & progression (Recruitment); design/design.md › The Krug; design/world-events.md › Events (Refugee movement)
 
 ### [MGT-004] Player-chosen callsign and kit marks
 **Rule.** The player cannot rename a soldier but may give one a nickname/callsign. It replaces the current
@@ -63,26 +68,59 @@ callsign, sets `callsignSource = player`, and is never replaced afterwards (by d
 The service number is unchanged. The player may also set `kitMarks` (cosmetic only).
 **Source.** design/management.md › Soldiers & progression
 
-### [MGT-005] Salaries and renewals
-**Rule.** Each soldier has a salary per day, set by its tier (MGT-002) at hiring. Salaries are paid from
-`economy` daily at 00:00 (the `dailyRollover`, STR-004): the sum of the salaries of every living soldier
-(`status` `active`; MIA and captured soldiers are not paid, spec assumption). Each soldier's contract runs
-`contractTermHours` and is then renewed (`contractEnds` moves on by one term); renewal is never refused for
-personal reasons — no soldier has personal opinions. The PMC's balance never goes below zero (MGT-070): if
-the balance cannot cover the day's salaries, the payment fails and the unpaid salaries follow the
-non-payment rule (`nonPayment`, not designed). Salaries use the shared economy rules (MGT-073, STR-092).
-**Values.** salary per tier — $50 / $100 / $200 / $400 per day (design draft) → data/recruitment.json
-`tiers[].salaryPerDayUsd`; `payIntervalHours` — 24 (design draft: daily at 00:00) → data/economy-rules.json
-(shared with STR-092; the only pay interval); `contractTermHours` — 720 (design draft: 30 days) →
-data/recruitment.json; `nonPayment` (consequence of unpaid salaries) — not set (design: names "the
-non-payment rule" but does not define it) → data/recruitment.json
-**Status.** open (non-payment rule)
-**Source.** design/management.md › Soldiers & progression › Contracts & morale; design/strategic-layer.md › Squads and simulation (Faction funds (draft))
+### [MGT-005] Fee per op (was: Salaries and renewals)
+**Rule.** A soldier is paid per deployment, not per day: each soldier on an op costs the fee per op of its
+current `rank` (`tiers[].feePerOpUsd` of the tier with that ID, MGT-002, MGT-074), paid when the op launches.
+Strategic sends a `launchOp` management request (`squad`, `soldiers`, optional `hiredPilot`, optional
+`insuredItems`) when the player launches an op (STR "Launch an op"); Management debits, as one payment, the
+sum of the listed soldiers' fees, plus `hiredPilotFeePerOpUsd` when `hiredPilot` is true (a hired helicopter
+pilot is paid a fee per op like a soldier, DAT-028), plus the insurance premium of MGT-036. If the balance
+cannot cover the whole sum (MGT-070) nothing is paid, the result is `ok: false` and the op does not launch
+(no fee, no launch); otherwise the result names `feesUsd` (and `premiumUsd`) and the op launches. There is no
+daily salary and no renewal: a soldier who is not on an op (idle at an FOB, wounded, MIA, captured) costs
+nothing. The former non-payment rule and the soldier contract term are removed (nothing can be left unpaid).
+A soldier promoted during an op (MGT-074) pays the new fee from the next launch. Fees use the shared economy
+rules file only for the booking (MGT-073); their amounts are recruitment data.
+**Values.** fee per op by rank — recruit $300, regular $600, veteran $1,200, elite $2,500 (design draft) →
+data/recruitment.json `tiers[].feePerOpUsd` (replaces `salaryPerDayUsd`); `hiredPilotFeePerOpUsd` — not set
+(design: "paid a fee per op like a soldier", no amount) → data/recruitment.json. Removed: `salaryPerDayUsd`,
+`contractTermHours`, `nonPayment` (recruitment.json); salaries no longer use `payIntervalHours`.
+**Status.** Draft; open (hired pilot fee)
+**Source.** design/management.md › Soldiers & progression (Recruitment; Contracts & morale); design/strategic-actions.md › Movement and operations (Launch an op; Fly one region by helicopter); › Trade, services, contracts and factions (Hire soldiers); design/data-definitions.md › Vehicles (draft) › Helicopters (draft)
+
+### [MGT-074] Rank and promotion
+**Rule.** A soldier's `rank` is one of the tier IDs `recruit` < `regular` < `veteran` < `elite` (MGT-002); a new
+hire starts at its hiring tier. The average attribute is the mean of the eight attributes (MGT-021),
+unrounded. Whenever an attribute changes (MGT-023, MGT-024, MGT-025), if the average attribute is above the
+top of the current rank's attribute range (`tiers[].attributeRange.max` of that tier: 45, 60, 75), the rank
+rises one step; this repeats while the new rank's top is also exceeded (spec choice for a jump across two
+ranges). `elite` is the highest rank. Rank never drops, also when skills drift back (MGT-025). A promotion is
+logged in the service record (entry kind `promotion`, spec addition) and the fee per op rises with it from
+the next launch (MGT-005). Promotion does not depend on ops survived.
+**Values.** promotion thresholds = the tiers' attribute range tops, above 45 / 60 / 75 (design draft) →
+data/recruitment.json `tiers[].attributeRange.max` (no separate field)
+**Status.** Draft
+**Source.** design/management.md › Soldiers & progression (Rank and leadership)
+
+### [MGT-075] Squad leader and Leadership bonus
+**Rule.** On an op, the highest-ranked soldier (MGT-074) leads the squad; ties go to the higher average
+attribute (then, spec choice, the soldier listed first in the squad). While the leader is alive on the
+tactical map, every other soldier of the side gets the Leadership bonus of the leader's rank, added to its
+morale and to its reaction chance (TAC-022). The bonus is added in battle only and never stored: the morale
+reported in the battle result excludes it (MGT-008). If the leader dies or leaves the map, the next
+highest-ranked soldier on the map takes over at its next activation (as for AI squad leaders, TAI; spec
+assumption for the player's squad) and its rank sets the bonus. TAC applies the bonus (TAC-094); the tactical map
+request carries each soldier's `rank` (`units[].rank`, enum recruit / regular / veteran / elite) and `attributes` for TAC to pick the leader. Perk effects (MGT-009) are applied by TAC-096 from `perks[].effect`.
+AI squads use the same leader rule and bonus (design/ai.md › Tactical AI).
+**Values.** `leadershipBonus` by leader rank — recruit +0, regular +2, veteran +4, elite +6 (design draft; one
+value used for both morale points and reaction-chance points) → data/management-rules.json
+**Status.** Draft
+**Source.** design/management.md › Soldiers & progression (Rank and leadership); design/ai.md › Tactical AI
 
 ### [MGT-006] Service record logging
 **Rule.** The game appends entries to a soldier's `serviceRecord` automatically, each stamped with game
 time (day + hour, STR clock). Entry kinds: `deployment` (op joined, op returned), `kill`, `rescue`,
-`wound`, `nearMiss`, `lootCarriedOut` (weight and value), `comradeLost`, plus deed entries (MGT-018).
+`wound`, `nearMiss`, `lootCarriedOut` (weight and value), `comradeLost`, `promotion` (MGT-074), plus deed entries (MGT-018).
 Entries come from battle results and op results. Entries are never removed.
 **Source.** design/management.md › Soldiers & progression › Service record
 
@@ -95,27 +133,43 @@ views of `roster`.
 ### [MGT-008] Morale persistence
 **Rule.** Morale is kept per soldier (`morale` in the soldier record), starting at `moraleStart` for a new
 hire, and kept from fight to fight in `roster`. When an op forms, the squad's morale is the average of its
-soldiers' morale (rounded to the nearest integer, spec choice); Strategic passes it on as the side's morale
-in the tactical map request. Only casualties move it (allies killed or wounded lower it, enemies killed or
-wounded raise it); the in-fight changes are TAC and act on the squad value. After a battle, each soldier who
-took part and is still on the roster gets the squad's change, `morale += battle_result.squadMorale − squad
-morale at the start of the battle`, clamped to 0–100 (spec choice: the battle result carries only the squad
-value). The low-morale flight rule (below `moraleFleeBelow` an activated
+soldiers' morale (rounded to the nearest integer, spec choice). The tactical map request carries each
+soldier's own morale (`tactical_map_request` `sides[].units[].morale`, TAC-095; Strategic copies it from the soldier record; the squad average stays available as
+the side's morale). Only casualties move morale (allies killed or wounded lower it, enemies killed or wounded
+raise it); the in-fight changes are TAC (TAC-095; casualty sizes `moraleCasualty` in data/tactical-rules.json, owned by TAC). The battle result reports each soldier's morale at the end of the
+battle (`battle_result` `soldiers[].morale`); after a battle Management sets each reported soldier who is still on the roster to that value,
+clamped to 0–100. The reported value excludes the leader's Leadership bonus (MGT-075, battle only, never
+stored). The former rule that applied the squad's change to every soldier is removed. The low-morale flight rule (below `moraleFleeBelow` an activated
 soldier may disobey and flee toward the nearest exit, TAC) is optional, left out of the first build
 iterations; morale persistence itself is not.
 **Values.** `moraleStart` — 80; `moraleFleeBelow` — 20 (used by TAC, optional rule) → data/management-rules.json
 **Status.** optional (flight rule only)
-**Source.** design/management.md › Soldiers & progression › Contracts & morale
+**Source.** design/management.md › Soldiers & progression › Contracts & morale; design/management.md › Soldiers & progression (Rank and leadership)
 
 ### [MGT-009] Perks
 **Rule.** Perks unlock when a skill (`marksmanship`, `recon`, `medical`, `technical`) reaches a threshold:
 one perk per skill at `perkThresholds[0]` and one at `perkThresholds[1]` (8 perks in all). A perk, once
 unlocked, stays (spec assumption, also if the skill drifts back, MGT-025). Leadership is not a perk: it
-comes from rank only (MGT-031). What each perk does is not designed.
-**Values.** `perkThresholds` — [50, 80] (design draft) → data/management-rules.json; `perks` (`{ id,
-attribute, threshold, effect }`) — not set (design: not stated) → data/management-rules.json
-**Status.** open (perk list and effects)
-**Source.** design/management.md › Soldiers & progression › Attributes
+comes from rank only (MGT-075). Management records which perks a soldier has; each effect is applied by the
+owner of the rule it changes (TAC for battle rules, MGT-067 for repairs, TAC recovery for FOB healing):
+
+| Perk (`perks[].id`) | Skill, threshold | Effect (`perks[].effect`) |
+| --- | --- | --- |
+| `steadyAim` | marksmanship 50 | Shooter spread × 0.9 on shots with at least one aim step (`shooterSpreadFactor` 0.9, `minAimSteps` 1; TAC-044) |
+| `snapShooter` | marksmanship 80 | Snap-shot penalty +1.5 MoA instead of the normal one (`snapShotPenaltyMoa` 1.5; TAC-044) |
+| `quietStep` | recon 50 | Enemies notice the soldier at 20% shorter distance (`noticeDistanceFactor` 0.8; TAC-081) |
+| `ghost` | recon 80 | Reaction chance against the soldier −10 while crouched or prone (`reactionChanceAgainst` −10, `whileStance` [crouched, prone]; TAC-022) |
+| `fieldMedic` | medical 50 | Medical items cost 1 AP less, never below 1 (`medicalApReduction` 1, `medicalApMin` 1; TAC Medical system) |
+| `traumaSurgeon` | medical 80 | IFAK and medkit restore 25% more HP (`hpRestoreFactor` 1.25, `items` [IFAK, medkit]); the soldier's patients heal 25% faster at the FOB (`fobHealFactor` 1.25; TAC recovery) |
+| `armourer` | technical 50 | The soldier's weapons wear 25% slower (`weaponWearFactor` 0.75; TAC-083); the soldier's repairs restore 25% more condition (`repairFactor` 1.25; MGT-067) |
+| `sapper` | technical 80 | Bolt cutters take 5 AP instead of 10 (`boltCutterAp` 5; ITM-026); field repairs of vehicles restore 25% more condition (`vehicleRepairFactor` 1.25; MGT-067) |
+
+"The soldier's patients" = soldiers whose FOB recovery uses this soldier as the squad's best Medical (spec
+reading of TAC recovery, which is driven by the best Medical in the squad).
+**Values.** `perkThresholds` — [50, 80] (design draft) → data/management-rules.json; `perks` — the table
+above (design draft) → data/management-rules.json `perks[]` (`id`, `attribute`, `threshold`, `effect`)
+**Status.** Draft
+**Source.** design/management.md › Soldier attributes (draft) › Perks (draft)
 
 ### [MGT-010] Persistent injuries
 **Rule.** Wounds from a battle result are stored on the soldier and persist between fights until healed.
@@ -307,13 +361,13 @@ values for them:
 **Rule.** `nerve` is not rolled; it runs from `nerve.min` to `nerve.max`, starts at `nerve.start` and
 grows with the service record: `nerve.perDeployment` per deployment survived (op returned) and
 `nerve.perFightUnderFire` per fight under fire, capped at `nerve.max`. Higher nerve lowers the effect of
-suppression and how much casualties lower morale for that soldier (applied in TAC). That effect is not
-implemented in the first build iterations (deferred); nerve is still tracked. Leadership is not a perk
-unlocked by nerve (or anything else): it comes from rank only (what rank is and what Leadership does: see
-Open questions).
+suppression and how much casualties lower morale for that soldier (applied in TAC): the soldier's
+suppression spread penalty and each casualty's morale loss for that soldier are multiplied by
+`1 − nerve ÷ nerve.effectDivisor` (Nerve 100 halves both). That effect is not implemented in the first build
+iterations (deferred); nerve is still tracked. Leadership is not a perk unlocked by nerve (or anything else):
+it comes from rank only (MGT-074, MGT-075).
 **Values.** `nerve.min` — 0, `nerve.max` — 100, `nerve.start` — 0, `nerve.perDeployment` — 2,
-`nerve.perFightUnderFire` — 1 (design draft) → data/management-rules.json; effect sizes — not set (design:
-not stated)
+`nerve.perFightUnderFire` — 1, `nerve.effectDivisor` — 200 (design draft) → data/management-rules.json
 **Status.** Draft; effect optional
 **Source.** design/management.md › Soldier attributes › Nerve
 
@@ -348,7 +402,7 @@ effects (accuracy, ergonomics, recoil, audible range, AP cost) and slots are DAT
 
 ### [MGT-036] Insurance
 **Rule.** Before an op the player may insure gear carried on it. The premium is
-`insurance.premiumFraction` × the insured items' `valueUsd` (ITM-034), debited when the op starts. For each
+`insurance.premiumFraction` × the insured items' `valueUsd` (ITM-034), debited when the op starts, together with the fees in the `launchOp` payment (MGT-005; `insuredItems`). For each
 insured item lost on that op (MGT-011), roll (seeded) `insurance.recoveryChance`; on success the item
 returns to the stash of the FOB the op started from after `insurance.delayDays` days (spec choice of the
 FOB). Insurance covers one op.
@@ -366,9 +420,10 @@ applying takes items from the FOB stash, missing items are reported and left emp
 **Rule.** A cheap "scav" loadout is always purchasable at every FOB, and the contract board always offers
 at least one low-risk contract, so a PMC that lost its gear can rebuild.
 The scav loadout is a used AK-74M with 2 magazines, a tourniquet and no armour. A low-risk contract is a
-`retrieve_deliver` mission away from the front, against no faction (`targetFaction` null). If the board of
-an FOB holds no such offer, Management asks for none itself (it does not invent contracts, MGT-041):
-Strategic must post one (STR, contract origin).
+`retrieve_deliver` mission away from the front, against no faction (`targetFaction` null). Strategic makes
+sure that some faction always keeps at least one such offer posted (STR-098; design decision
+2026-11-24); Management never asks for or invents one (MGT-041), it only stores and shows the offers it
+receives.
 **Values.** (design drafts) `scavLoadout.items` — AK-74M (used: `scavLoadout.weaponCondition`, not set) ×1,
 AK-74 magazine ×2, tourniquet ×1; `scavLoadout.priceUsd` — $500; `lowRiskContract` — `{ missionId:
 retrieve_deliver, targetFaction: null, minFrontDistance }` (`minFrontDistance`, the tiles that count as "away from the
@@ -394,11 +449,11 @@ their own) have prices that fluctuate over time and are public: every price is v
 player without intel. Stock improves with Krug standing (GEN-010). Each item's base price is its
 `valueUsd` (ITM-034). Once per day (00:00 `dailyRollover`) each Krug price moves by a seeded factor in
 [−`dailyMaxChange`, +`dailyMaxChange`] of its current price, then is clamped to
-[base × (1 − `maxDeviation`), base × (1 + `maxDeviation`)].
-**Values.** `krugPriceFluctuation.dailyMaxChange` — 0.10; `krugPriceFluctuation.maxDeviation` — 0.30
+[base × (1 − `maxDeviation`), base × (1 + `maxDeviation`)]. Krug resentment: whatever the player pays the Krug (purchases, barter deals counted against the player, services) is × (1 + `resentment.priceMarkup`) on top (GEN overview, Krug resentment); what the Krug pays the player (ITM-022) is unchanged (spec reading: "cost the player more").
+**Values.** `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json; `krugPriceFluctuation.dailyMaxChange` — 0.10; `krugPriceFluctuation.maxDeviation` — 0.30
 (design draft) → data/traders.json
 **Status.** Draft
-**Source.** design/management.md › Gear, loot & return › Traders
+**Source.** design/management.md › Gear, loot & return › Traders; design/design.md › The Krug
 
 ## Contracts and missions
 
@@ -526,16 +581,14 @@ from `management_view` (MGT-072).
 - **Failed contract:** a contract fails when its deadline passes with missions still open (`contractEnded`
   reason `deadline` from Strategic), or when every mission has failed (Management ends it itself,
   `endReason: allFailed`). A contract with at least one successful mission and no open ones is
-  `completed`. A failed contract: no further pay; reputation loss with the employer (MGT-056); the advance
-  becomes a debt to the employer that the player must pay back, or it is written off as a debt entry in
-  `economy` (MGT-070). The player repays with a `repayDebt` request (`contractId`, `amountUsd`). A repayment (in part or in full) is credited to the employer's funds: Management names
-  it in its result (`repayment`: `contractId`, `employer`, `amountUsd`) and Strategic adds it to that
-  faction's funds (STR-093).
+  `completed`. A failed contract: no further pay and a reputation loss with the employer (MGT-056); the
+  player keeps the advance and owes nothing — no debt entry, no repayment (the former `repayDebt` request and
+  `repayment` result are removed). A failed contract costs only reputation.
 - **Employer default:** a payment due that the employer's funds cannot cover fails the contract at once
   (`contractEnded` from Strategic, STR-093). No further pay; no reputation loss with anyone; the player keeps
-  the advance, and it does not become a debt. An offer whose advance the employer cannot pay cannot be
+  the advance. An offer whose advance the employer cannot pay cannot be
   signed (STR-093).
-**Source.** design/management.md › Contracts and missions › Contract terms; design/strategic-layer.md › Squads and simulation (Faction funds (draft))
+**Source.** design/management.md › Contracts and missions › Contract terms; design/strategic-layer.md › Squads and simulation (Faction funds (draft)); design/strategic-actions.md › Trade, services, contracts and factions (Accept a contract)
 
 ### [MGT-049] Intel level
 **Rule.** Each contract has `intelLevel` ∈ {`exact` (exact location), `lastKnown` (last known position),
@@ -544,11 +597,11 @@ from `management_view` (MGT-072).
 
 ### [MGT-050] Deniability
 **Rule.** A contract with `deniable = true` may be disowned by its employer if it goes wrong (a mission
-fails, or the contract fails, MGT-048): roll (seeded) the employer's `disownChance` once per contract, at
-the first such event (spec choice). When disowned (`disowned = true`): the contract is still paid (missions
-met later still pay their shares) but gives no reputation with the employer — no `reputationGain`
-(MGT-056) from then on (the mission-failed / contract-broken losses with the employer still apply, spec
-reading); reputation losses with other factions that would be attributed to the employer fall on the player
+fails, or the contract fails, MGT-048): roll (seeded) the employer's `disownChance` once per contract, when
+it first goes wrong (design decision 2026-11-24); a contract not disowned then is never rolled again. When
+disowned (`disowned = true`): the contract is still paid (missions met later still pay their shares) but
+gives no reputation gains with the employer — no `reputationGain` (MGT-056) from then on; the reputation
+losses for failed missions and for a broken contract with the employer still apply (design); reputation losses with other factions that would be attributed to the employer fall on the player
 alone; the employer never admits the link (no event, news line or hand-in names it as the employer).
 Mostly VDK contracts are deniable.
 **Values.** `disownChance` — VDK 0.30, every other employer 0.10 (design draft) → data/factions.json
@@ -710,13 +763,14 @@ items move between FOBs only by squad transport — a squad loads items from one
 soldiers' containers and vehicle storage (DAT-008, DAT-025), travels, and unloads them at another FOB.
 There is no instant transfer. Loot carried out (MGT-035), purchases at an FOB's location (MGT-039) and
 plant deliveries (MGT-068) go to the stash of the FOB concerned. The player owns one FOB at campaign start;
-more are bought in small and large cities or taken over (STR). Operational range per FOB is STR. FOB upkeep,
-if any, uses the shared economy rules (MGT-073).
-**Values.** `fobPrices` (purchase price per city size) — not set (design: not stated) →
-data/management-rules.json; FOB upkeep → data/economy-rules.json `fobUpkeepPerDayUsd` — not set (design:
-names FOB upkeep, no value)
-**Status.** open (prices, upkeep)
-**Source.** design/management.md › Base & meta progression
+more are bought in small and large cities (a `buyFob` request debits the city size's price; the new FOB is
+usable after the STR delay) or taken over (STR). Operational range per FOB is STR. FOBs have no upkeep: an
+FOB costs only its purchase price (design decision 2026-11-24).
+**Values.** `fobPrices.smallCity` — $25,000; `fobPrices.largeCity` — $50,000 (design draft) →
+data/management-rules.json; the 24-hour delay before a bought FOB can be used is STR (strategic actions).
+Removed: FOB upkeep (`economy-rules.fobUpkeepPerDayUsd`).
+**Status.** Draft
+**Source.** design/management.md › Base & meta progression; design/strategic-actions.md › Trade, services, contracts and factions (Buy a new FOB)
 
 ### [MGT-067] Paid field services
 **Rule.** Services bought with money in the field: hospital treatment in cities, repairs at mechanical
@@ -726,7 +780,7 @@ treated; repairs at a mechanical plant `servicePrices.repairPerConditionPointUsd
 restored (weapon `condition`, DAT-014, or vehicle condition, DAT-029); fuel `servicePrices.fuelPerUnitUsd`
 per fuel unit (DAT-024). A payment the balance cannot cover fails (MGT-070): the service is not given. A
 weapon repair by a soldier (not a paid service) raises the instance `condition` by a rate scaled by the
-repairing soldier's Technical.
+repairing soldier's Technical, × `repairFactor` with the Armourer perk; a field repair of a vehicle by a soldier with the Sapper perk restores × `vehicleRepairFactor` (MGT-009).
 **Values.** `servicePrices.hospitalPerWoundUsd` — $300; `servicePrices.repairPerConditionPointUsd` — $20;
 `servicePrices.fuelPerUnitUsd` — $50 (design draft) → data/management-rules.json; `weaponRepair`
 (condition restored per repair, Technical scaling) — not set (design: Open, DAT-014) →
@@ -760,10 +814,10 @@ build (design: OPTIONAL).
 
 ### [MGT-070] Economy ledger
 **Rule.** `economy` holds the PMC's money balance and a list of debts. Each debt: creditor faction,
-amount, origin (e.g. unreturned advance, MGT-048; Krug deal). Paying a debt's full amount removes it
-(Krug: entry in Karsin's book, GEN-008). Every credit and debit is logged with game time. The balance never
-goes below zero: a debit larger than the balance fails as a whole (nothing is paid, the request returns
-`ok: false`), and unpaid salaries follow the non-payment rule (MGT-005). Debts carry no interest or penalty
+amount, origin (a Krug deal; a failed contract's advance is never a debt, MGT-048). Paying a debt's full
+amount removes it (Krug: entry in Karsin's book, GEN-008). Every credit and debit is logged with game time.
+The balance never goes below zero: a debit larger than the balance fails as a whole (nothing is paid, the
+request returns `ok: false`); an op whose fees cannot be paid does not launch (MGT-005). Debts carry no interest or penalty
 (design: not stated). The PMC's running costs and income use the shared economy rules (MGT-073); contract
 pay is credited only on a `contractPayment` request from Strategic (MGT-047, STR-093). AI factions' money
 is not in `economy`. The balance is published as `funds` in `management_view` (MGT-072).
@@ -781,20 +835,19 @@ data/management-rules.json
 **Source.** design/management.md › Base & meta progression
 
 ### [MGT-073] Shared economy rules for the PMC's running costs and income
-**Rule.** Every recurring cost and income of the player's PMC uses the shared economy rules file
-(`data/economy-rules.json`, the same file as the AI factions' funds, STR-092): salaries (MGT-005), FOB
-upkeep (MGT-066), vehicle upkeep and plant income (MGT-068). All are booked every `payIntervalHours`
-(daily, at the 00:00 `dailyRollover`) in this order (spec choice): plant income and deliveries
-(`plantOutput`) first, then salaries, then FOB upkeep, then vehicle upkeep. Vehicle upkeep per owned
-vehicle = `round(vehicleUpkeepPerDayFraction × costUsd)` per day (DAT-024); fuel is paid separately when
-refuelling (MGT-067). Each booking follows MGT-070: a cost the balance cannot cover fails (salaries →
-non-payment rule; an unpaid upkeep — consequence not designed).
+**Rule.** The player's PMC's fees and income use the shared economy rules file (`data/economy-rules.json`,
+the same file as the AI factions' funds, STR-092). Soldier fees are not recurring: they are booked once per
+op, at launch (MGT-005). The recurring items are vehicle upkeep and plant income (MGT-068); FOBs have no
+upkeep (MGT-066) and there are no salaries. Both are booked every `payIntervalHours` (daily, at the 00:00
+`dailyRollover`) in this order (spec choice): plant income and deliveries (`plantOutput`) first, then vehicle
+upkeep. Vehicle upkeep per owned vehicle = `round(vehicleUpkeepPerDayFraction × costUsd)` per day (DAT-024);
+fuel is paid separately when refuelling (MGT-067). Each booking follows MGT-070: a cost the balance cannot
+cover fails (the consequence of unpaid vehicle upkeep is not designed).
 **Values.** `payIntervalHours` — 24 (design draft); `vehicleUpkeepPerDayFraction` — 0.002 (design draft:
-0.2% of the price per day) → data/economy-rules.json; `fobUpkeepPerDayUsd` — not set (design: not stated)
-→ data/economy-rules.json; salary per tier → data/recruitment.json (MGT-005); plant output →
-data/poi.json (MGT-068)
-**Status.** open (FOB upkeep amount; consequence of unpaid upkeep)
-**Source.** design/management.md › Soldiers & progression (Contracts & morale); design/data-definitions.md › Vehicles (draft) (Vehicle parameters, Cost)
+0.2% of the price per day) → data/economy-rules.json; fee per op by rank → data/recruitment.json (MGT-005);
+plant output → data/poi.json (MGT-068). Removed: `fobUpkeepPerDayUsd`.
+**Status.** open (consequence of unpaid vehicle upkeep)
+**Source.** design/management.md › Soldiers & progression (Contracts & morale); › Base & meta progression (FOBs); design/data-definitions.md › Vehicles (draft) (Vehicle parameters, Cost)
 
 ## Interfaces
 
@@ -816,11 +869,11 @@ No other part of `roster`, `unlocks` or `economy` is published.
 
 ## Open questions
 
-1. **Partly resolved (2026-11-24):** four draft tiers with hire price, salary per day and attribute range; salaries daily at 00:00; contracts renew every 30 days (MGT-002, MGT-003, MGT-005). Still open: price scaling within a tier, pools (tiers and candidates per pool, refresh), the non-payment rule, attribute distribution within the range. MGT-002, MGT-003, MGT-005, MGT-022: price tiers, hire price formula, attribute ranges per tier,
+1. **Partly resolved (2026-11-24):** four draft tiers with hire price, fee per op (replacing the earlier salary per day; no renewals, 2026-11-24 b) and attribute range (MGT-002, MGT-003, MGT-005). Still open: price scaling within a tier, pools (tiers and candidates per pool, refresh), attribute distribution within the range. MGT-002, MGT-003, MGT-005, MGT-022: price tiers, hire price formula, attribute ranges per tier,
    salaries, pay interval and renewal terms are all unset.
 2. **Resolved (2026-11-24):** morale per soldier; squad morale = average when the op forms (MGT-008). MGT-008: morale is "squad-wide", but squads are formed per op. Is morale stored per squad, per PMC, or
    reset when a squad is re-formed?
-3. **Partly resolved (2026-11-24):** perks at skill 50 and 80 (one each per skill); Leadership comes from rank only; nerve 0–100, +2 per deployment survived, +1 per fight under fire (MGT-009, MGT-031). Still open: perk effects; nerve effect sizes. MGT-009, MGT-031: perk list and thresholds, nerve scale and growth; design open whether Leadership is a
+3. **Partly resolved (2026-11-24):** perks at skill 50 and 80 (one each per skill); Leadership comes from rank only; nerve 0–100, +2 per deployment survived, +1 per fight under fire (MGT-009, MGT-031). **Resolved (2026-11-24):** perk table drafted (MGT-009); nerve multiplies the suppression spread penalty and each casualty's morale loss by 1 − Nerve ÷ 200 (MGT-031). MGT-009, MGT-031: perk list and thresholds, nerve scale and growth; design open whether Leadership is a
    perk at a Nerve threshold.
 4. **Resolved (2026-11-24):** every attribute within 5 of the top one is a candidate (MGT-013). MGT-013: the tie rule says "two attributes within 5 points"; spec generalizes to all attributes within 5
    of the top one. Confirm.
@@ -842,7 +895,7 @@ No other part of `roster`, `unlocks` or `economy` is published.
 14. **Resolved (design eb072a2):** the rest is paid per mission, each mission paying its share when its
     goal is met; a failed mission loses only its share and its reputation, and the contract goes on
     (MGT-047, MGT-048). Whether the advance is repaid in money or booked as debt stays as before (both
-    allowed). MGT-047, MGT-048: is the remainder paid per mission or only when every mission of the contract
+    allowed). **Superseded (2026-11-24 b):** the advance is kept, never repaid or booked as debt (Q48). MGT-047, MGT-048: is the remainder paid per mission or only when every mission of the contract
     succeeds? Does one failed mission fail the whole contract? Is the advance repaid in money or always
     booked as debt?
 15. **Partly resolved (2026-11-24):** disowned contracts are paid but give no reputation; employer never admits the link; disown chance VDK 30%, others 10% (MGT-050). Still open: chance that an offer is deniable at all. MGT-050: deniability chance per employer; whether disowned contracts are paid.
@@ -872,8 +925,8 @@ No other part of `roster`, `unlocks` or `economy` is published.
 28. **Resolved (design eb072a2):** the contract fails at once and the player keeps the advance (MGT-048,
     STR-093). MGT-047, STR-093: what happens when the employer's funds cannot cover a payment due (late payment,
     debt owed to the player, contract fails)? VDK "late payments" suggests delay.
-29. **Resolved (2026-11-24):** credited to the employer's funds (MGT-048, STR-093). MGT-048: is a repaid advance credited back to the employer's funds (STR-093)?
-30. **Resolved (2026-11-24):** all of them — salaries, FOB upkeep, vehicle upkeep, plant income (MGT-073). MGT-005, MGT-070: which of the player's costs and incomes use the shared `data/economy-rules.json`
+29. **Resolved (2026-11-24):** credited to the employer's funds (MGT-048, STR-093). **Superseded (2026-11-24 b):** there is no repayment (Q48). MGT-048: is a repaid advance credited back to the employer's funds (STR-093)?
+30. **Resolved (2026-11-24):** all of them — salaries, FOB upkeep, vehicle upkeep, plant income (MGT-073). **Superseded (2026-11-24 b):** no salaries and no FOB upkeep; fees per op and plant income use the file, vehicle upkeep is the only recurring cost (MGT-073). MGT-005, MGT-070: which of the player's costs and incomes use the shared `data/economy-rules.json`
     formulas (salaries only, or FOB upkeep and plant income too)?
 31. **Resolved (design eb072a2):** no mission needs the squad back at an FOB; the layer where the goal is
     met detects it, Strategic confirms it, and the pay is credited at the next strategic hour (MGT-044,
@@ -909,18 +962,34 @@ No other part of `roster`, `unlocks` or `economy` is published.
     offer is needed (strategic_commands `contractOffer`).
 41. **Resolved (2026-11-24):** intel needs alone can create offers (MGT-041, MGT-043). MGT-043: `intelNeeds` is a `sourceGoal` but no STR-018 squad goal. Confirm that intel-driven offers carry
     `sourceGoal: intelNeeds` without a squad goal behind them.
-42. MGT-009, MGT-031: "Leadership comes from rank only", but the design defines neither a soldier rank for
+42. **Resolved (2026-11-24):** rank = hiring tier (Recruit, Regular, Veteran, Elite), rising one step when the
+    average attribute climbs above 45 / 60 / 75, never dropping; the highest rank leads the op (ties: higher
+    average attribute) and lends the others +0 / +2 / +4 / +6 to morale and reaction chance, battle only
+    (MGT-074, MGT-075). MGT-009, MGT-031: "Leadership comes from rank only", but the design defines neither a soldier rank for
     the player's soldiers nor what Leadership does. Is rank the hiring tier (Recruit, Regular, Veteran,
     Elite — the same names STR uses for VIP morale loss by rank), and what is Leadership's effect?
-43. MGT-005, MGT-070: "unpaid salaries follow the non-payment rule" — the rule itself is not defined
+43. **Resolved (2026-11-24):** no salaries: each soldier's fee per op (by rank) is paid at launch, no fee no
+    launch; no renewals; the non-payment rule is obsolete (`recruitment.nonPayment`, `contractTermHours`,
+    `salaryPerDayUsd` removed; MGT-005). MGT-005, MGT-070: "unpaid salaries follow the non-payment rule" — the rule itself is not defined
     (soldiers leave? morale loss? debt?). `recruitment.nonPayment` stays unset.
-44. MGT-008: the battle result carries only `squadMorale`; spec applies the squad's change to every
+44. **Resolved (2026-11-24):** the tactical map request carries each soldier's morale and the battle result
+    reports each soldier's morale at the end; Management stores the reported values (MGT-008). MGT-008: the battle result carries only `squadMorale`; spec applies the squad's change to every
     soldier who took part. Confirm, or should the battle result report morale per soldier?
-45. MGT-066, MGT-073: FOB upkeep is named as a running cost but has no amount; consequence of an upkeep
+45. **Resolved (2026-11-24):** FOBs have no upkeep, only a purchase price ($25,000 small city, $50,000 large
+    city; MGT-066, MGT-073). Still open: consequence of unpaid vehicle upkeep (MGT-073). MGT-066, MGT-073: FOB upkeep is named as a running cost but has no amount; consequence of an upkeep
     payment the balance cannot cover is not stated.
-46. MGT-050: once a contract is disowned, do mission-failed and contract-broken losses with the employer
+46. **Resolved (2026-11-24):** losses still apply, only gains stop; one disown roll per contract, when it
+    first goes wrong (MGT-050). MGT-050: once a contract is disowned, do mission-failed and contract-broken losses with the employer
     still apply (spec: yes; only gains stop)? Is the disown roll made once per contract (spec) or per failure?
-47. MGT-038, MGT-041: Management never invents contracts, but a low-risk contract must always be on the
+47. **Resolved (2026-11-24):** Strategic (STR-098) makes sure some faction always keeps at least one low-risk contract
+    posted (MGT-038). MGT-038, MGT-041: Management never invents contracts, but a low-risk contract must always be on the
     board. Spec: Strategic must keep one posted; confirm the owner.
-48. MGT-048: how does the player repay an advance debt? Spec adds a `repayDebt` management request
+48. **Resolved (2026-11-24):** no repayment: a failed contract costs only reputation, the advance is kept and
+    nothing is owed; `repayDebt` and the `repayment` result are removed (MGT-048). MGT-048: how does the player repay an advance debt? Spec adds a `repayDebt` management request
     (`contractId`, `amountUsd`) whose result names the `repayment` for Strategic to credit.
+49. MGT-005, DAT-028: a hired helicopter pilot is "paid a fee per op like a soldier", but the design gives no
+    amount and does not say whether the pilot is a roster soldier (with a rank and its fee) or a separate hire.
+    Spec: a separate per-op hire, `recruitment.hiredPilotFeePerOpUsd`, not set.
+50. MGT-003, STR-065: refugee recruits come with a "fee 30% lower". With the fee-per-op model "fee" could mean
+    the hire price or the fee per op. Spec: the hire price (the design calls them cheap recruits); the fee per
+    op stays the rank's fee.
