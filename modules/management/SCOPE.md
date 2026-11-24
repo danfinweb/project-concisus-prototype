@@ -1,11 +1,11 @@
 # Management — scope
 
-Refreshed by `/scope` (2026-11-24, spec baseline `e8aa7e7`, design `c1333f3`). Lists everything this module
+Refreshed by `/scope` (2026-11-24, spec baseline `a0210cd`, design `c1333f3`). Lists everything this module
 may read outside its folder.
 
 ## Spec IDs
 
-Source: `spec/management.md` (area MGT, 75 IDs, all mapped to `modules/management` in `spec/_index.md`).
+Source: `spec/management.md` (area MGT, 76 IDs, all mapped to `modules/management` in `spec/_index.md`).
 `(open)` = the design leaves a value or rule unset; build with a stub and flag it. `(optional)` = left out
 of the first build iterations. `(removed)` = rule dropped, ID kept; do not implement. `(draft)` = drafted
 design values, build them as given.
@@ -14,11 +14,11 @@ design values, build them as given.
 
 | ID | Summary |
 | --- | --- |
-| MGT-001 | Soldier record: id, serviceNumber, callsign (+source, prestige), 8 attributes, nerve, morale, wounds, rank, feeDiscount, deeds, status, hiredSkills, serviceRecord, kitMarks; derived values never stored; `leftMap` → `active`, final fate only from `soldierFate` |
+| MGT-001 | Soldier record: id, serviceNumber, callsign (+source, prestige), 8 attributes, nerve, morale, wounds `{ zoneHp, conditions }`, equipment, perks, skillXp, skillIdleDays, rank, feeDiscount, deeds, status, hiredSkills, serviceRecord, kitMarks; derived values never stored; `leftMap` → `active`, final fate only from `soldierFate` |
 | MGT-002 | (open: pools) Four pools; four tiers recruit / regular / veteran / elite with hire price, fee per op, attribute range; at FOBs; always one affordable candidate; no game time |
 | MGT-003 | (open: scaling) Hire price from tier price, scaled by average attribute; Krug × (1 + resentment markup); refugee recruit normal price with `feeDiscount` |
 | MGT-004 | Player may set a callsign (source `player`, never replaced) and cosmetic kit marks; no renaming |
-| MGT-005 | (draft) Fee per op by rank × (1 − feeDiscount), paid as one `launchOp` payment with the insurance premium; can't pay → no launch; no salaries, renewals or non-payment; a pilot is a normal roster soldier |
+| MGT-005 | (draft) Fee per op by rank × (1 − feeDiscount), paid as one `launchOp` payment (`squad`, `soldiers`, `fobId`, `insuredItems`) with the insurance premium; can't pay → no launch; no salaries, renewals or non-payment; a pilot is a normal roster soldier |
 | MGT-074 | (draft) Rank = hiring tier; rises when the average attribute passes the rank's range top (45 / 60 / 75), repeating; never drops; logged as `promotion`; new fee from next launch |
 | MGT-075 | (draft) Highest rank leads (ties: higher average, then squad order); Leadership bonus by rank (+0/+2/+4/+6) to morale and reaction chance, battle only, never stored; applied by TAC-094 |
 | MGT-006 | Service record entries with game time: deployment, kill, rescue, wound, nearMiss, lootCarriedOut, comradeLost, promotion, deeds; never removed |
@@ -128,7 +128,8 @@ design values, build them as given.
 
 | ID | Summary |
 | --- | --- |
-| MGT-072 | `management_view` after each request batch and on load: reputation (value, standing), contracts (offered, signed, ended since last view), funds; nothing else of `roster`, `unlocks`, `economy` |
+| MGT-072 | `management_view` after each request batch and on load: reputation (value, standing), contracts (offered, signed, ended since last view), funds (`balanceUsd`, `debtsUsd` always), roster (every soldier not dead: id, status, rank, morale, attributes, nerve, wounds, equipment, perks); nothing else |
+| MGT-076 | Request handling for types ruled elsewhere: `healingTick`, `contaminationTick` (`hpLost`), `moraleChange`, `capitalIncome`, `priceModifier` (`modifierId`, `target`, `factor`, `regions`), `payCompensation`, `payOffBounty`, `payKrugPass`, `payKrugEscort`, `buyIntel`, `handOver`; every debit per MGT-070; amounts from Strategic |
 
 **Also reads** (rules this module depends on but does not own)
 
@@ -144,11 +145,12 @@ design values, build them as given.
 | STR-015, STR-011 | `spec/strategic.md` | Plant output and mineral modifier (`plantOutput`) |
 | STR-025 | `spec/strategic.md` | Pay your way through (Krug) (`payKrugPass`) |
 | STR-027, STR-028, STR-029 | `spec/strategic.md` | Op lifecycle, launch (`launchOp`), return to an FOB (`opReturn`) |
-| STR-037 | `spec/strategic.md` | Stand by (values computed by MGT from roster data) |
+| STR-024, STR-034, STR-037 | `spec/strategic.md` | Evasion, pilot check, stand by (read the published roster; `healingTick`) |
+| STR-047 | `spec/strategic.md` | VIP death morale shock (`moraleChange`) |
 | STR-039..STR-044 | `spec/strategic.md` | Zero-time trade, contract actions, paid services, FOB purchase, payments to factions, contract postings |
 | STR-048, STR-064 | `spec/strategic.md` | VIP intel (`buyIntel`), bounty on the PMC (`payOffBounty`) |
 | STR-054, STR-058 | `spec/strategic.md` | News feed lines; Operation dispute assigns blame (MGT-064) |
-| STR-062, STR-065 | `spec/strategic.md` | Fuel shortage (`priceModifier`), refugee recruits (`localRecruits`, fee discount) |
+| STR-062, STR-063, STR-065 | `spec/strategic.md` | Fuel shortage and chemical leak (`priceModifier`), refugee recruits (`localRecruits`, fee discount) |
 | STR-092, STR-093, STR-094 | `spec/strategic.md` | Shared economy formulas, contract payment between modules, Krug escorts |
 | STR-097, STR-098 | `spec/strategic.md` | HP loss on contaminated tiles (`contaminationTick`), low-risk contract guarantee |
 | SAI-013, SAI-015 | `spec/strategic-ai.md` | Hostility from standing; rival PMCs taking offers (MGT-052) |
@@ -166,13 +168,13 @@ design values, build them as given.
 
 | Interface | Direction | Version |
 | --- | --- | --- |
-| `spec/interfaces/management_view.schema.json` | produces (to strategic) | 0.2.0 |
+| `spec/interfaces/management_view.schema.json` | produces (to strategic) | 0.3.0 |
 | `spec/interfaces/battle_result.schema.json` | consumes (from tactical) | 0.4.0 |
-| `spec/interfaces/management_requests.schema.json` | consumes (from strategic); returns `results` (`ok`, `paymentDue`, `feesUsd`, `premiumUsd`) | 0.7.0 |
-| `spec/interfaces/tactical_map_request.schema.json` | reads only (`units[].rank`, `units[].morale`, `attributes` that Strategic fills from the roster) | 0.8.0 |
+| `spec/interfaces/management_requests.schema.json` | consumes (from strategic); returns `results` (`ok`, `paymentDue`, `feesUsd`, `premiumUsd`) | 0.8.0 |
+| `spec/interfaces/tactical_map_request.schema.json` | reads only (the `units[]` shape Strategic fills from `management_view` `roster`: rank, morale, attributes, equipment, perks) | 0.9.0 |
 
 `strategic_commands` is no longer consumed: contract offers reach Management only as `management_requests`
-`contractOffer` (local copy of `strategic_commands` `$defs/contractOffer`; checked 2026-11-24, structurally
+`contractOffer` (local copy of `strategic_commands` 0.7.0 `$defs/contractOffer`; rechecked after `a0210cd`, structurally
 identical).
 
 ## Data tables
@@ -182,7 +184,7 @@ Read through `shared/registry.js` only. All tables in `data/` are still empty (`
 
 | Table | Schema | Version | Used for |
 | --- | --- | --- | --- |
-| `data/management-rules.json` | `spec/interfaces/data/management-rules.schema.json` | 0.8.0 | Morale, Leadership, perks, nerve, skill growth and drift, carry capacity, insurance, scav loadout, low-risk contract, reputation acts and standing, advance, services, weapon repair, FOB prices, score weights |
+| `data/management-rules.json` | `spec/interfaces/data/management-rules.schema.json` | 0.9.0 | Morale, Leadership, perks, nerve, skill growth and drift, carry capacity, insurance, scav loadout, low-risk contract, reputation acts and standing, advance, services, weapon repair, FOB prices, score weights |
 | `data/economy-rules.json` | `spec/interfaces/data/economy-rules.schema.json` | 0.5.0 | Shared booking rules, `payIntervalHours` (MGT-070, MGT-073) |
 | `data/recruitment.json` | `spec/interfaces/data/recruitment.schema.json` | 0.6.0 | Tiers (hire price, fee per op, attribute range = rank thresholds), pools, price formula, distribution |
 | `data/callsigns.json` | `spec/interfaces/data/callsigns.schema.json` | 0.3.0 | Generation and generic callsigns, deeds (MGT-013..MGT-020) |
@@ -192,7 +194,7 @@ Read through `shared/registry.js` only. All tables in `data/` are still empty (`
 | `data/missions.json` | `spec/interfaces/data/missions.schema.json` | 0.3.0 | Mission types, pay bands, goals, success parameters (MGT-043..MGT-046) |
 | `data/factions.json` | `spec/interfaces/data/factions.schema.json` | 0.6.0 | Reputation holders, `disownChance`, Krug `resentment.priceMarkup` (MGT-003, MGT-040, MGT-050, MGT-053) |
 | `data/events.json` | `spec/interfaces/data/events.schema.json` | 0.7.0 | `params.recruitFeeDiscount` (refugee recruits, MGT-003) |
-| `data/poi.json` | `spec/interfaces/data/poi.schema.json` | 0.6.0 | Plant `dailyOutput`, mineral modifier (MGT-068; computed by STR) |
+| `data/poi.json` | `spec/interfaces/data/poi.schema.json` | 0.7.0 | Plant `dailyOutput`, mineral modifier (MGT-068; computed by STR) |
 | `data/vehicles.json` | `spec/interfaces/data/vehicles.schema.json` | 0.4.0 | Vehicle storage, availability, prices, condition (DAT-025, DAT-027, DAT-029) |
 
 ## State slices
@@ -208,29 +210,16 @@ Read through `shared/registry.js` only. All tables in `data/` are still empty (`
 
 ## Open questions
 
-Found while scoping (2026-11-24); report to the root session, do not edit `spec/`. The earlier seven
-scope findings are resolved by the spec (camelCase canonical, one owner per value, weight penalty in
-TAC-027, contract fields, `leftMap`, `management_view`). The still-open items in `spec/management.md` ›
-Open questions (1, 7, 11, 15, 23 and the `(open)` tags above) still apply.
+Report to the root session, do not edit `spec/`. All six findings of the previous scope are fixed by
+cleanup `a0210cd`: roster in `management_view` 0.3.0, MGT-076 request handling, the new soldier record
+fields, `launchOp` `fobId`, corrected descriptions, `debtsUsd` required. The still-open items in
+`spec/management.md` › Open questions still apply (1, 7, 11, 15, 23, and the new 51 and 52), and so do the
+`(open)` tags above. Two of them block tests:
 
-1. **Strategic can't read the roster it needs.** MGT-072 says `management_view` publishes nothing of
-   `roster`, but Strategic must fill `tactical_map_request` `units[].rank`, `units[].morale` and
-   `attributes` "from the soldier record" (MGT-008, MGT-075), and STR-037 uses values "computed by MGT from
-   roster data". Either `management_view` needs a roster part (per soldier: id, rank, morale, attributes,
-   wounds, status, equipment, perks, nerve) or another interface must carry it.
-2. **Request types with no MGT rule.** `management_requests` lists `healingTick`, `contaminationTick`,
-   `capitalIncome`, `priceModifier`, `payCompensation`, `payOffBounty`, `buyIntel`, `handOver`, `payKrugPass`
-   (and STR-099 ceasefire brokering may cost money), but `spec/management.md` defines what Management does
-   for none of them. Payloads are generic (`params`, `items`, `hours`), so tests cannot pin fields. Needed:
-   one MGT rule (or a pointer to the STR/TAC rule) and the payload fields per type. In particular,
-   `contaminationTick` (STR-097) removes HP, while MGT-001 stores `wounds` per zone, not HP.
-3. **Soldier record fields missing.** MGT-009 records perks, MGT-023 tracks xp per skill, MGT-025 an idle
-   count per skill, MGT-031 fights under fire; MGT-001 lists none of `perks`, `skillXp`, `skillIdleDays`.
-   Add them to MGT-001 (or say they are derived from the service record).
-4. **Insurance return FOB unknown.** MGT-036 returns recovered items to "the FOB the op started from", but
-   `launchOp` carries only `squad`, `soldiers`, `insuredItems` — no `fobId`.
-5. **Stale descriptions in `management_requests` 0.7.0.** `results.feesUsd` still says "plus a hired
-   pilot's fee"; the `contractOffer` copy says it mirrors `strategic_commands` 0.5.0 (now 0.6.0; structure
-   identical, `reputationGain` deprecation note differs only in text).
-6. **`funds.debtsUsd` optional.** MGT-072 lists `{ balanceUsd, debtsUsd }`; the schema requires only
-   `balanceUsd`. Confirm `debtsUsd` may be omitted (e.g. when there are no debts).
+1. **Q51 — contamination HP split (MGT-076, STR-097).** `contaminationTick` gives `hpLost` per soldier,
+   but wounds are stored per body zone. Leave `contaminationTick` out of tests until the zone split is
+   decided.
+2. **Q52 — recovery rate (MGT-010, MGT-076).** `healingTick` applies "TAC recovery", but no rate exists
+   in spec or design. Leave healing out of tests until a rate is set.
+
+No new findings came up in this refresh.
