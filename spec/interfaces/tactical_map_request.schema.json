@@ -3,7 +3,7 @@
   "$id": "tactical_map_request.schema.json",
   "title": "Tactical map request",
   "description": "Everything the tactical layer needs to generate and run one engagement. The strategic layer never builds tactical maps; it sends this. Spec: STR-022, STR-023, TAC-001..TAC-005, TAC-038, TAC-076, TAC-080, TAC-094, TAC-095, TAC-096, TAI-009, TAI-013, TAI-018.",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/tactical"],
   "type": "object",
@@ -38,7 +38,7 @@
     },
     "sides": {
       "type": "array", "minItems": 2,
-      "description": "Every faction present. The player side lists soldiers by roster ID with full state (from Management); AI sides list soldiers or strength/gear tiers.",
+      "description": "Every faction present. The player side lists soldiers by roster ID with full state (from Management); AI sides list every soldier from its world record (STR-017, STR-023): id, rank, morale, zoneHp, attributes, perks, and tier = the squad gear tier.",
       "items": {
         "type": "object", "required": ["faction", "controller", "units"],
         "properties": {
@@ -93,7 +93,7 @@
         "conditions": { "type": "array", "items": { "type": "object" } },
         "stamina": { "type": "integer" },
         "equipment": { "type": "object", "description": "Slot → item instance (item ID, condition, durability, contents). Slots: weapon1, weapon2, holster (a pistol on the battle belt, extra third weapon, counts toward belt capacity; DAT-005, TAC-042), helmet, bodyArmour, vest, belt, backpack" },
-        "tier": { "type": "string", "description": "AI only: strength/gear tier when no full soldier record exists" }
+        "tier": { "type": "string", "description": "AI only: the squad gear tier the unit is equipped by (STR-023); rank, morale, zoneHp, attributes and perks come from the AI soldier record (STR-017)" }
       }
     }
   }

@@ -3,7 +3,7 @@
   "$id": "data/management-rules.schema.json",
   "title": "Management rules",
   "description": "Global management constants (spec MGT). The weight to AP/stamina penalty is TAC-027 (tactical-rules); the pay interval and running-cost formulas are economy-rules (MGT-073).",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "$defs": {
@@ -23,7 +23,7 @@
         "medicalApMin": { "type": "integer", "minimum": 1, "description": "fieldMedic 1" },
         "hpRestoreFactor": { "type": "number", "exclusiveMinimum": 0, "description": "traumaSurgeon 1.25 for the listed items" },
         "items": { "type": "array", "items": { "type": "string", "x-ref": "items" }, "description": "traumaSurgeon: IFAK and medkit" },
-        "fobHealFactor": { "type": "number", "exclusiveMinimum": 0, "description": "traumaSurgeon 1.25 (TAC recovery)" },
+        "fobHealFactor": { "type": "number", "exclusiveMinimum": 0, "description": "traumaSurgeon 1.25: recovery at an FOB of the group whose best Medical has the perk (MGT-010)" },
         "weaponWearFactor": { "type": "number", "exclusiveMinimum": 0, "description": "armourer 0.75 (TAC-083)" },
         "repairFactor": { "type": "number", "exclusiveMinimum": 0, "description": "armourer 1.25 (MGT-067)" },
         "boltCutterAp": { "type": "integer", "minimum": 1, "description": "sapper 5 (ITM-026)" },
@@ -124,6 +124,16 @@
         "missionId": { "type": "string", "x-ref": "missions" },
         "targetFaction": { "type": "null" },
         "minFrontDistance": { "type": "integer", "minimum": 0, "description": "tiles from the nearest front tile, not set" }
+      },
+      "additionalProperties": false
+    },
+    "recovery": {
+      "type": "object", "description": "MGT-010: HP recovered per body zone per hour outside battle = hpPerHourPerZone + hpPerMedicalStep x floor(best Medical / medicalStep), x fobFactor at an FOB; design draft 1, 1, 25, 2",
+      "properties": {
+        "hpPerHourPerZone": { "type": "number", "minimum": 0, "description": "design draft 1" },
+        "hpPerMedicalStep": { "type": "number", "minimum": 0, "description": "design draft 1 per full medicalStep points of the group's best Medical" },
+        "medicalStep": { "type": "integer", "minimum": 1, "maximum": 100, "description": "design draft 25" },
+        "fobFactor": { "type": "number", "minimum": 1, "description": "design draft 2 (twice as fast at an FOB)" }
       },
       "additionalProperties": false
     },

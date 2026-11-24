@@ -45,9 +45,9 @@ state never appears in it. Fields (schema: `spec/interfaces/strategic_perception
 | `mapShape` | Grid shape, `square` or `hex`: sets adjacency and distance (STR-005) |
 | `recruitsAvailable` | Its own recruit pool, soldiers a `recruit` can draw (STR-014, STR-096) |
 | `ownRegions` | Regions and points of interest it controls: `id`, `poi`, `krugMarket`, `output`, and on settlement tiles `loyalty` as one value per faction (faction → −100…100, STR-009) |
-| `ownSquads` | Its squads: `id`, `region`, `goal`, `target`, `strength`, `supplies`, `fuel`, `morale`, `vehicle` (null = on foot), `transit` (the move in progress `{ toRegion, hoursLeft }` or null, STR-017) |
+| `ownSquads` | Its squads: `id`, `region`, `goal`, `target`, `strength`, `supplies`, `fuel`, `morale` (the average of its soldiers' own morale, STR-017), `vehicle` (null = on foot), `transit` (the move in progress `{ toRegion, hoursLeft }` or null, STR-017) |
 | `knownRegions` | Every region it has seen: `id`, `x`, `y`, `terrain`, `road` (kind), `roadTo` (adjacent tiles the road continues to), `roadCrossing` (`bridge`/`ford` on water), `poi`, `krugMarket`, `controller`, `loyalty` (per faction), `flags` — current if in recon range, else last known state with the time `observed` |
-| `knownSquads` | Foreign squads it knows of (including the player's): `id`, `faction`, `region`, `estimatedStrength`, time `seen`, `knownGoal` and its `knownTarget` if intel reveals them |
+| `knownSquads` | Foreign squads it knows of (including the player's): `id`, `faction`, `region`, `estimatedStrength`, time `seen`; non-player squads: `knownGoal` and its `knownTarget` if intel reveals them; player squads: `knownObjectives` (`contractId`, `missionKey`, `missionId`, `target`, `region`), the signed-contract missions its op carries whose target or location intel has revealed (STR-021, design 0eec0d4; view 0.11.0) |
 | `capital` | The capital tile, its `holder`, `occupant` and `contestedSince` (STR-007) |
 | `vips` | Its own VIPs and the enemy VIPs it holds intel on (STR-045, STR-048): `id`, `faction`, `rank`, `regionId`; own VIPs `guardSquadIds`; enemy VIPs `guardSize`, `observed` and `intelExpires` (after it, last known state) |
 | `relations` | Its relation to every other faction (range and thresholds → see STR-051) |
@@ -255,9 +255,11 @@ goals on the strategic map and in tactical engagements alike unless SAI-013 make
    (thresholds: the standing table of MGT-054 in data/management-rules.json);
 2. it has a mission targeting the player (a hunt, a counter-attack on an FOB);
 3. its standing toward the player is `unfriendly` or worse and it and the player pursue the same
-   objective at the same time (the MGT-054 rule). Same objective = same goal and target: a player squad's
-   `knownGoal` and `knownTarget` in `knownSquads` equal one of its own squads' `goal` and `target`
-   (cleanup 2026-11-24, spec choice).
+   objective at the same time (the MGT-054 rule). The player's objective is the target or location of a
+   mission in a contract the player has signed, once the faction's intel reveals it (design 0eec0d4): a
+   player squad's `knownObjectives` in `knownSquads` (when and how it is revealed: STR-021). Same objective
+   (spec choice) = one entry's `target` equals the `target` of one of its own squads' goals, or one entry's
+   `region` is the tile of that own target (a POI, VIP or squad on it, or the region itself).
 Otherwise it is non-hostile. The AI may only target the player (goal `hunt`/`attackPoi` against a player
 FOB, `moveSquad` to engage) while hostile. Attacking a non-hostile faction is the player's choice and costs
 reputation (MGT).
@@ -404,7 +406,11 @@ values unset) → data/ai/doctrines.json (Krug doctrine).
     SAI-013); offer pay is the exact MGT-046 formula (SAI-014, STR-092); consideration names, input units
     and curve types `linear`/`step` (SAI-006); an action for a squad in `transit` cancels its move
     (SAI-004, STR-002, STR-020).
-19. SAI-013 condition 3 — player squads hold no STR-018 goal (goals are for non-player squads), so a player
+19. **Resolved (2026-11-24, design 0eec0d4):** the player's objective is the target or location of a
+    mission in a contract the player has signed, once the faction's intel reveals it; the view carries it as
+    `knownSquads[].knownObjectives` (view 0.11.0), revealed to the employer or when the player squad is seen
+    on that tile (spec choice, STR-021; other intel sources: question 21) (SAI-003, SAI-013).
+    SAI-013 condition 3 — player squads hold no STR-018 goal (goals are for non-player squads), so a player
     squad's `knownGoal`/`knownTarget` has no source. Needs a design decision: what "the player's objective"
     is for this check (e.g. the target/location of a signed contract mission revealed by intel, or the tile
     the player's squad moves toward), and when intel reveals it.
@@ -415,3 +421,8 @@ values unset) → data/ai/doctrines.json (Krug doctrine).
     shipment for `hireEscort` is an own `supplyRun` or `tradeRoute` squad (SAI-009, STR-094). SAI-006,
     SAI-010, SAI-014, SAI-009 — layer normalisation had no field, personality had no input, the hex
     convention, the offer deadline, the patron's enemies and the shipment to escort were unstated.
+21. SAI-013, STR-021 (2026-11-24, design 0eec0d4): how does a faction's intel reveal the target or location
+    of a player contract mission? The spec reveals it to the contract's employer and to a faction that sees
+    the player squad on the mission's target or location tile. Do other sources reveal it too (bought intel,
+    captured documents, Krug rumours, being the contract's target faction), and does it reveal the mission
+    before the squad arrives (e.g. on signing)?

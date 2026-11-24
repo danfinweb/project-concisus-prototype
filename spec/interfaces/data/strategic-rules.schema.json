@@ -3,7 +3,7 @@
   "$id": "data/strategic-rules.schema.json",
   "title": "Strategic rules",
   "description": "Global strategic and campaign constants (spec STR, GEN-012..GEN-015, GEN-019). Per-terrain movement and visibility live in data/strategic-terrain.json (STR-095); battle duration is TAC-003 battleDurationHours in tactical-rules. Roads have no visibility of their own (STR-006).",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design drafts listed in the spec.",
   "type": "object",
   "properties": {
@@ -92,6 +92,21 @@
       },
       "additionalProperties": false
     },
+    "heliFieldRepair": {
+      "type": "object", "description": "STR-034: field repair of a damaged grounded helicopter by its squad's best Technical soldier; hours = ceil(baseHours × baseTechnical / Technical)",
+      "properties": {
+        "baseHours": { "type": "number", "exclusiveMinimum": 0, "description": "hours of work at baseTechnical, design draft 24" },
+        "baseTechnical": { "type": "integer", "minimum": 1, "maximum": 100, "description": "design draft 50" }
+      },
+      "additionalProperties": false
+    },
+    "aiSoldiers": {
+      "type": "object", "description": "STR-017: per-soldier records of AI soldiers in the world slice",
+      "properties": {
+        "rankMix": { "type": "object", "description": "Default rank → share for AI soldiers created without a rule's own mix (not set, STR Open questions 57)", "properties": { "recruit": { "type": "number", "minimum": 0, "maximum": 1 }, "regular": { "type": "number", "minimum": 0, "maximum": 1 }, "veteran": { "type": "number", "minimum": 0, "maximum": 1 }, "elite": { "type": "number", "minimum": 0, "maximum": 1 } }, "additionalProperties": false }
+      },
+      "additionalProperties": false
+    },
     "contaminationHpPerHour": { "type": "integer", "minimum": 0, "description": "STR-097: HP lost per soldier per strategic hour on a contaminated or hazard tile, design draft 2" },
     "reconRange": {
       "type": "object", "description": "STR-008: ranges in regions (not set)",
@@ -138,7 +153,7 @@
         "krugPass": { "type": "integer", "minimum": 0, "description": "STR-025, design draft 0" },
         "payFaction": { "type": "integer", "minimum": 0, "description": "STR-043: pay compensation or pay off a bounty, design draft 0" },
         "krugEscort": { "type": "integer", "minimum": 0, "description": "STR-094: hire a Krug escort, design draft 0" },
-        "brokerCeasefire": { "type": "integer", "minimum": 0, "description": "STR-099: broker the general SSV–VDK ceasefire at a governmental institution, not set (design: no time)" }
+        "brokerCeasefire": { "type": "integer", "minimum": 0, "description": "STR-099: broker the general SSV–VDK ceasefire at a governmental institution, design draft 24" }
       },
       "additionalProperties": false
     },

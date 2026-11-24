@@ -3,7 +3,7 @@
   "$id": "data/tactical-rules.schema.json",
   "title": "Tactical rules",
   "description": "Global tactical constants (spec TAC; ballistic constants from DAT/ITM).",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -58,6 +58,9 @@
     "heavyEncumbranceThreshold": { "type": "number", "description": "TAC-027, draft 1.25 x carry capacity" },
     "encumbranceStrengthDivisor": { "type": "number", "description": "TAC-027, draft 200: penalty x (1 - Strength / 200)" },
     "neutralReactRadiusTiles": { "type": "integer", "description": "TAC-001, draft 3 tiles" },
+    "hostileNeutral": { "type": "object", "description": "TAC-001 / TAI-017: fixed default for an armed neutral side that turned hostile (goal attack the side that attacked it)", "properties": {
+      "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1, "description": "TAI-009 share; the design's 'normal acceptable loss', not set" },
+      "doctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "Tactical doctrine ID used when the request gives the side none; not set" } }, "additionalProperties": false },
     "commandRetries": { "type": "integer", "description": "TAI-005, draft 3 retries per activation" },
     "tileSizeM": { "type": "number", "description": "TAC-028, design 1.5 m" },
     "walkCost": { "type": "integer", "description": "TAC-029, design 2 AP" },
@@ -114,7 +117,10 @@
     "degradedArmourThreshold": { "type": "number", "description": "TAC-050, design 50" },
     "bluntShare": { "type": "number", "minimum": 0, "maximum": 1, "description": "TAC-051, design 0.20" },
     "armourWear": { "type": "object", "description": "TAC-051, draft {blocked 0.10, penetrating 0.05, min 1} (replaces durabilityLossPerHit)", "properties": { "blocked": { "type": "number" }, "penetrating": { "type": "number" }, "min": { "type": "integer" } } },
-    "zones": { "type": "object", "description": "TAC-052..TAC-061: zone → {baseHp (TAC-057), hitboxes {upright, crouched, prone, aiming} (TAC-052..TAC-055), lightBleedChance (TAC-060), heavyBleedChance (TAC-061)}" },
+    "zones": { "type": "object", "description": "TAC-052..TAC-061: zone → {baseHp (TAC-057), hitboxes {upright, crouched, prone, aiming {upright, crouched, prone}} (TAC-052..TAC-055), lightBleedChance (TAC-060), heavyBleedChance (TAC-061)}", "properties": {
+      "head": { "$ref": "#/$defs/zone" }, "thorax": { "$ref": "#/$defs/zone" },
+      "leftArm": { "$ref": "#/$defs/zone" }, "rightArm": { "$ref": "#/$defs/zone" },
+      "leftLeg": { "$ref": "#/$defs/zone" }, "rightLeg": { "$ref": "#/$defs/zone" } }, "additionalProperties": false },
     "hpScaleBase": { "type": "number", "description": "TAC-057, design 0.5" },
     "hpScaleEndurance": { "type": "number", "description": "TAC-057, design 0.75" },
     "lightBleedHp": { "type": "integer", "description": "TAC-060, design 1 HP per turn" },
@@ -135,12 +141,13 @@
     "placeChargeCost": { "type": "integer", "description": "TAC-072, draft 8" },
     "placeChargeCostSkilled": { "type": "integer", "description": "TAC-072, draft 6" },
     "placeChargeSkilledThreshold": { "type": "integer", "description": "TAC-072, draft Technical 50" },
+    "detonateChargeCost": { "type": "integer", "minimum": 1, "description": "TAC-097, design draft 2 AP (remote trigger)" },
     "restrainCost": { "type": "integer", "description": "TAC-073, draft 6" },
     "liftCost": { "type": "integer", "description": "TAC-074, draft 4" },
     "putDownCost": { "type": "integer", "description": "TAC-074, draft 2" },
     "carryMoveSurcharge": { "type": "integer", "description": "TAC-074, draft 2 per tile" },
     "dragMoveSurcharge": { "type": "integer", "description": "TAC-074, draft 3 per tile" },
-    "bodyWeightKg": { "type": "number", "minimum": 0, "description": "TAC-074: own weight of a carried or dragged body, added to the gear on it; not set (design gives none, tactical open question 64)" },
+    "bodyWeightKg": { "type": "number", "minimum": 0, "description": "TAC-074: own weight of a carried or dragged body (one fixed value), added to the gear on it; design draft 80 kg" },
     "moraleFlight": { "type": "object", "description": "TAC-077 (optional)", "properties": { "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "flight chance, not set" }, "nerveDivisor": { "type": "number", "exclusiveMinimum": 0, "description": "design draft 200: suppression spread and casualty morale loss × (1 − Nerve ÷ nerveDivisor)" } }, "additionalProperties": false },
     "moraleCasualty": { "type": "object", "description": "TAC-095: morale change per casualty for each soldier with it in line of sight or in its squad; design draft allyKilled 10, allyWounded 3 (losses), enemyKilled 3, enemyWounded 1 (gains)", "properties": { "allyKilled": { "type": "number", "minimum": 0 }, "allyWounded": { "type": "number", "minimum": 0 }, "enemyKilled": { "type": "number", "minimum": 0 }, "enemyWounded": { "type": "number", "minimum": 0 } }, "additionalProperties": false },
     "weaponWearPerShot": { "type": "number", "minimum": 0, "description": "DAT-014 / TAC-083, draft 0.02 condition per round" },
@@ -156,5 +163,43 @@
     "mines": { "type": "object", "description": "TAC-078 (optional): mine placement, damage and clearing, not set" },
     "pouchItemMaxKg": { "type": "number", "description": "ITM-016, design 1 kg" }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "box": {
+      "type": "object", "description": "TAC-052: axis-aligned box in metres in the soldier's local frame (x right, y forward along the facing, z up from the ground; origin on the ground at the soldier's position)",
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "[x, y, z] of the low corner" },
+        "max": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" }, "description": "[x, y, z] of the high corner" }
+      },
+      "additionalProperties": false
+    },
+    "zone": {
+      "type": "object", "description": "TAC-052..TAC-061: one body zone",
+      "properties": {
+        "baseHp": { "type": "number", "minimum": 0, "description": "TAC-057" },
+        "lightBleedChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "TAC-060" },
+        "heavyBleedChance": { "type": "number", "minimum": 0, "maximum": 1, "description": "TAC-061" },
+        "hitboxes": {
+          "type": "object", "description": "TAC-052..TAC-055: one box per stance",
+          "properties": {
+            "upright": { "$ref": "#/$defs/box", "description": "TAC-052, design" },
+            "crouched": { "$ref": "#/$defs/box", "description": "TAC-054, design draft" },
+            "prone": { "$ref": "#/$defs/box", "description": "TAC-055, design draft" },
+            "aiming": {
+              "type": "object", "description": "TAC-053, arms only: box per stance while aiming, replacing that stance's box; crouched and prone design draft, upright not set",
+              "properties": {
+                "upright": { "$ref": "#/$defs/box" },
+                "crouched": { "$ref": "#/$defs/box" },
+                "prone": { "$ref": "#/$defs/box" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

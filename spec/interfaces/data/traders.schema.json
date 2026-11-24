@@ -3,7 +3,7 @@
   "$id": "data/traders.schema.json",
   "title": "Traders",
   "description": "Trader stock and barter rates (spec MGT-039/MGT-040, ITM-022/ITM-023, ITM-034). Item prices are items.valueUsd.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "$comment": "Named constants. Fields are optional until the content pass fills them with the design placeholders listed in the spec.",
   "type": "object",
   "properties": {
@@ -41,6 +41,23 @@
       "properties": {
         "dailyMaxChange": { "type": "number", "minimum": 0, "maximum": 1 },
         "maxDeviation": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "krugStock": {
+      "type": "object", "description": "MGT-040: the Krug's item list and how each Krug market's own stock is drawn from it (a seeded share rolled once per market)",
+      "properties": {
+        "basic": { "type": "array", "items": { "type": "string", "x-ref": "items" }, "description": "Krug items open at any standing that allows trade; not set (design: not stated)" },
+        "better": { "type": "array", "items": { "type": "string", "x-ref": "items" }, "description": "Better Krug items: in a market's stock, bought only at reputation with the Krug >= betterMinReputation; not set (design: not stated)" },
+        "shareByKind": {
+          "type": "object", "description": "Share of basic + better a market stocks, by market kind; design draft city 0.6, town 0.4",
+          "properties": {
+            "city": { "type": "number", "minimum": 0, "maximum": 1 },
+            "town": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "betterMinReputation": { "type": "integer", "minimum": -100, "maximum": 100, "description": "Reputation with the Krug needed for the better items, design draft 20" }
       },
       "additionalProperties": false
     }

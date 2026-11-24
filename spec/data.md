@@ -443,12 +443,15 @@ water; landing on any open, non-water tile; one seat is the pilot, a roster sold
 only at FOBs and oil plants, never from diesel canisters; noticed by every
 faction in range; each hostile military point of interest on its path rolls a chance to damage or down it
 (STR-034); a downed helicopter becomes a crash site and starts an emergency op (STR); a damaged one
-crashes the same way over water and over land lands and waits for repair at a mechanical plant (STR-034). Hidden cities are
-reachable only this way (optional feature).
+crashes the same way over water, and over land lands and stays grounded until repaired — at a mechanical
+plant, or in the field by a squad soldier with Technical, as for weapons — then may fly on (design 0eec0d4;
+STR-034). Field repair time (design draft): 24 hours of work at Technical 50, scaled by 50 ÷ the repairer's
+Technical, rounded up (15 hours at Technical 80). Hidden cities are reachable only this way (optional feature).
 **Values.** → see STR-034: `pilotTechnicalMin` — design 50 and `heliMoveHours` — design 1 are single values in
 data/strategic-rules.json, not vehicle record fields; damage / down chance per point of interest (design
-draft 10% / 3%) → STR-034.
-**Source.** design/data-definitions.md › Vehicles (draft) › Helicopters (draft)
+draft 10% / 3%) and the field repair time (design draft 24 hours at Technical 50) → STR-034; not vehicle
+record fields.
+**Source.** design/data-definitions.md › Vehicles (draft) › Helicopters (draft); design/strategic-actions.md › Movement and operations (Fly one region by helicopter)
 
 ### [DAT-029] Vehicle instance state and loss
 **Rule.** Each owned vehicle instance tracks fuel, storage contents and condition (owner: MGT; on the map:
@@ -865,7 +868,7 @@ ammunition crate $500 → data/items.json; no `valueUsd` on the other nine.
 | `revealSquadPlan` | Field orders | Read: shows that squad's goal and route (STR intel) | `durationHours` 72 |
 | `revealAdjacentSquads` | Encrypted radio | Carried by a squad: shows that faction's squads within range (STR) | `rangeRegions` 1, `durationDays` 7 |
 | `extendRadio` | Codebook | With an encrypted radio of the same faction: extends it (STR) | `rangeRegions` 2, `durationDays` 14 |
-| `demolition` | Demolition charge | Destroys a wall or vehicle; required for sabotage objectives (TAC/MGT missions) | — |
+| `demolition` | Demolition charge | Destroys a wall or vehicle; required for sabotage objectives (TAC/MGT missions). Comes with its remote trigger (no separate item); goes off only when its placer sets it off (TAC-072, TAC-097) | Blast as a frag grenade (TAC-097): `damage` 100, `radiusTiles` 4 (design draft), `penetrationClass` 2 (as the frag grenade) |
 | `cutLock` | Bolt cutters | Opens locked gates and containers silently (TAC-071) | `apCost` 10 (design: Defined; the only field for the base cost, read by TAC-071; the Sapper perk replaces it, MGT-009 `boltCutterAp`) |
 | `poiKey` | POI key | Opens the locked rooms of its point of interest (TAC) | — |
 | `restockMedical` | Medical supply crate | Restocks a squad once (MGT) | 4 bandages, 2 tourniquets |
@@ -874,7 +877,7 @@ ammunition crate $500 → data/items.json; no `valueUsd` on the other nine.
 Items without a row have no operation use. The former `checkpointPass` type is removed (the checkpoint
 pass item and checkpoints are gone from the design).
 **Values.** params as listed → data/items.json.
-**Source.** design/item-list.md › Operation and faction items
+**Source.** design/item-list.md › Operation and faction items; design/tactical-actions.md › Gear and interaction (Set off a demolition charge); design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors (Destruction)
 
 ### [ITM-027] Hand-in action
 **Rule.** A hand-in is one strategic player action at a point of interest held by the receiving faction,

@@ -5,7 +5,7 @@ Maps every spec ID to the module or tool that implements it and to its design so
 
 IDs are `[AREA-NNN]`, never reused or renumbered; a removed rule keeps its ID, marked `(removed)`.
 
-Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
+Design baseline: 0eec0d4 (update, 2026-11-24; previous c1333f3)
 
 | Area | File | Design source | Implemented by |
 | --- | --- | --- | --- |
@@ -21,7 +21,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 
 ## IDs
 
-421 IDs (first split 2026-11-22, updated from design c1333f3, cleanups 2026-11-24). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
+422 IDs (first split 2026-11-22, updated from design 0eec0d4). Status in brackets: `open` = the design leaves a value or rule unset, `optional` = left out of the first build iterations, `removed` = rule dropped from the design (ID kept).
 
 | ID | Title | Implemented by | Design source |
 | --- | --- | --- | --- |
@@ -84,7 +84,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [STR-031] | Move one region on foot | modules/strategic | design/strategic-actions.md › Movement and operations |
 | [STR-032] | Move one region by ground vehicle (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) |
 | [STR-033] | Vehicle profile (removed) | modules/strategic | design/data-definitions.md › Vehicles (draft) (Profile) |
-| [STR-034] | Fly one region by helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters |
+| [STR-034] | Fly one region by helicopter | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters |
 | [STR-035] | Land a helicopter (open) | modules/strategic | design/strategic-actions.md › Movement and operations; design/data-definitions.md › Vehicles (draft) › Helicopters |
 | [STR-036] | Scout (open) | modules/strategic | design/strategic-layer.md (Time); design/strategic-actions.md › Movement and operations |
 | [STR-037] | Stand by | modules/strategic | design/strategic-layer.md (Time); › Squads and simulation (Strategic turn); design/strategic-actions.md › Movement and operations |
@@ -94,7 +94,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [STR-041] | Paid services (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions; design/data-definitions.md › Vehicles (draft) › Helicopters |
 | [STR-042] | Acquire an FOB (open) | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions; design/management.md › Base & meta progression |
 | [STR-043] | Payments to factions | modules/strategic | design/strategic-actions.md › Trade, services, contracts and factions |
-| [STR-099] | Broker a ceasefire (open) | modules/strategic | design/design.md › Factions & campaign › Player role (Endings) |
+| [STR-099] | Broker a ceasefire | modules/strategic | design/design.md › Factions & campaign › Player role (Endings) |
 | [STR-044] | Contract postings from goals | modules/strategic | design/management.md › Contracts and missions; design/ai.md › Strategic AI |
 | [STR-045] | VIP entity | modules/strategic | design/strategic-layer.md › VIPs |
 | [STR-046] | VIP guard | modules/strategic | design/strategic-layer.md › VIPs |
@@ -205,8 +205,8 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [TAC-051] | Blunt damage and armour wear | modules/tactical | design/tactical-layer.md › Derived per shot; › Derived per shot › Armour wear and weapon condition (draft); design/item-list.md › Body armour |
 | [TAC-052] | Body zones and upright hitboxes | modules/tactical | design/tactical-layer.md › Body zones and hitboxes |
 | [TAC-053] | Aiming arm pose (open) | modules/tactical | design/tactical-layer.md › Body zones and hitboxes |
-| [TAC-054] | Crouched hitboxes (open) | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
-| [TAC-055] | Prone hitboxes and limits (open) | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
+| [TAC-054] | Crouched hitboxes | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
+| [TAC-055] | Prone hitboxes and limits | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
 | [TAC-056] | Cover occlusion | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Stance |
 | [TAC-057] | Zone HP | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Health and effects per zone; design/management.md › Soldier attributes › Derived values |
 | [TAC-058] | Zone damage effects | modules/tactical | design/tactical-layer.md › Body zones and hitboxes › Health and effects per zone; design/tactical-actions.md › Movement (Leg wounds), Weapons, AP modifiers on an activation |
@@ -223,9 +223,9 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [TAC-069] | Drop the backpack | modules/tactical | design/tactical-actions.md › Gear and interaction; design/data-definitions.md › Soldier equipment slots |
 | [TAC-070] | Pick up or loot | modules/tactical | design/tactical-actions.md › Gear and interaction; design/data-definitions.md › Soldier equipment slots |
 | [TAC-071] | Cut a lock | modules/tactical | design/tactical-actions.md › Gear and interaction; design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors |
-| [TAC-072] | Place a demolition charge (open) | modules/tactical | design/tactical-actions.md › Gear and interaction |
+| [TAC-072] | Place a demolition charge | modules/tactical | design/tactical-actions.md › Gear and interaction |
 | [TAC-073] | Restrain a VIP | modules/tactical | design/tactical-actions.md › Gear and interaction |
-| [TAC-074] | Carry or drag a body (open) | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a body) |
+| [TAC-074] | Carry or drag a body | modules/tactical | design/tactical-actions.md › Gear and interaction (Carry or drag a body) |
 | [TAC-084] | Doors | modules/tactical | design/tactical-actions.md › Gear and interaction (Open a door, Close a door); design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors |
 | [TAC-085] | Cover edge destruction | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Tiles, cover and doors (Destruction) |
 | [TAC-086] | Tactical map types | modules/tactical | design/tactical-layer.md › Tactical map generation (draft) › Inputs, Map types |
@@ -239,16 +239,17 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [TAC-094] | Squad leader and Leadership bonus | modules/tactical | design/management.md › Soldiers & progression (Rank and leadership); design/ai.md › Tactical AI |
 | [TAC-095] | Morale in battle | modules/tactical | design/management.md › Soldiers & progression (Contracts & morale) |
 | [TAC-096] | Perk effects in battle | modules/tactical | design/management.md › Soldier attributes (draft) (Perks) |
+| [TAC-097] | Set off a demolition charge | modules/tactical | design/tactical-actions.md › Gear and interaction; design/tactical-layer.md › Tactical map generation › Tiles, cover and doors; design/item-list.md › Operation and faction items |
 | [MGT-001] | Soldier record | modules/management | design/management.md › Soldiers & progression |
 | [MGT-002] | Hiring pools (open) | modules/management | design/management.md › Soldiers & progression |
-| [MGT-003] | Hire price (open) | modules/management | design/management.md › Soldiers & progression |
+| [MGT-003] | Hire price | modules/management | design/management.md › Soldiers & progression |
 | [MGT-004] | Player-chosen callsign and kit marks | modules/management | design/management.md › Soldiers & progression |
 | [MGT-005] | Fee per op | modules/management | design/management.md › Soldiers & progression › Contracts & morale; design/strategic-layer.md › Squads and simulation (Faction funds (draft)) |
 | [MGT-006] | Service record logging | modules/management | design/management.md › Soldiers & progression › Service record |
 | [MGT-007] | Dossier and after-action report | modules/management | design/management.md › Soldiers & progression › Service record |
 | [MGT-008] | Squad morale persistence (optional (flight rule only)) | modules/management | design/management.md › Soldiers & progression › Contracts & morale |
 | [MGT-009] | Perks (open) | modules/management | design/management.md › Soldiers & progression › Attributes |
-| [MGT-010] | Persistent injuries | modules/management | design/management.md › Soldiers & progression › Injuries |
+| [MGT-010] | Persistent injuries and recovery | modules/management | design/management.md › Soldiers & progression › Injuries |
 | [MGT-011] | Death, MIA and capture | modules/management | design/management.md › Soldiers & progression › Death; › Gear, loot & return |
 | [MGT-012] | Memorial wall | modules/management | design/management.md › Soldiers & progression › Memorial |
 | [MGT-013] | Generation callsign: row and column | modules/management | design/callsigns.md › Generation callsigns |
@@ -278,7 +279,7 @@ Design baseline: c1333f3 (update, 2026-11-24; previous 06dc2a6)
 | [MGT-037] | Loadout presets | modules/management | design/management.md › Gear, loot & return › Risk control |
 | [MGT-038] | Scav loadout and rebuild floor (open) | modules/management | design/management.md › Gear, loot & return › Design risk |
 | [MGT-039] | Faction traders | modules/management | design/management.md › Gear, loot & return › Traders; › Reputation › Standing |
-| [MGT-040] | Krug market prices (open) | modules/management | design/management.md › Gear, loot & return › Traders |
+| [MGT-040] | Krug market stock and prices (open) | modules/management | design/management.md › Gear, loot & return › Traders |
 | [MGT-041] | Contract origin | modules/management | design/management.md › Contracts and missions › Where contracts come from |
 | [MGT-042] | Contract structure | modules/management | design/management.md › Contracts and missions › Contract terms |
 | [MGT-043] | Goal to mission mapping | modules/management | design/management.md › Contracts and missions |

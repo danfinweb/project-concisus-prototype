@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "tactical_perception_view.schema.json",
   "title": "Tactical perception view",
-  "description": "What one side knows under fog of war at an AI-controlled activation. Built by tactical/core, passed to that side's controller as plain data: decide(view, rng) gets no query functions; path, line-of-sight and shot previews are precomputed in allowedActions (TAI-001). Spec: TAI-001, TAI-002, TAI-004, TAI-005, TAI-006, TAI-008, TAI-012, TAI-013, TAI-014, TAC-001, TAC-028, TAC-035, TAC-037, TAC-094, TAC-095.",
-  "version": "0.8.0",
+  "description": "What one side knows under fog of war at an AI-controlled activation. Built by tactical/core, passed to that side's controller as plain data: decide(view, rng) gets no query functions; path, line-of-sight and shot previews are precomputed in allowedActions (TAI-001). Spec: TAI-001, TAI-002, TAI-004, TAI-005, TAI-006, TAI-008, TAI-012, TAI-013, TAI-014, TAC-001, TAC-028, TAC-035, TAC-037, TAC-094, TAC-095, TAC-097.",
+  "version": "0.9.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/tactical-ai"],
   "type": "object",
@@ -11,7 +11,7 @@
   "properties": {
     "side": { "type": "string" },
     "faction": { "type": "string" },
-    "doctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "One doctrine per side, from the tactical map request sides[].doctrine (TAI-015)" },
+    "doctrine": { "type": "string", "x-ref": "ai/doctrines", "description": "One doctrine per side, from the tactical map request sides[].doctrine (TAI-015); for a neutral side turned hostile without one, tactical-rules hostileNeutral.doctrine (TAC-001)" },
     "turn": { "type": "integer", "minimum": 1 },
     "timeOfDay": { "enum": ["day", "night"] },
     "activeUnit": { "type": ["string", "null"], "description": "Unit to act, or null when the side chooses whom to activate (answered by activate or pass, TAI-002)" },
@@ -58,11 +58,12 @@
       "type": { "type": "string", "description": "A tactical_commands command type" },
       "unit": { "type": "string", "description": "activate: a unit that may be activated now" },
       "apCost": { "type": "integer" },
+      "charges": { "type": "array", "items": { "type": "string" }, "description": "detonateCharge: item instances of the charges the active unit placed that are still on the map (TAC-097)" },
       "reachable": { "type": "array", "description": "move: tiles with the previewed path, its AP cost and AP left (TAC-037); a move command may name only the tile, TAC then follows this path (TAI-005)", "items": { "type": "object", "required": ["tile"], "properties": { "tile": { "$ref": "#/$defs/pos" }, "path": { "type": "array", "description": "Tiles from the first step to tile", "items": { "$ref": "#/$defs/pos" } }, "apCost": { "type": "integer" }, "apLeft": { "type": "integer" } } } },
       "targets": { "type": "array", "description": "shoot / throwGrenade: targets in line of sight with the shot preview (TAC-046)", "items": { "type": "object", "properties": {
         "unit": { "type": "string" }, "tile": { "type": "object" }, "hitChance": { "type": "number", "minimum": 0, "maximum": 1 }, "concealed": { "type": "boolean", "description": "TAC-046 / TAC-082: target concealed; hitChance is the best case (unshifted cone)" },
         "zoneShares": { "type": "object" }, "likelyZone": { "type": "string" }, "penetrates": { "type": "boolean" } } } } } } },
-    "battleGoal": { "type": "object", "description": "The active unit's goal: its own from the request, else its side's (TAI-009, TAI-018)", "properties": { "goal": { "enum": ["attack", "defend", "escort", "reachExit", "hold"], "description": "As sent; TAC never sets retreat, the AI derives it (TAI-009)" }, "targets": { "type": "array", "items": { "type": "string" } }, "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1 } } },
+    "battleGoal": { "type": "object", "description": "The active unit's goal: its own from the request, else its side's (TAI-009, TAI-018); for a neutral side turned hostile, the fixed default TAC fills: attack the attacking side's units, acceptableLoss from tactical-rules hostileNeutral (TAC-001, TAI-017)", "properties": { "goal": { "enum": ["attack", "defend", "escort", "reachExit", "hold"], "description": "As sent; TAC never sets retreat, the AI derives it (TAI-009)" }, "targets": { "type": "array", "items": { "type": "string" } }, "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1 } } },
     "objectives": { "type": "array", "items": { "type": "object" }, "description": "Tactical-map objectives of the battle known to the side (TAC-076)" }
   },
   "$defs": {

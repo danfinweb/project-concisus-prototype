@@ -2,8 +2,8 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "battle_result.schema.json",
   "title": "Battle result",
-  "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, TAC-095, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
-  "version": "0.5.0",
+  "description": "Outcome of one tactical engagement, sent back to the strategic layer (control, attribution, events) and to Management (roster, wounds, xp, loot, reputation). Spec: TAC-003, TAC-095, STR-017, STR-023, STR-058, MGT-006, MGT-011, MGT-035, MGT-056..MGT-064.",
+  "version": "0.6.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/strategic", "modules/management"],
   "type": "object",
@@ -35,6 +35,21 @@
           "underFire": { "type": "boolean" },
           "morale": { "type": "number", "minimum": 0, "maximum": 100, "description": "The soldier's battle morale at the end (for leftMap: when it left), without the Leadership bonus (TAC-095)" }
         }
+      }
+    },
+    "aiUnits": {
+      "type": "array", "description": "Every AI-controlled unit of the tactical map request that is not a player soldier (opponent, third side, neutrals, allied AI units on the player side), so the strategic layer can update its per-soldier records (STR-017, STR-023; TAC-095). Player-only fields (skillUse, kills, deedEvents, equipment, acts) are never given here",
+      "items": {
+        "type": "object", "required": ["id", "faction", "status"],
+        "properties": {
+          "id": { "type": "string", "description": "Unit ID from tactical_map_request sides[].units[].id" },
+          "faction": { "type": "string", "x-ref": "factions", "description": "The unit's side (its sides[] entry's faction)" },
+          "status": { "enum": ["active", "leftMap", "dead", "captured"], "description": "At battle end; captured = restrained and carried off the map by the player's side (TAC-073, TAC-074)" },
+          "exitId": { "type": ["string", "null"], "description": "status leftMap: id of the exit used (TAC-038)" },
+          "zoneHp": { "type": "object", "description": "zone → HP at battle end (for leftMap: when it left), same zones as soldiers[].zoneHp (TAC-057)" },
+          "morale": { "type": "number", "minimum": 0, "maximum": 100, "description": "Battle morale at the end (for leftMap: when it left), without the Leadership bonus (TAC-095)" }
+        },
+        "additionalProperties": false
       }
     },
     "squadMorale": { "type": "number", "description": "Average of soldiers[].morale over the player soldiers still alive (TAC-095)" },

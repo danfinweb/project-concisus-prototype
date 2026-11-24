@@ -15,7 +15,9 @@ rules in TAC.
 generation, never changes); `callsign` (current displayed callsign); `callsignSource` (`generated` |
 `earned` | `player`); `callsignPrestige` (0 for generated, 1–5 for earned); the eight attributes
 (MGT-021); `nerve` (MGT-031); `morale` (MGT-008); `wounds` (`{ zoneHp, conditions }`, per body zone,
-in the `battle_result` shapes, TAC Medical system; spec choice); `equipment` (slot → item instance, the
+in the `battle_result` shapes, TAC Medical system; spec choice); `healCarry` (0 ≤ x < 1, default 0) and
+`contaminationOwedHp` (integer ≥ 0, default 0), the rounding remainders of recovery and contamination loss
+(MGT-010; spec choice, not published); `equipment` (slot → item instance, the
 slots of DAT/`tactical_map_request`); `perks` (perk IDs unlocked, MGT-009; never removed; sent as
 `tactical_map_request` `units[].perks`, TAC-096); `skillXp` (xp toward the next point, per skill,
 MGT-023); `skillIdleDays` (days since last use, per skill, MGT-025); `rank` (a tier ID, MGT-002: the hiring tier at hiring, rising by MGT-074, never dropping; the fee per
@@ -57,8 +59,8 @@ rules).
 ### [MGT-003] Hire price
 **Rule.** A candidate's hire price starts from its tier's `hirePriceUsd` (MGT-002) and scales with the
 candidate's average attribute within the tier (price follows stats): a candidate at the middle of the tier's
-attribute range pays the tier price, a better one more, a worse one less. Scaling (spec choice, cleanup
-2026-11-24; linear): with `mid` and `half` the middle and half-width of the tier's `attributeRange`,
+attribute range pays the tier price, a better one more, a worse one less. Scaling (linear, design 0eec0d4;
+formula spec choice, cleanup 2026-11-24): with `mid` and `half` the middle and half-width of the tier's `attributeRange`,
 price = `hirePriceUsd` × (1 + `priceFormula.spread` × (average attribute − `mid`) ÷ `half`), so the top of
 the range pays + `spread` of the tier price and the bottom − `spread`; without `spread` (or `half` = 0) the
 price is flat. The price is rounded to whole USD and never below 0, after the modifiers.
@@ -67,10 +69,10 @@ Price modifiers, applied after the scaling: a Krug recruit (local recruit from K
 `localRecruits` request) costs the normal hire price; it is hired with `feeDiscount` =
 `params.recruitFeeDiscount` (MGT-001), so its fee per op is lower for as long as it serves (MGT-005).
 **Values.** tier hire prices (design draft, MGT-002) → data/recruitment.json `tiers[].hirePriceUsd`;
-scaling within a tier `priceFormula.spread` (share of the tier price, 0–1) — not set (design: "scales
-with the average attribute", no number; Open questions 1) → data/recruitment.json; `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json (Krug record,
+scaling within a tier `priceFormula.spread` (share of the tier price, 0–1) — 0.30 (design draft: −30% at
+the bottom of the tier's attribute range, +30% at the top) → data/recruitment.json; `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json (Krug record,
 schema owned by STR/GEN); `params.recruitFeeDiscount` — 0.30 (design draft) → data/events.json (STR-065)
-**Status.** open (scaling value `priceFormula.spread`)
+**Status.** Draft
 **Source.** design/management.md › Soldiers & progression (Recruitment); design/design.md › The Krug; design/world-events.md › Events (Refugee movement)
 
 ### [MGT-004] Player-chosen callsign and kit marks
@@ -160,11 +162,13 @@ iterations; morale persistence itself is not.
 ### [MGT-009] Perks
 **Rule.** Perks unlock when a skill (`marksmanship`, `recon`, `medical`, `technical`) reaches a threshold:
 one perk per skill at `perkThresholds[0]` and one at `perkThresholds[1]` (8 perks in all). A perk, once
-unlocked, stays (spec assumption, also if the skill drifts back, MGT-025). Perks of a soldier hired with a
-skill already at a threshold: Open questions 53. Leadership is not a perk: it
+unlocked, stays (spec assumption, also if the skill drifts back, MGT-025). A soldier hired with a skill
+already at or above a threshold starts with every perk whose threshold that skill meets (design 0eec0d4):
+on `hire` (MGT-076) `perks` is set from the hired skill values (`hiredSkills`), so a skill hired at 82 gives
+both perks of that skill. Leadership is not a perk: it
 comes from rank only (MGT-075). Management records which perks a soldier has (`perks`, MGT-001;
 published in `management_view` `roster`, MGT-072); each effect is applied by the
-owner of the rule it changes (TAC for battle rules, MGT-067 for repairs, TAC recovery for FOB healing):
+owner of the rule it changes (TAC for battle rules, MGT-067 for repairs, MGT-010 for healing at an FOB):
 
 | Perk (`perks[].id`) | Skill, threshold | Effect (`perks[].effect`) |
 | --- | --- | --- |
@@ -173,22 +177,50 @@ owner of the rule it changes (TAC for battle rules, MGT-067 for repairs, TAC rec
 | `quietStep` | recon 50 | Enemies notice the soldier at 20% shorter distance (`noticeDistanceFactor` 0.8; TAC-081) |
 | `ghost` | recon 80 | Reaction chance against the soldier −10 while crouched or prone (`reactionChanceAgainst` −10, `whileStance` [crouched, prone]; TAC-022) |
 | `fieldMedic` | medical 50 | Medical items cost 1 AP less, never below 1 (`medicalApReduction` 1, `medicalApMin` 1; TAC Medical system) |
-| `traumaSurgeon` | medical 80 | IFAK and medkit restore 25% more HP (`hpRestoreFactor` 1.25, `items` [IFAK, medkit]); the soldier's patients heal 25% faster at the FOB (`fobHealFactor` 1.25; TAC recovery) |
+| `traumaSurgeon` | medical 80 | IFAK and medkit restore 25% more HP (`hpRestoreFactor` 1.25, `items` [IFAK, medkit]); the soldier's patients heal 25% faster at the FOB (`fobHealFactor` 1.25; MGT-010) |
 | `armourer` | technical 50 | The soldier's weapons wear 25% slower (`weaponWearFactor` 0.75; TAC-083); the soldier's repairs restore 25% more condition (`repairFactor` 1.25; MGT-067) |
 | `sapper` | technical 80 | Bolt cutters take 5 AP instead of 10 (`boltCutterAp` 5; ITM-026); field repairs of vehicles restore 25% more condition (`vehicleRepairFactor` 1.25; MGT-067) |
 
-"The soldier's patients" = soldiers whose FOB recovery uses this soldier as the squad's best Medical (spec
-reading of TAC recovery, which is driven by the best Medical in the squad).
+"The soldier's patients" = soldiers whose recovery at an FOB uses this soldier as the best Medical (spec
+reading of MGT-010, which is driven by the best Medical of the soldiers healing together).
 **Values.** `perkThresholds` — [50, 80] (design draft) → data/management-rules.json; `perks` — the table
 above (design draft) → data/management-rules.json `perks[]` (`id`, `attribute`, `threshold`, `effect`)
 **Status.** Draft
 **Source.** design/management.md › Soldier attributes (draft) › Perks (draft)
 
-### [MGT-010] Persistent injuries
-**Rule.** Wounds from a battle result are stored on the soldier and persist between fights until healed.
-Serious wounds need hours of recovery at an FOB or field surgery; healing rules are TAC (Medical system,
-Recovery after an op).
-**Source.** design/management.md › Soldiers & progression › Injuries
+### [MGT-010] Persistent injuries and recovery
+**Rule.** Wounds from a battle result are stored on the soldier (`wounds`, MGT-001) and persist between
+fights until healed. Management owns healing outside battle (in battle: TAC Medical system).
+- **Recovery (design 0eec0d4).** Outside battle, soldiers recover HP every hour in every body zone. Strategic
+  sends it as `healingTick` (MGT-076): for a player squad not in battle, its `soldiers` and `atFob` (the squad
+  is in a PMC FOB region, STR-037); for soldiers resting at an FOB outside any op, `fobId` and no `soldiers`
+  (every `active` soldier Management has at that FOB, MGT-076 `opReturn`; `atFob` true). The healing group is
+  the listed soldiers (or those at the FOB); its best Medical `M` is the highest current `medical` in the
+  group, the wounded soldier included. Rate per zone per hour:
+  `r` = `recovery.hpPerHourPerZone` + `recovery.hpPerMedicalStep` × floor(`M` ÷ `recovery.medicalStep`),
+  × `recovery.fobFactor` when `atFob`, and × the Trauma surgeon `fobHealFactor` (MGT-009) when `atFob` and a
+  soldier of the group with that perk has Medical `M`. Example: `M` = 60 at an FOB → (1 + 2) × 2 = 6 HP per
+  zone per hour.
+- **Rounding (spec choice).** Per tick each zone gains `g` = floor(`r` × `hours` + `healCarry`) HP, at most up
+  to its max HP (MGT-028); the soldier keeps the rest as `healCarry` (0 ≤ `healCarry` < 1, MGT-001), so
+  fractional rates (Trauma surgeon) are not lost over hourly ticks. `healCarry` is set to 0 when every zone is
+  at max HP. A zone at 0 HP (a disabled limb) heals the same way. Healing changes only `wounds.zoneHp`;
+  `wounds.conditions` stay until treated (TAC Medical system in battle; `hospital`, MGT-076).
+- **Contamination loss (design 0eec0d4).** The strategic HP loss on contaminated tiles (`contaminationTick`,
+  STR-097) is spread evenly over all body zones (every key of `wounds.zoneHp`, zones at 0 HP included). Spec
+  choice for whole HP: the soldier's `contaminationOwedHp` (MGT-001) grows by `hpLost`; each zone then loses
+  floor(`contaminationOwedHp` ÷ number of zones) HP (never below 0; the share of a zone already at 0 HP is
+  lost), and `contaminationOwedHp` drops by that amount × the number of zones. Example: 2 HP per hour over six
+  zones → every zone loses 1 HP every third hour. A head or thorax reaching 0 HP outside battle kills the
+  soldier (`status` `dead`, MGT-011; TAC-059 read outside battle, spec choice). Requests apply in the order
+  received (MGT-076), so a `contaminationTick` and a `healingTick` of the same hour apply in Strategic's
+  order. How the two rates compare: Open questions 57.
+**Values.** `recovery.hpPerHourPerZone` — 1; `recovery.hpPerMedicalStep` — 1; `recovery.medicalStep` — 25;
+`recovery.fobFactor` — 2 (design draft: 1 HP per hour per zone, +1 per full 25 points of the best Medical, ×2
+at an FOB) → data/management-rules.json; `fobHealFactor` — 1.25 (MGT-009) → data/management-rules.json
+`perks[]`; `contaminationHpPerHour` — 2 (design draft) → data/strategic-rules.json (STR-097)
+**Status.** Draft
+**Source.** design/management.md › Soldiers & progression › Injuries; design/tactical-layer.md › Medical system › Recovery after an op; design/strategic-layer.md › World events (draft) (Desperate measures (draft)); design/strategic-actions.md › Movement and operations (Stand by)
 
 ### [MGT-011] Death, MIA and capture
 **Rule.** Death is permanent: `status = dead`, the soldier leaves the active roster and moves to the
@@ -459,25 +491,42 @@ Friendly, best added at Trusted; item IDs only, vehicles go through `vehicleTrad
 (design draft: +25%) → data/management-rules.json
 **Source.** design/management.md › Gear, loot & return › Traders; › Reputation › Standing
 
-### [MGT-040] Krug market prices
+### [MGT-040] Krug market stock and prices
 **Rule.** Krug markets (a `krugMarket` flag on a town or city tile, STR; not a point of interest of
 their own) have prices that fluctuate over time and are public: every price is visible to the
-player without intel. Stock improves with Krug standing (GEN-010). Each item's base price is its
-`valueUsd` (ITM-034). Once per day (00:00 `dailyRollover`) each Krug price moves by a seeded factor in
-[−`dailyMaxChange`, +`dailyMaxChange`] of its current price, then is clamped to
-[base × (1 − `maxDeviation`), base × (1 + `maxDeviation`)].
-Price state (spec choice, cleanup 2026-11-24): the current Krug prices live in Management's `economy` slice
-as `economy.krugPrices`: market tile ID → item ID → current price (USD, before the resentment markup).
-Each Krug market keeps its own price list (spec reading of "Krug markets with … prices"; Open questions
-56). An item with no entry is at its base price. The `dailyRollover` request (MGT-068) carries
-`krugMarkets`, the IDs of every tile flagged `krugMarket` at that check (Strategic, STR-005): Management
-moves the price of every item definition that has a `valueUsd`, at every listed market, in ascending order
-of market ID then item ID, with its own seeded RNG (TEC-015); a listed market without a list starts at the
-base prices; lists of markets not listed are dropped. Trades at a Krug market (`trade`, MGT-076) use that
-market's list. Krug resentment: whatever the player pays the Krug (purchases, barter deals counted against the player, services) is × (1 + `resentment.priceMarkup`) on top (GEN overview, Krug resentment); what the Krug pays the player (ITM-022) is unchanged (spec reading: "cost the player more").
+player without intel. Each Krug market has its own stock and its own prices, moved independently, so
+buying in one market and selling in another can pay (design 0eec0d4).
+- **Stock (design draft).** The Krug's item list is `krugStock.basic` ∪ `krugStock.better` (item IDs). Each
+  market's stock is a seeded share of that list, rolled once per market: `krugStock.shareByKind.city` of the
+  items in a city market (small or large city tile), `krugStock.shareByKind.town` in a town market (town,
+  village variant included; spec reading of "small town"). Spec choice: the count is the share × the list
+  size, rounded half up, at least 1 when the list is not empty; the items are drawn without replacement from
+  the list sorted by item ID, with a seeded stream keyed by the market tile ID (TEC-015), so the result does
+  not depend on the order markets appear. The stock is rolled the first time the market is listed in a
+  `dailyRollover` (the market's kind comes from `krugMarketKinds`, MGT-076) and kept in
+  `economy.krugStock` (market tile ID → item IDs) for the rest of the campaign, also while the market is not
+  listed. Items of `krugStock.better` in a market's stock can be bought only while the player's reputation
+  with the Krug is at least `krugStock.betterMinReputation` (design: "Krug standing 20+"; reputation value,
+  MGT-053); the rest of the stock from any standing that allows trade (MGT-055). A `trade` buy at a Krug
+  market (MGT-076) can take only items in that market's stock; stock is not used up by buying (spec reading:
+  the design gives no quantities). Selling to a Krug market (ITM-022) is not limited to its stock.
+- **Prices.** Each item's base price is its `valueUsd` (ITM-034). Once per day (00:00 `dailyRollover`) each
+  Krug price moves by a seeded factor in [−`dailyMaxChange`, +`dailyMaxChange`] of its current price, then is
+  clamped to [base × (1 − `maxDeviation`), base × (1 + `maxDeviation`)]. Price state (spec choice, cleanup
+  2026-11-24): `economy.krugPrices`: market tile ID → item ID → current price (USD, before the resentment
+  markup); an item with no entry is at its base price. The `dailyRollover` request (MGT-068) carries
+  `krugMarkets`, the IDs of every tile flagged `krugMarket` at that check (Strategic, STR-005): Management
+  moves the price of every item definition that has a `valueUsd` (sale prices need every item, not only the
+  stock), at every listed market, in ascending order of market ID then item ID, with its own seeded RNG
+  (TEC-015); a market listed for the first time starts at the base prices and moves from the next
+  `dailyRollover` on; price lists of markets not listed are dropped. Trades at a Krug market (`trade`,
+  MGT-076) use that market's list.
+- **Krug resentment:** whatever the player pays the Krug (purchases, barter deals counted against the player, services) is × (1 + `resentment.priceMarkup`) on top (GEN overview, Krug resentment); what the Krug pays the player (ITM-022) is unchanged (spec reading: "cost the player more").
 **Values.** `resentment.priceMarkup` — 0.10 (design draft) → data/factions.json; `krugPriceFluctuation.dailyMaxChange` — 0.10; `krugPriceFluctuation.maxDeviation` — 0.30
-(design draft) → data/traders.json
-**Status.** Draft
+(design draft) → data/traders.json; `krugStock.shareByKind.city` — 0.60; `krugStock.shareByKind.town` —
+0.40; `krugStock.betterMinReputation` — 20 (design draft) → data/traders.json; `krugStock.basic`,
+`krugStock.better` (the Krug's item list) — not set (design: not stated) → data/traders.json
+**Status.** Draft (Krug item list not set)
 **Source.** design/management.md › Gear, loot & return › Traders; design/design.md › The Krug
 
 ## Contracts and missions
@@ -609,8 +658,11 @@ from `management_view` (MGT-072).
 - **Failed contract:** a contract fails when its deadline passes with missions still open (`contractEnded`
   reason `deadline` from Strategic), or when every mission has failed (Management ends it itself,
   `endReason: allFailed`). A contract with at least one successful mission and no open ones is
-  `completed`. A failed contract: no further pay and a reputation loss with the employer (MGT-056; amount
-  not set, Open questions 55); the
+  `completed`. A failed contract: no further pay, and each mission still open at the deadline fails
+  (`outcome` `failure`) and costs the normal `repActs.missionFailed` with the employer (MGT-056; design
+  0eec0d4), one loss per open mission, applied in mission `key` order (spec choice); there is no separate
+  contract-level loss. An `allFailed` contract has no open missions, so it costs nothing beyond the losses
+  its missions already took (spec reading). While disowned the losses still apply (MGT-050). The
   player keeps the advance and owes nothing — no debt entry, no repayment (the former `repayDebt` request and
   `repayment` result are removed). A failed contract costs only reputation.
 - **Employer default:** a payment due that the employer's funds cannot cover fails the contract at once
@@ -742,8 +794,8 @@ in a Krug market −50 (see also GEN-009).
 
 ### [MGT-059] War crimes
 **Rule.** Killing civilians or prisoners changes reputation by `repActs.warCrime` with every faction, and
-civilian loyalty in that region collapses (applied by STR). Attribution (MGT-064) applies (per faction or
-by any witness: Open questions 54).
+civilian loyalty in that region collapses (applied by STR). Attribution (MGT-064): one surviving witness
+of any faction attributes the war crime to every faction (design 0eec0d4).
 **Values.** `repActs.warCrime` — −20 → data/management-rules.json
 **Source.** design/management.md › Reputation › What changes reputation
 
@@ -779,7 +831,9 @@ they change only from acts that affect them directly (MGT-053).
 ### [MGT-064] Attribution
 **Rule.** An act changes reputation with the affected faction only if at least one member of that faction
 witnessed it and survived (reported by TAC/STR). Any member of that faction who took part in the fight and
-survives it is a witness; sight of the act is not needed. Unwitnessed acts stay unattributed unless an Operation
+survives it is a witness; sight of the act is not needed. A war crime (MGT-059) is the exception (design
+0eec0d4): one surviving witness of any faction (`battle_result` `witnesses` with a count ≥ 1 for any
+faction) attributes it to every faction. Civilians belong to no faction and are no witnesses (spec reading). Unwitnessed acts stay unattributed unless an Operation
 dispute event (STR) assigns the blame, in which case the act is applied to the faction it names.
 **Source.** design/management.md › Reputation › Attribution
 
@@ -793,7 +847,7 @@ research.
 
 ### [MGT-066] FOBs
 **Rule.** Every op starts and ends at an FOB (GEN-001). Each FOB offers a stash of its own, rest with slow
-healing (TAC recovery), hiring (MGT-002) and a contract board (MGT-051). Stashes are per FOB, not shared:
+healing that is twice as fast as elsewhere (MGT-010), hiring (MGT-002) and a contract board (MGT-051). Stashes are per FOB, not shared:
 items move between FOBs only by squad transport — a squad loads items from one FOB's stash into its
 soldiers' containers and vehicle storage (DAT-008, DAT-025), travels, and unloads them at another FOB.
 There is no instant transfer. Loot carried out (MGT-035), purchases at an FOB's location (MGT-039) and
@@ -828,13 +882,15 @@ Technical) → data/management-rules.json
 is STR) delivers output to the nearest player FOB stash: oil plant → fuel; mechanical plant → spare parts
 and vehicle repairs; chemical plant → medical supplies; arms plant → weapons and ammunition; mineral plant
 → medium income to `economy` plus a boost to the output of every other plant the PMC holds; hidden-city
-complex (optional) → prototype items. An unguarded plant falls back to the region's controller (STR) and
+complex (optional) → prototype items. The PMC gets only this daily output from a plant, no plant income on
+top (design 0eec0d4): the STR-014 `income` of a plant type is never paid to the PMC; the mineral plant's
+`dailyOutput.amountUsd` is its only money. An unguarded plant falls back to the region's controller (STR) and
 stops delivering. Strategic sends each delivery as a `plantOutput` management request with `plantId`,
 `fobId` (the receiving FOB, STR-015) and the `items` and/or `amountUsd` (the type's `dailyOutput`
 `{ items [{ item, count }], amountUsd }` after STR-011); Management adds the items to that FOB's stash and
 credits the amount (MGT-070); at each daily check it also sends
-`dailyRollover` with `day` (STR-004) and `krugMarkets` (the Krug market tiles whose prices move, MGT-040;
-cleanup 2026-11-24).
+`dailyRollover` with `day` (STR-004), `krugMarkets` (the Krug market tiles whose prices move, MGT-040;
+cleanup 2026-11-24) and `krugMarketKinds` (`city` | `town` per listed market, for the stock share, MGT-040).
 **Values.** (design drafts) daily output: oil plant 20 fuel units; mechanical plant 10 kg spare parts;
 chemical plant 5 medical kits; arms plant 2 weapons and 300 rounds; mineral plant $1,500 plus +10% per
 mineral plant held to every other held plant's output, at most +30% → data/poi.json (`dailyOutput`,
@@ -851,8 +907,8 @@ build (design: OPTIONAL).
 **Source.** design/management.md › Base & meta progression
 
 ### [MGT-070] Economy ledger
-**Rule.** `economy` holds the PMC's money balance, a list of debts and the current Krug market prices
-(`krugPrices`, MGT-040). Each debt: creditor faction,
+**Rule.** `economy` holds the PMC's money balance, a list of debts, the current Krug market prices
+(`krugPrices`, MGT-040) and each Krug market's stock (`krugStock`, MGT-040). Each debt: creditor faction,
 amount, origin (a Krug deal; a failed contract's advance is never a debt, MGT-048). Paying a debt's full
 amount removes it (Krug: entry in Karsin's book, GEN-008). Every credit and debit is logged with game time.
 The balance never goes below zero: a debit larger than the balance fails as a whole (nothing is paid, the
@@ -876,10 +932,11 @@ data/management-rules.json
 ### [MGT-073] Shared economy rules for the PMC's running costs and income
 **Rule.** The player's PMC's fees and income use the shared economy rules file (`data/economy-rules.json`,
 the same file as the AI factions' funds, STR-092). Soldier fees are not recurring: they are booked once per
-op, at launch (MGT-005). The only recurring item is plant income (MGT-068): FOBs (MGT-066) and vehicles have no
+op, at launch (MGT-005). The only recurring item is plant output (MGT-068; a PMC-held plant pays only its
+daily output, no STR-014 plant income, design 0eec0d4): FOBs (MGT-066) and vehicles have no
 upkeep (a vehicle costs only its price, fuel and repairs, MGT-067; DAT-024) and there are no salaries.
-Plant income and deliveries (`plantOutput`) are booked every `payIntervalHours` (daily, at the 00:00
-`dailyRollover`). Each booking follows MGT-070.
+Plant deliveries (`plantOutput`, items and the mineral plant's `amountUsd`) are booked every
+`payIntervalHours` (daily, at the 00:00 `dailyRollover`). Each booking follows MGT-070.
 **Values.** `payIntervalHours` — 24 (design draft) → data/economy-rules.json; fee per op by rank → data/recruitment.json (MGT-005);
 plant output → data/poi.json (MGT-068). Removed: `fobUpkeepPerDayUsd`, `vehicleUpkeepPerDayFraction`.
 **Source.** design/management.md › Soldiers & progression (Contracts & morale); › Base & meta progression (FOBs); design/data-definitions.md › Vehicles (draft) (Vehicle parameters, Cost)
@@ -918,8 +975,8 @@ Strategic credits that faction's funds (STR-092). Results list one entry per req
 
 | Type | Payload | Management does | Rule |
 | --- | --- | --- | --- |
-| `healingTick` | `squad`, `soldiers`, `hours`, `atFob` | heals the listed soldiers' `wounds` for `hours` by the recovery rule (best Medical of the squad, faster at an FOB; Trauma surgeon `fobHealFactor`) | STR-037, TAC recovery, MGT-009 |
-| `contaminationTick` | `squad`, `soldiers`, `hpLost` | removes `hpLost` HP from each listed soldier's `wounds` (zone split: Open questions 51) | STR-097 |
+| `healingTick` | `squad`, `soldiers`, `hours`, `atFob`; or `fobId` without `soldiers` (every `active` soldier resting at that FOB, `atFob` true) | heals every zone of each soldier in the group for `hours` by the recovery rule (rate from the group's best Medical, × `fobFactor` at an FOB, Trauma surgeon `fobHealFactor`; `healCarry`) | MGT-010, STR-037, MGT-009 |
+| `contaminationTick` | `squad`, `soldiers`, `hpLost` | removes `hpLost` HP from each listed soldier, spread evenly over all body zones (`contaminationOwedHp`); a head or thorax at 0 HP kills | MGT-010, STR-097 |
 | `moraleChange` | `moraleChanges` `[{ soldier, delta }]` | adds each `delta` to that soldier's `morale`, clamped 0–100 | STR-047, MGT-008 |
 | `capitalIncome` | `amountUsd` | credits `economy` | STR-007, MGT-070 |
 | `priceModifier` | `modifierId`, `target` (`fuel` \| `medical`), `factor`, optional `regions` | multiplies the prices of that target by `factor` (on top of MGT-039, MGT-040, MGT-067) while active; a later request with the same `modifierId` replaces it, `factor` 1 removes it. Spec reading: `fuel` = fuel items and `servicePrices.fuelPerUnitUsd`; `medical` = medical items and `servicePrices.hospitalPerWoundUsd` | STR-062, STR-063 |
@@ -941,13 +998,13 @@ changes nothing and returns `ok: false`. The result names `amountUsd` (money mov
 
 | Type | Payload | Management does | Rule |
 | --- | --- | --- | --- |
-| `hire` | `candidateId`, `fobId` or `location` (local pool) | debits the candidate's hire price and adds it to `roster`; the result names `soldierId` | MGT-002, MGT-003 |
+| `hire` | `candidateId`, `fobId` or `location` (local pool) | debits the candidate's hire price and adds it to `roster` with every perk its hired skills meet (MGT-009); the result names `soldierId` | MGT-002, MGT-003, MGT-009 |
 | `localRecruits` | `location`, `count`, optional `feeDiscount` | adds `count` local candidates to that location's pool (refugee recruits carry `feeDiscount`) | STR-065, GEN-010, MGT-003 |
-| `trade` | `squad` or `fobId`, `location`, optional `trader` (absent = Krug market), `buy`, `sell` | sells `sell` at the buy rates, then buys `buy` from the stock open at the current standing, at the trader or Krug price; one net booking | MGT-039, MGT-040, ITM-022 |
+| `trade` | `squad` or `fobId`, `location`, optional `trader` (absent = Krug market), `buy`, `sell` | sells `sell` at the buy rates, then buys `buy` from the stock open at the current standing (at a Krug market: that market's own stock and prices, `better` items from `krugStock.betterMinReputation`), at the trader or Krug price; one net booking | MGT-039, MGT-040, ITM-022 |
 | `barter` | `squad` or `fobId`, `location`, optional `trader`, `dealId` | takes that daily deal: removes its goods, adds its gear | ITM-023 |
 | `vehicleTrade` | `squad` or `fobId`, `location`, `vehicle` (buy) or `vehicleInstance` (sell) | buys a vehicle of that type (its price and availability, DAT-027) or sells that PMC vehicle | STR-039, DAT-029 |
 | `handIn` | `squad`, `location`, `faction`, `items` | removes the items and applies their hand-in rewards (money, reputation, daily caps) | ITM-027, ITM-028 |
-| `hospital` | `squad`, `soldiers` | debits `hospitalPerWoundUsd` per wound (`wounds.conditions` entry) of the listed soldiers and treats them by TAC recovery (rate: Open questions 52) | STR-041, MGT-067 |
+| `hospital` | `squad`, `soldiers` | debits `hospitalPerWoundUsd` per wound (`wounds.conditions` entry) of the listed soldiers and treats every one of them: their `wounds.conditions` are cleared (spec reading; Open questions 58). Zone HP comes back by the normal recovery (MGT-010) over the treatment's hours, which Strategic sends as `healingTick` (`atFob` false unless the city holds a PMC FOB) | STR-041, MGT-067, MGT-010 |
 | `repair` | `squad` or `fobId`, `instances` and/or `vehicleInstance` | debits `repairPerConditionPointUsd` per condition point restored and sets their condition to 100 | STR-041, MGT-067 |
 | `refuel` | `squad`, `vehicleInstance`, `units` | debits `fuelPerUnitUsd` × `units` and adds the units to the vehicle's fuel, at most `fuelRangeRegions` | STR-041, MGT-067, DAT-024 |
 | `buyFob` | `location`, `fobId` (the new FOB, STR-016), `size` | debits `fobPrices[size]` and adds the FOB with an empty stash | STR-042, MGT-066 |
@@ -958,7 +1015,7 @@ Brokering a ceasefire (STR-099) has no cost and sends no request.
 
 ## Open questions
 
-1. **Partly resolved (2026-11-24):** four draft tiers with hire price, fee per op (replacing the earlier salary per day; no renewals, 2026-11-24 b) and attribute range (MGT-002, MGT-003, MGT-005). **Partly resolved (cleanup 2026-11-24):** the scaling rule is linear with `priceFormula.spread` (MGT-003, recruitment 0.7.0); its value is still open. Still open: the price scaling value `spread` within a tier, pools (tiers and candidates per pool, refresh), attribute distribution within the range. MGT-002, MGT-003, MGT-005, MGT-022: price tiers, hire price formula, attribute ranges per tier,
+1. **Partly resolved (2026-11-24):** four draft tiers with hire price, fee per op (replacing the earlier salary per day; no renewals, 2026-11-24 b) and attribute range (MGT-002, MGT-003, MGT-005). **Partly resolved (cleanup 2026-11-24):** the scaling rule is linear with `priceFormula.spread` (MGT-003, recruitment 0.7.0); its value is still open. **Resolved (2026-11-24, design 0eec0d4):** `spread` 0.30 (draft): −30% at the bottom of the tier's attribute range, +30% at the top (MGT-003). Still open: pools (tiers and candidates per pool, refresh), attribute distribution within the range. MGT-002, MGT-003, MGT-005, MGT-022: price tiers, hire price formula, attribute ranges per tier,
    salaries, pay interval and renewal terms are all unset.
 2. **Resolved (2026-11-24):** morale per soldier; squad morale = average when the op forms (MGT-008). MGT-008: morale is "squad-wide", but squads are formed per op. Is morale stored per squad, per PMC, or
    reset when a squad is re-formed?
@@ -1085,27 +1142,46 @@ Brokering a ceasefire (STR-099) has no cost and sends no request.
     serve; the hire price is normal (MGT-001 `feeDiscount`, MGT-003, MGT-005). MGT-003, STR-065: refugee recruits come with a "fee 30% lower". With the fee-per-op model "fee" could mean
     the hire price or the fee per op. Spec: the hire price (the design calls them cheap recruits); the fee per
     op stays the rank's fee.
-51. STR-097, MGT-076 (cleanup 2026-11-24): the strategic HP loss on contaminated tiles is given per soldier,
+51. **Resolved (2026-11-24, design 0eec0d4):** spread evenly over all body zones; whole HP through the
+    `contaminationOwedHp` remainder (MGT-010, MGT-076). STR-097, MGT-076 (cleanup 2026-11-24): the strategic HP loss on contaminated tiles is given per soldier,
     but Management stores HP per body zone (`wounds.zoneHp`). Which zones lose it? Options: spread evenly
     over all zones; thorax only; a seeded zone per point. A zone reaching 0 HP has battle effects
     (TAC-059), so the choice changes outcomes.
-52. MGT-010, MGT-076, STR-037 (cleanup 2026-11-24): `healingTick` applies "TAC recovery" (HP per hour from
+52. **Resolved (2026-11-24, design 0eec0d4):** outside battle, every hour, every zone: 1 HP + 1 per full 25
+    points of the best Medical, ×2 at an FOB (draft); specified in MGT-010 with `management-rules.recovery`
+    (healing outside battle is Management's). MGT-010, MGT-076, STR-037 (cleanup 2026-11-24): `healingTick` applies "TAC recovery" (HP per hour from
     the squad's best Medical, faster at an FOB), but spec/tactical.md has no recovery-rate rule and the
     design gives no rate. Needed: the HP per hour (in and out of an FOB) and how it scales with Medical.
-53. MGT-009, MGT-022 (cleanup 2026-11-24): a candidate can be generated with a skill already at or above a
+53. **Resolved (2026-11-24, design 0eec0d4):** yes, every perk whose threshold the hired skill meets
+    (MGT-009, MGT-076 `hire`). MGT-009, MGT-022 (cleanup 2026-11-24): a candidate can be generated with a skill already at or above a
     perk threshold (50 or 80). Is a soldier hired that way hired with that perk? Options: yes, every perk
     whose threshold the hired value meets; no, perks unlock only by growth past the threshold after hiring.
-54. MGT-059, MGT-064 (cleanup 2026-11-24): a war crime changes reputation with every faction, but attribution
+54. **Resolved (2026-11-24, design 0eec0d4):** one surviving witness of any faction attributes it to every
+    faction; civilians are no faction and no witnesses (spec reading) (MGT-059, MGT-064). MGT-059, MGT-064 (cleanup 2026-11-24): a war crime changes reputation with every faction, but attribution
     needs a surviving witness of the affected faction. Options: each faction loses `repActs.warCrime` only if
     one of its own members witnessed it and survived; or one surviving witness of any faction attributes it
     to all.
-55. MGT-048, MGT-056 (cleanup 2026-11-24): a failed contract costs "a reputation loss with the employer",
+55. **Resolved (2026-11-24, design 0eec0d4):** each mission still open at the deadline fails and costs
+    `repActs.missionFailed`; no contract-level value; `allFailed` costs nothing extra (MGT-048). MGT-048, MGT-056 (cleanup 2026-11-24): a failed contract costs "a reputation loss with the employer",
     but no value is set (`contractBroken` covers betrayal only). Options: each mission still open at the
     deadline fails and costs `repActs.missionFailed`; one new contract-level value (e.g.
     `repActs.contractFailed`); or both. Same question for `allFailed` (missions already paid their loss).
-56. MGT-040 (cleanup 2026-11-24): the Krug price state now lives in `economy.krugPrices` and moves at the
+56. **Resolved (2026-11-24, design 0eec0d4):** per-market stock and prices, moved independently (arbitrage
+    possible); stock draft: a seeded share of the Krug item list per market, rolled once (60% city, 40%
+    town), `better` items from Krug standing 20+ (MGT-040; `traders.krugStock`, `dailyRollover.krugMarketKinds`,
+    `economy.krugStock`). The Krug item list itself is not set (data). MGT-040 (cleanup 2026-11-24): the Krug price state now lives in `economy.krugPrices` and moves at the
     `dailyRollover` for the markets Strategic lists in `krugMarkets` (management_requests 0.10.0). Spec
     reading: each Krug market keeps its own price list, moved independently (seeded). Needs a design
     decision: per-market prices (arbitrage between markets possible) or one network-wide Krug price list
     shared by every market. Also open: which items each Krug market stocks (the price list covers every
     item with a `valueUsd`; stock by Krug standing is not defined).
+57. MGT-010, STR-097 (2026-11-24): with the draft rates, healing outside battle (at least 1 HP per zone per
+    hour, every hour) outpaces the contamination loss (2 HP per soldier per hour spread over six zones = 1/3
+    HP per zone per hour), so a squad on a contaminated tile never loses HP net and contamination has no
+    effect. Options: no healing on a contaminated tile (or while a `contaminationTick` applies that hour);
+    contamination per zone instead of per soldier (2 HP per zone per hour); or a higher
+    `contaminationHpPerHour`.
+58. MGT-067, MGT-076 `hospital` (2026-11-24): the design gives hospital treatment a price per wound ($300)
+    and 4 hours, but no effect. Spec reading: it clears every condition (`wounds.conditions`) of the treated
+    soldiers; zone HP comes back only by the normal recovery. Confirm, or should it also restore HP (e.g.
+    to full) or heal faster during the treatment?

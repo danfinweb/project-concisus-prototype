@@ -62,8 +62,8 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 | `knownNeutrals[]` | Known units of the neutral side whose faction is not hostile to this side (TAC-001), same fields and last-known rule as `knownEnemies` (with `faction`, without `visibleGear`); once hostile to this side they are listed in `knownEnemies` instead |
 | `noises[]` | Noise markers since the unit's last activation (TAC-019): `origin` tile, `direction` and `distance` from the active unit, `turn` |
 | `map` | Tiles known to the side: `tiles` (`x`, `y`, `level`, `cost` (terrain move cost), `impassable`, `obscuring`, `cover` per edge `n`/`e`/`s`/`w` = `none`, `half`, `full`, `doors` (edge → `open`, `closed`, `locked`), `windows` (edges), `destroyed` (edges now rubble); TAC-029, TAC-035, TAC-082, TAC-084, TAC-085), `exits` (`id`, tile, condition), `containers` and `bodies` (contents only once searched by the side, TAC-070), `smoke` (clouds with tile, `radiusTiles`, last turn) |
-| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with the previewed `path`, its AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082). With `activeUnit: null`: one `activate` entry (with `unit`) per unit that may be activated (stamina ≥ `activationCost`, TAC-005, TAC-008), plus one `pass` entry, so the AI never reads `tactical-rules` for this |
-| `battleGoal` | The active unit's aim in this battle: `goal` (`attack`, `defend`, `escort`, `reachExit`, `hold`), `targets` and `acceptableLoss`, as set by the strategic layer in the tactical map request (TAI-009, TAI-018) |
+| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with the previewed `path`, its AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082); for `detonateCharge` the `charges` (item instances of the charges this unit placed that are still on the map, TAC-097). With `activeUnit: null`: one `activate` entry (with `unit`) per unit that may be activated (stamina ≥ `activationCost`, TAC-005, TAC-008), plus one `pass` entry, so the AI never reads `tactical-rules` for this |
+| `battleGoal` | The active unit's aim in this battle: `goal` (`attack`, `defend`, `escort`, `reachExit`, `hold`), `targets` and `acceptableLoss`, as set by the strategic layer in the tactical map request (TAI-009, TAI-018), or for a neutral side turned hostile the fixed default TAC fills (TAC-001, TAI-017) |
 | `objectives[]` | The mission objectives of the battle that can be met on the tactical map (TAC-076), as known to the side |
 
 An AI soldier knows as much about a seen enemy's gear as the player would: weapon type, helmet and armour
@@ -102,7 +102,8 @@ Tile and unit positions are `{x, y, level}` (TAC-028).
 | `pickUp` | `target` (container, body or tile), `item` | TAC-070 |
 | `cutLock` | `target` (door or container) | TAC-071 |
 | `closeDoor` | `edge` (the door's tile edge `{tile, side}`; opening is part of `move`) | TAC-084 |
-| `placeCharge` | `item`, `target` | TAC-072 |
+| `placeCharge` | `item`, `target` (adjacent cover edge, door or vehicle edge) | TAC-072 |
+| `detonateCharge` | `item` (a charge this unit placed) | TAC-097 |
 | `restrainVip` | `unit` | TAC-073 |
 | `liftBody` | `target` (adjacent body), `mode` (`carry`, `drag`) | TAC-074 |
 | `putDownBody` | — | TAC-074 |
@@ -204,7 +205,7 @@ and shaped by the `actionFit` curve:
   `actionFit.<commandType>`.
 The weapon is the unit's `activeWeapon` slot; its `weaponType` and magazine size come from `data/items.json`.
 OPTIONAL (later build): AI use of `turn`, `vault`, `climb`, `swapWeapon`, `throwGrenade`, `useItem`,
-`dropBackpack`, `pickUpBackpack`, `search`, `pickUp`, `cutLock`, `closeDoor`, `placeCharge`, `restrainVip`,
+`dropBackpack`, `pickUpBackpack`, `search`, `pickUp`, `cutLock`, `closeDoor`, `placeCharge`, `detonateCharge`, `restrainVip`,
 `liftBody` and `putDownBody`. Until each gets a fit rule, the AI never chooses it; TAC still offers it in
 `allowedActions`, and a unit's final facing is set by `endActivation` (TAC-007).
 **Values.** — not set (design: all behaviour values unset) → data/ai/doctrines.json `considerations.actionFit`, `actionFit.<commandType>`, `actionFit.noPenetration`.
@@ -270,7 +271,7 @@ further to the side of the nearest visible enemy's line. Claims last `roles.clai
 ### [TAI-015] Doctrines
 **Rule.** `data/ai/doctrines.json` holds records with `layer: "tactical"`; the tactical map request sets one
 doctrine ID per side (`sides[].doctrine`) and
-TAC passes it in the view's `doctrine`. All squads of a side use that doctrine. A doctrine sets weights and curves of TAI-007 to TAI-014.
+TAC passes it in the view's `doctrine` (for a neutral side turned hostile without one, `hostileNeutral.doctrine`, TAI-017). All squads of a side use that doctrine. A doctrine sets weights and curves of TAI-007 to TAI-014.
 Fields a tactical doctrine holds (spec choice, cleanup 2026-11-24; schema `data/ai-doctrines.schema.json`):
 `wGoal`, `wFit`, `wCoord` (numbers, TAI-007); `logTopN` (integer ≥ 1, TAI-016); `considerations`
 (name → `{weight, curve}`) with the names `survival`, `survival.exposure`, `survival.stance`,
@@ -298,8 +299,16 @@ shows them; the AI keeps none.
 **Rule.** Units hostile to neither side (a non-involved faction toward the player per SAI-013, civilians)
 form the neutral side (TAC-001), controlled by `tactical-ai`. Until attacked, neutral units never activate
 and `tactical-ai` is not called for them: their reactions follow the fixed TAC rule (TAC-001: civilians
-flee to the nearest exit, armed neutrals take cover). Once a neutral faction turns hostile, its units form
-a third side that `tactical-ai` commands like any AI side, with their own activation after the opponent's.
+flee to the nearest exit, armed neutrals take cover). Civilians never turn hostile; attacked, they only
+flee. Once an armed neutral faction turns hostile, its units form a third side that `tactical-ai` commands
+like any AI side, with their own activation after the opponent's, under a fixed default (design): it
+attacks the side that attacked it and retreats at the normal acceptable loss. TAC fills that default in
+the view (TAC-001): `battleGoal` `{goal: "attack", targets: the attacking side's unit IDs, acceptableLoss:
+hostileNeutral.acceptableLoss}` and, when the request gives the side no `doctrine`, `doctrine` =
+`hostileNeutral.doctrine` (data/tactical-rules.json). The AI treats it like any other battle goal: TAI-009
+scores progress toward those targets and derives the retreat from `acceptableLoss`; no special code path.
+**Values.** `hostileNeutral.acceptableLoss` — not set (design: "the normal acceptable loss", no value),
+`hostileNeutral.doctrine` — not set → data/tactical-rules.json (TAC-001)
 **Source.** design/tactical-layer.md › Turn structure; design/ai.md › Tactical AI; design/ai.md › Strategic AI › Faction behaviour
 
 ### [TAI-018] Allied AI units
@@ -356,7 +365,7 @@ player moves the VIP as part of the player's activations, and the VIP never reac
     unit order)?
 14. **Resolved (design 3aac08f):** the VIP is set by `vipControl` in the tactical map request; with `player` it moves only and never reacts (TAI-018). TAI-018 — With `vipControl: player`, does the VIP join the player's activation choice like a squad soldier
     (stamina, reactions), and does the setting live in game settings or in the tactical map request?
-15. TAI-017 / TAI-015 / TAI-009 — A neutral faction that turned hostile (TAC-001) becomes a third AI side,
+15. **Resolved (2026-11-24, design 0eec0d4):** a fixed default — a neutral side that turns hostile attacks the side that attacked it and retreats at the normal acceptable loss; TAC fills the goal and a default doctrine from data (`hostileNeutral`, TAC-001, TAI-017). Civilians never turn hostile; they only flee. TAI-017 / TAI-015 / TAI-009 — A neutral faction that turned hostile (TAC-001) becomes a third AI side,
     but the request normally gives a `role: neutral` side no `doctrine` and no `battleGoal` entry. Which
     doctrine and battle goal does the AI use for it (options: the request always carries both for neutral
     sides, set by the strategic layer; a fixed default such as attack the attacking side, or defend/hold

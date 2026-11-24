@@ -3,7 +3,7 @@
   "$id": "strategic_perception_view.schema.json",
   "title": "Strategic perception view",
   "description": "What one faction knows under fog of war. One view per faction for every hour that passes, built from the state at the start of that hour. Built by strategic/core, passed to the faction's controller. Spec: STR-005, STR-008, STR-009, STR-014, STR-017, STR-020, STR-021, STR-070, STR-092, STR-094, STR-096, SAI-002, SAI-003, SAI-005, SAI-015, SAI-017. Views are also built for factions created during play (resistance groups, STR-067, with IDs made at creation; a rogue PMC, STR-066), never for the civilian population or the off-map influences (SAI-002).",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "x-producer": "modules/strategic",
   "x-consumers": ["modules/strategic-ai"],
   "type": "object",
@@ -19,7 +19,7 @@
       "loyalty": { "type": "object", "description": "Settlement tiles only: faction → −100..100 (STR-009)", "additionalProperties": { "type": "integer", "minimum": -100, "maximum": 100 } } } } },
     "ownSquads": { "type": "array", "items": { "type": "object", "required": ["id", "region"], "properties": {
       "id": { "type": "string" }, "region": { "type": "string" }, "goal": { "type": "string" }, "target": { "type": "string" },
-      "strength": { "type": "number" }, "supplies": { "type": "number" }, "fuel": { "type": "number" }, "morale": { "type": "number" },
+      "strength": { "type": "number" }, "supplies": { "type": "number" }, "fuel": { "type": "number" }, "morale": { "type": "number", "description": "Average of its soldiers' own morale, rounded (STR-017: per-soldier records)" },
       "vehicle": { "type": ["string", "null"], "x-ref": "vehicles", "description": "null = on foot (STR-017)" },
       "transit": { "type": ["object", "null"], "description": "STR-017: the move in progress, null when not moving", "properties": { "toRegion": { "type": "string" }, "hoursLeft": { "type": "integer", "minimum": 1 } } } } } },
     "knownRegions": { "type": "array", "items": { "type": "object", "required": ["id"], "properties": {
@@ -35,8 +35,13 @@
     "knownSquads": { "type": "array", "description": "Noticed foreign squads, the player's included", "items": { "type": "object", "required": ["id", "faction", "region"], "properties": {
       "id": { "type": "string", "description": "The squad's ID (STR-017); attack.target and setGoal.target name it" },
       "faction": { "type": "string" }, "region": { "type": "string" }, "estimatedStrength": { "type": "number" }, "seen": { "type": "object" },
-      "knownGoal": { "type": "string", "description": "Only if intel reveals it (STR-018 goal)" },
-      "knownTarget": { "type": ["string", "null"], "description": "The target of knownGoal (region, POI, squad or the player), present whenever knownGoal is; null for a goal without target (SAI-013 condition 3, spec choice)" } } } },
+      "knownGoal": { "type": "string", "description": "Non-player squads only, if intel reveals it (STR-018 goal)" },
+      "knownTarget": { "type": ["string", "null"], "description": "The target of knownGoal (region, POI, squad or the player), present whenever knownGoal is; null for a goal without target (SAI-013 condition 3, spec choice)" },
+      "knownObjectives": { "type": "array", "description": "Player squads only: the objectives of the player (SAI-013 condition 3, design 0eec0d4) = missions of signed player contracts this squad's op carries (STR-028) whose target or location this faction's intel has revealed (STR-021). Absent or empty when none is revealed", "items": { "type": "object", "required": ["contractId", "missionKey", "target"], "properties": {
+        "contractId": { "type": "string" }, "missionKey": { "type": "string", "description": "missions[].key in the contract" },
+        "missionId": { "type": "string", "x-ref": "missions" },
+        "target": { "type": "string", "description": "The mission's target (VIP, POI, squad or region id), or its location region when it names no target" },
+        "region": { "type": "string", "description": "The tile of that target or location as this faction knows it" } }, "additionalProperties": false } } } } },
     "capital": { "type": "object", "description": "STR-007", "properties": { "tile": { "type": "string" }, "holder": { "type": ["string", "null"] }, "occupant": { "type": ["string", "null"] }, "contestedSince": { "type": ["object", "null"] } } },
     "vips": { "type": "array", "items": { "$ref": "#/$defs/vip" }, "description": "Own VIPs and known enemy VIPs with intel expiry (STR-045, STR-048)" },
     "relations": { "type": "object", "description": "faction → relation; range and thresholds: STR-051" },

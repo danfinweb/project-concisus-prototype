@@ -5,6 +5,18 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | battle_result | 0.6.0 | New `aiUnits[]` (id, faction, status, exitId, zoneHp, morale) for every AI-controlled unit, for the strategic per-soldier records (STR-017, STR-023) | tactical, strategic |
+| 2026-11-24 | tactical_map_request | 0.11.0 | AI units carry the real per-soldier values from `world`; `tier` = squad gear tier (descriptions only, STR-017, STR-023) | strategic, tactical |
+| 2026-11-24 | tactical_commands | 0.8.0 | New command `detonateCharge` (`item` = the placed charge, TAC-097) | tactical, tactical-ai |
+| 2026-11-24 | tactical_perception_view | 0.9.0 | `allowedActions[].charges`; doctrine and battleGoal descriptions name the hostile-neutral default (TAC-001, TAI-017) | tactical, tactical-ai |
+| 2026-11-24 | strategic_perception_view | 0.11.0 | `knownSquads[].knownObjectives` for player squads; `knownGoal` non-player only; `ownSquads.morale` = soldier average (SAI-013, STR-021) | strategic, strategic-ai |
+| 2026-11-24 | management_requests | 0.11.0 | `dailyRollover.krugMarketKinds`; healingTick FOB variant (`fobId`), descriptions for `hours`, `atFob`, `hpLost` (MGT-010, MGT-040) | strategic, management |
+| 2026-11-24 | data/strategic-rules | 0.8.0 | `heliFieldRepair {baseHours, baseTechnical}`, `aiSoldiers.rankMix`; `actionHours.brokerCeasefire` draft 24 | strategic, tools |
+| 2026-11-24 | data/tactical-rules | 0.11.0 | Typed `zones` (box, zone $defs); `hitboxes.aiming` keyed by stance; `detonateChargeCost`; `hostileNeutral {acceptableLoss, doctrine}`; `bodyWeightKg` draft 80 | tactical, tools |
+| 2026-11-24 | data/items | 0.11.0 | `opEffect` gains `damage`, `radiusTiles`, `penetrationClass` (demolition) | tactical, tools |
+| 2026-11-24 | data/management-rules | 0.10.0 | `recovery {hpPerHourPerZone, hpPerMedicalStep, medicalStep, fobFactor}` (MGT-010) | management |
+| 2026-11-24 | data/recruitment | 0.8.0 | `priceFormula.spread` draft 0.30 (description only) | management |
+| 2026-11-24 | data/traders | 0.6.0 | `krugStock {basic, better, shareByKind {city, town}, betterMinReputation}` (MGT-040) | management, tools |
 | 2026-11-24 | data/terrain | 0.5.0 | Cleanup 4: `blocksSight` flag (TAC-016) | tactical, tools |
 | 2026-11-24 | data/mapgen-tactical | 0.5.0 | Cleanup 4: typed sub-objects zones, water, roads, buildings, parcels, groundFill, details, deployment (TAC-087, TAC-088) | tactical, tools |
 | 2026-11-24 | strategic_perception_view | 0.10.0 | Cleanup 3: `patronRelations` (the patron's relations, for factions whose patron is on the map); `mapShape` hex uses axial `x`, `y` | strategic, strategic-ai |

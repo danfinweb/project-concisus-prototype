@@ -272,7 +272,7 @@ GEN-012).
 - **General ceasefire.** While it holds, every SSV–VDK encounter on any tile never turns hostile (as the
   local ceasefire flag does, STR-060, but across the whole front and the whole map). It never starts by
   itself: only the player starts it, with the strategic action Broker a ceasefire (STR-099) at a
-  governmental institution, while both the SSV and the VDK are exhausted (GEN-013: at least
+  governmental institution, which takes 24 hours (design 0eec0d4, draft: `actionHours.brokerCeasefire`), while both the SSV and the VDK are exhausted (GEN-013: at least
   `coup.exhaustedSigns` true crisis signs at the last daily check) and the player's reputation with both is
   Trusted (MGT-054).
 - **Ending.** At a daily check (STR-004), the campaign ends as `reformed` once the general ceasefire has
@@ -281,8 +281,9 @@ GEN-012).
   count restarts.
 - **Epilogue.** The `reformed` epilogue makes clear that the peace is only temporary.
 **Values.** `campaign.reformedCeasefireDays` 14 (design draft) → data/strategic-rules.json; exhaustion →
-`coup.exhaustedSigns` (GEN-013).
-**Source.** design/design.md › Factions & campaign › Player role
+`coup.exhaustedSigns` (GEN-013); brokering time → see STR-099 (`actionHours.brokerCeasefire` 24, design
+draft, data/strategic-rules.json).
+**Source.** design/design.md › Factions & campaign › Player role; design/strategic-actions.md › Trade, services, contracts and factions
 
 ## Open questions
 
@@ -353,7 +354,8 @@ GEN-012).
     for the player's PMC, Varyag and Aegis (a rogue PMC included), not for the states or resistance groups.
     Confirm which requesters count as foreign PMCs.
 15. **Resolved (2026-11-24, design c1333f3):** only the player brokers it, through an action at a
-    governmental institution (STR-099); it never starts by itself (GEN-019). The action's time and cost are
-    not stated (STR-099, data). GEN-019: how does the player broker the general ceasefire (a strategic action: where, how long, at what
+    governmental institution (STR-099); it never starts by itself (GEN-019). **Resolved (2026-11-24, design
+    0eec0d4):** the action takes 24 hours (draft; STR-099, GEN-019); a cost is still not stated (spec
+    reading: none). Formerly: the action's time and cost are not stated (STR-099, data). GEN-019: how does the player broker the general ceasefire (a strategic action: where, how long, at what
     cost), and can the SSV and the VDK fall into it without the player? Until decided, the spec has no
     command or action that starts it.
