@@ -1,0 +1,34 @@
+{
+  "faction": "ssv",
+  "time": { "day": 3, "hour": 10 },
+  "mapShape": "square",
+  "recruitsAvailable": 12,
+  "doctrine": "ssv",
+  "ownRegions": [{ "id": "r0_0" }, { "id": "r0_1", "poi": "town", "krugMarket": true }],
+  "ownSquads": [
+    { "id": "ssv-s1", "region": "r0_1", "strength": 6, "supplies": 10, "fuel": 50, "morale": 70, "vehicle": null, "transit": null },
+    { "id": "ssv-s2", "region": "r0_0", "strength": 5, "supplies": 8, "fuel": 40, "morale": 60, "vehicle": null, "transit": { "toRegion": "r1_0", "hoursLeft": 2 } }
+  ],
+  "knownRegions": [
+    { "id": "r0_0", "x": 0, "y": 0, "terrain": "plain", "road": "dirt", "roadTo": ["r1_0"], "controller": "ssv", "flags": [], "observed": { "day": 3, "hour": 10 } },
+    { "id": "r1_0", "x": 1, "y": 0, "terrain": "forest", "road": "dirt", "roadTo": ["r0_0", "r2_0"], "controller": null, "poi": "gas", "flags": [], "observed": { "day": 3, "hour": 10 } },
+    { "id": "r2_0", "x": 2, "y": 0, "terrain": "plain", "road": "dirt", "roadTo": ["r1_0"], "controller": "vdk", "poi": "oil", "flags": [], "observed": { "day": 3, "hour": 6 } },
+    { "id": "r0_1", "x": 0, "y": 1, "terrain": "plain", "road": null, "controller": "ssv", "poi": "town", "krugMarket": true, "loyalty": { "ssv": 20, "vdk": -10 }, "flags": [], "observed": { "day": 3, "hour": 10 } },
+    { "id": "r1_1", "x": 1, "y": 1, "terrain": "water", "road": null, "roadCrossing": null, "controller": null, "flags": [], "observed": { "day": 3, "hour": 10 } },
+    { "id": "r2_1", "x": 2, "y": 1, "terrain": "plain", "road": null, "controller": "vdk", "poi": "capital", "flags": [], "observed": { "day": 3, "hour": 8 } }
+  ],
+  "knownSquads": [
+    { "id": "vdk-s9", "faction": "vdk", "region": "r2_1", "estimatedStrength": 5, "seen": { "day": 3, "hour": 9 } },
+    { "id": "player-k1", "faction": "player", "region": "r1_0", "estimatedStrength": 3, "seen": { "day": 3, "hour": 8 }, "knownGoal": "attackPoi", "knownTarget": "r2_0" }
+  ],
+  "capital": { "tile": "r2_1", "holder": "vdk", "occupant": "vdk", "contestedSince": null },
+  "vips": [{ "id": "vip-7", "faction": "vdk", "rank": "colonel", "regionId": "r2_1", "guardSize": 2, "observed": { "day": 3, "hour": 8 }, "intelExpires": { "day": 4, "hour": 8 } }],
+  "relations": { "vdk": -80, "varyag": 20, "aegis": -10, "krug": 10 },
+  "reputationWithPlayer": { "value": -20, "standing": "unfriendly" },
+  "funds": 40000,
+  "contracts": [],
+  "contractOffers": [],
+  "events": [{ "eventId": "fuelShortage", "subjects": ["ssv"], "startTime": { "day": 2, "hour": 0 }, "endTime": { "day": 5, "hour": 0 } }],
+  "crisisSigns": ["troopLoss", "littleTerritory"],
+  "availableMeasures": ["conscription", "martialLaw"]
+}

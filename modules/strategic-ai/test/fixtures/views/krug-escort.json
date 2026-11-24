@@ -1,0 +1,24 @@
+{
+  "faction": "krug",
+  "time": { "day": 5, "hour": 22 },
+  "mapShape": "square",
+  "recruitsAvailable": 2,
+  "ownRegions": [{ "id": "r0_0", "poi": "town", "krugMarket": true }, { "id": "r1_0" }],
+  "ownSquads": [
+    { "id": "krug-s1", "region": "r0_0", "strength": 4, "supplies": 6, "fuel": 30, "morale": 80, "vehicle": null, "transit": null },
+    { "id": "krug-s2", "region": "r1_0", "strength": 4, "supplies": 6, "fuel": 30, "morale": 80, "vehicle": null, "goal": "tradeRoute", "target": "r0_0", "transit": null }
+  ],
+  "knownRegions": [
+    { "id": "r0_0", "x": 0, "y": 0, "terrain": "plain", "road": "asphalt", "roadTo": ["r1_0"], "controller": "krug", "poi": "town", "krugMarket": true, "flags": [], "observed": { "day": 5, "hour": 22 } },
+    { "id": "r1_0", "x": 1, "y": 0, "terrain": "plain", "road": "asphalt", "roadTo": ["r0_0", "r2_0"], "controller": "krug", "flags": [], "observed": { "day": 5, "hour": 22 } },
+    { "id": "r2_0", "x": 2, "y": 0, "terrain": "forest", "road": "asphalt", "roadTo": ["r1_0"], "controller": "ssv", "flags": [], "observed": { "day": 5, "hour": 20 } }
+  ],
+  "knownSquads": [],
+  "relations": { "ssv": 10, "vdk": 30, "varyag": -20, "aegis": 0 },
+  "reputationWithPlayer": { "value": 25, "standing": "friendly" },
+  "funds": 15000,
+  "escortRequests": [
+    { "id": "esc-1", "requester": "vdk", "convoy": "vdk-c1", "region": "r0_0", "route": ["r0_0", "r1_0", "r2_0"], "priceUsd": 900, "relation": 30 },
+    { "id": "esc-2", "requester": "player", "convoy": "player-c1", "region": "r0_0", "route": ["r0_0", "r1_0"], "priceUsd": 100, "reputation": 25 }
+  ]
+}

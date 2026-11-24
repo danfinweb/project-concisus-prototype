@@ -22,7 +22,7 @@
 import {
   setup, loadCore, schemaErrors, deepFreeze, makeView, randomView, offer, grid, violations,
   playerTargets, strategistEntries, allOptions, optionsNaming, expectedTotal, patchDoctrine, patchTable,
-  AI_FACTIONS, Rng, registry,
+  AI_FACTIONS, TABLES, Rng, registry,
 } from './helpers.js';
 
 const json = (x) => JSON.stringify(x);
@@ -922,5 +922,84 @@ export default {
         }
       },
     },
+
+    // ---------------- Adapter: interface tests (/integrate) ----------------
+    {
+      id: 'adapter-version-pins', spec: ['SAI-003', 'SAI-004'], name: 'Adapter pins match the interface schema versions',
+      async run({ assert }) {
+        const a = await loadAdapter();
+        const schemas = await a.loadSchemas();
+        assert.deepEqual(a.checkVersions(schemas), []);
+        const old = { ...schemas, strategic_perception_view: { ...schemas.strategic_perception_view, version: '0.8.0' } };
+        assert.equal(a.checkVersions(old).length, 1, 'a minor-version drift is reported');
+        let threw = false;
+        try { await a.createController({ schemas: old }); } catch (e) { threw = e.name === 'InterfaceError'; }
+        assert.ok(threw, 'createController refuses a drifted schema');
+      },
+    },
+    {
+      id: 'adapter-required-tables', spec: ['SAI-005', 'SAI-010'], name: 'requiredTables lists exactly the tables core reads',
+      async run({ assert }) {
+        const a = await loadAdapter();
+        assert.deepEqual([...a.requiredTables].sort(), [...TABLES].sort());
+      },
+    },
+    {
+      id: 'adapter-fixture-views', spec: ['SAI-002', 'SAI-003', 'SAI-004', 'SAI-011'], name: 'Sample views from fixtures/views/ are accepted; outputs validate as strategic_commands',
+      async run({ assert, ...ctx }) {
+        await setup(ctx);
+        const ctl = await (await loadAdapter()).createController();
+        for (const name of ['ssv-hour', 'krug-escort']) {
+          const res = await fetch(new URL(`./fixtures/views/${name}.json`, import.meta.url));
+          const view = await res.json();
+          const viewErrs = await schemaErrors('strategic_perception_view', view);
+          assert.ok(viewErrs.length === 0, `${name}: ${viewErrs.join('; ')}`);
+          const out = ctl.decide(view, 3);
+          assert.equal(out.faction, view.faction);
+          const errs = await schemaErrors('strategic_commands', out);
+          assert.ok(errs.length === 0, `${name}: ${errs.join('; ')}`);
+          noViolations(assert, view, out, `${name}:`);
+        }
+      },
+    },
+    {
+      id: 'adapter-random-views', spec: ['SAI-001', 'SAI-004'], name: 'Adapter on 30 random views: valid output, same as core plus faction, seed number = Rng',
+      async run({ assert, ...ctx }) {
+        await setup(ctx);
+        const ctl = await (await loadAdapter()).createController();
+        const core = await loadCore();
+        for (const s of seeds(30)) {
+          const v = randomView(s);
+          const out = ctl.decide(v, s);
+          const direct = core.decide(v, new Rng(s));
+          assert.equal(json(out), json({ faction: v.faction, ...direct }), `seed ${s}`);
+          assert.equal(json(ctl.decide(v, new Rng(s))), json(out), `seed ${s}: Rng and seed differ`);
+        }
+      },
+    },
+    {
+      id: 'adapter-invalid-view', spec: ['SAI-003', 'SAI-005'], name: 'An invalid view is rejected with its schema errors, or answered with pass on request',
+      async run({ assert, ...ctx }) {
+        await setup(ctx);
+        const a = await loadAdapter();
+        const strict = await a.createController();
+        const bad = makeView('vdk');
+        delete bad.mapShape;
+        bad.knownSquads = [{ faction: 'ssv', region: 'r0_0' }]; // no id
+        let err = null;
+        try { strict.decide(bad, 1); } catch (e) { err = e; }
+        assert.ok(err && err.name === 'InterfaceError', 'no InterfaceError');
+        assert.ok(err.errors.some((e) => /mapShape/.test(e.message)) && err.errors.some((e) => /id/.test(e.message)), json(err.errors));
+        const lenient = await a.createController({ onInvalidView: 'pass' });
+        const out = lenient.decide(bad, 1);
+        assert.deepEqual(out, { faction: 'vdk', commands: [{ type: 'pass' }], log: [] });
+        assert.deepEqual(await schemaErrors('strategic_commands', out), []);
+      },
+    },
   ],
 };
+
+async function loadAdapter() {
+  try { return await import('../adapter/index.js'); }
+  catch (e) { throw new Error(`adapter/index.js not loadable (${e.message})`); }
+}
