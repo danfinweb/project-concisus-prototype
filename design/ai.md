@@ -19,7 +19,7 @@ Each layer's AI is a separate module. It sees only what its side knows under fog
 2. it has a specific mission targeting the player (a hunt, a counter-attack on an FOB), or
 3. it is Unfriendly or worse toward the player and both are after the same objective at the same time.
 
-Otherwise its units go about their business, on the strategic map and in tactical engagements alike. Attacking a non-hostile faction is the player's choice — and costs reputation.
+For condition 3, the player's objective is the target or location of a mission in a contract the player has signed, once the faction's intel reveals it. Otherwise its units go about their business, on the strategic map and in tactical engagements alike. Attacking a non-hostile faction is the player's choice — and costs reputation.
 
 **Faction AI tiers.** Each faction AI works toward its ultimate goal (SSV and VDK: hold the capital and most of the country; Varyag and Aegis: profit and keep their patron standing; the Krug: keep its trade routes and markets and avoid open war; resistance groups: survive and harass the controller until it leaves their area; a rogue PMC with no patron: seize and hold the capital or plants) in three tiers:
 
@@ -35,7 +35,7 @@ Other factions evaluate contract offers with the same utility scoring. The Krug 
 
 ## Tactical AI
 
-Enemy squads take roles: flank, suppress, retreat, call reinforcements (OPTIONAL — later build; until then a side fights with what is on the map). Units of non-hostile factions on the same map follow their own objectives and only engage under the faction behaviour rules above.
+Enemy squads take roles: flank, suppress, retreat, call reinforcements (OPTIONAL — later build; until then a side fights with what is on the map). Units of non-hostile factions on the same map follow their own objectives and only engage under the faction behaviour rules above. A neutral side that turns hostile uses a fixed default: it attacks the side that attacked it and retreats at the normal acceptable loss. Civilians never turn hostile; they only flee.
 
 **Unit scoring.** Each unit scores its candidate actions, weighted in this order of importance:
 

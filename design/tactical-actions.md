@@ -69,8 +69,9 @@ Draft: an item used from the backpack costs +4 AP (the backpack surcharge, the s
 | Pick up or loot (items, bodies, containers) | 2 AP per item taken | Opening a container or searching a body first costs 3 AP once per side; its contents then stay visible to the whole side | Draft |
 | Cut a lock with bolt cutters | 10 AP | Silent | Defined |
 | Place a demolition charge | 8 AP | Technical 50+: 6 AP | Draft |
+| Set off a demolition charge (remote trigger) | 2 AP (draft) | A placed charge goes off only on this action by the soldier who placed it. It destroys the edge it is placed on, and its blast hurts soldiers nearby by the grenade blast rules (draft: as a frag grenade) | Draft |
 | Restrain a VIP (capture mission) | 6 AP | Adjacent tile; only once the VIP surrenders or is wounded | Draft |
-| Carry or drag a body | Lift 4 AP, put down 2 AP; carrying +2 AP per tile, dragging +3 AP per tile | The player chooses carry or drag; lift only from an adjacent tile. A wounded or dead squadmate, an enemy or a restrained VIP can be moved. The body and its gear count toward the carrier's encumbrance: carrying fails if that goes over carry capacity, dragging always works. Carrying: upright, no sprinting, climbing or vaulting. Dragging: upright or crouched, not prone, no vaulting (put the body down first) | Draft |
+| Carry or drag a body | Lift 4 AP, put down 2 AP; carrying +2 AP per tile, dragging +3 AP per tile | The player chooses carry or drag; lift only from an adjacent tile. A wounded or dead squadmate, an enemy or a restrained VIP can be moved. The body (draft: a fixed 80 kg) and its gear count toward the carrier's encumbrance: carrying fails if that goes over carry capacity, dragging always works. Carrying: upright, no sprinting, climbing or vaulting. Dragging: upright or crouched, not prone, no vaulting (put the body down first) | Draft |
 
 Draft: **Open a door** — walking through a closed, unlocked door opens it as part of the move, +1 AP on that step. **Close a door** on an adjacent tile edge: 1 AP. A locked door needs bolt cutters, the POI key or a demolition charge (see Tactical map generation in the GDD).
 

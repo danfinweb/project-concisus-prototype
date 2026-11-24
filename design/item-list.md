@@ -335,7 +335,7 @@ Items that open options during operations or can be handed in to a faction for m
 | Codebook | 0.2 | Officers, command posts | With an encrypted radio of the same faction: range 2 regions, duration 14 days | Its enemies: $1,000, +5 reputation |
 | Western satellite phone | 1.0 | Western-backed officers, Aegis | — | SSV or Varyag: $1,200, +5 reputation |
 | Hard drive with data | 0.3 | Offices, PMC command posts, old laptops (10%) | — | Rival of the owning PMC: $1,500, +5 reputation; the Krug: $2,000, no reputation |
-| Demolition charge | 2.0 | Military depots, engineers | Destroys a wall or a vehicle; required for sabotage objectives (bridges, plants) | — |
+| Demolition charge | 2.0 | Military depots, engineers | Destroys a wall or a vehicle; required for sabotage objectives (bridges, plants); comes with its remote trigger and goes off only when its placer sets it off (see Tactical actions) | — |
 | Bolt cutters | 2.0 | Warehouses, industry | Opens locked gates and containers silently (10 AP) | — |
 | POI key | 0.01 | Guards of that point of interest | Opens the locked rooms of one point of interest | — |
 | Plant spare parts | 10.0 | Industrial points of interest | — | Faction holding a plant: $500, +3 reputation, plant output +25% for 7 days |

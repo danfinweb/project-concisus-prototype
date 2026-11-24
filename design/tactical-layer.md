@@ -38,7 +38,7 @@ Combat alternates one soldier at a time between the sides. There are no rounds: 
 5. **Stall rule:** if no soldier sees or hears an enemy for 2 turns of passing, turns advance automatically (stamina recovers) until someone is seen or heard, or a soldier acts. The player can stop the advance at any time by activating a soldier.
 6. Effects with a duration (bleeding, smoke) are counted in turns. A soldier who is hit, whose cover is hit (any enemy round stopped by a cover edge the soldier is behind, facing the shooter, whoever it was aimed at), or within 1 tile of whom an enemy shot lands, is **suppressed**: −5 AP, wider spread and no reactions, until one full turn passes without such hits.
 
-A tactical map has the player's side — which can include allied units under AI control, such as defenders, a convoy or an escorted VIP — and one opponent. Units that are hostile to neither (a non-involved faction, civilians) form a third, neutral side controlled by the tactical AI; it turns hostile toward whoever attacks it. Until attacked, neutral units never activate: they only react, by a fixed rule. When shot at, or when a shot lands within 3 tiles, civilians flee (they move away from the shooter to the nearest exit and leave the map) and armed neutrals take cover. A neutral unit that turns hostile joins the turn order as a third side, with its own activation after the opponent's in every turn, controlled by the tactical AI.
+A tactical map has the player's side — which can include allied units under AI control, such as defenders, a convoy or an escorted VIP — and one opponent. Units that are hostile to neither (a non-involved faction, civilians) form a third, neutral side controlled by the tactical AI; armed neutrals turn hostile toward whoever attacks them; civilians never turn hostile, they only flee. Until attacked, neutral units never activate: they only react, by a fixed rule. When shot at, or when a shot lands within 3 tiles, civilians flee (they move away from the shooter to the nearest exit and leave the map) and armed neutrals take cover. A neutral unit that turns hostile joins the turn order as a third side, with its own activation after the opponent's in every turn, controlled by the tactical AI.
 
 **Stamina**
 
@@ -152,8 +152,34 @@ While aiming, the arm boxes swing forward and partly shield the thorax from the 
 **Stance**
 
 - **Crouched:** total height about 1.20 m; legs folded under the thorax, head at about 1.00–1.20 m. Half cover hides the legs and most of the thorax.
-- **Prone:** lying flat, total height about 0.40 m, the body stretched out along the facing. From the front only the head, the arms (when aiming) and the top of the thorax show; from the side the whole body shows. Half cover hides a prone soldier completely until they fire over it. Prone gives the lowest shooter spread, but no sprinting, vaulting or climbing.
+- **Prone:** lying flat, total height about 0.40 m, the body stretched out along the facing. From the front only the head, the arms (when aiming) and the top of the thorax show; from the side the whole body shows. Half cover hides a prone soldier completely; a prone soldier cannot fire over half cover and must crouch first (the crouched rule then applies). Prone gives the lowest shooter spread, but no sprinting, vaulting or climbing.
 - **Cover:** half cover (tile edge about 1.0 m high) hides an upright soldier's legs and lower thorax; full cover hides everything until the soldier leans or fires over it.
+
+**Hitboxes for a crouched soldier (draft: about 1.20 m tall)**
+
+| Zone | Boxes | Size (width × depth × height) | Height above ground | Share of front silhouette |
+| --- | --- | --- | --- | --- |
+| Head | 1 | 0.22 × 0.25 × 0.20 m (draft) | 1.00–1.20 m, 0.10 m forward of the thorax (draft) | \~8% (draft) |
+| Thorax | 1 | 0.40 × 0.30 × 0.50 m (draft) | 0.55–1.05 m (draft) | \~37% (draft) |
+| Left arm | 1 | 0.12 × 0.12 × 0.50 m (draft) | 0.50–1.00 m, left of the thorax (draft) | \~11% (draft) |
+| Right arm | 1 | 0.12 × 0.12 × 0.50 m (draft) | 0.50–1.00 m, right of the thorax (draft) | \~11% (draft) |
+| Left leg | 1 | 0.16 × 0.50 × 0.55 m (draft) | 0.00–0.55 m, folded under the thorax (draft) | \~16% (draft) |
+| Right leg | 1 | 0.16 × 0.50 × 0.55 m (draft) | 0.00–0.55 m, folded under the thorax (draft) | \~16% (draft) |
+
+While aiming crouched, the arm boxes swing forward as upright (draft: 0.25 m forward of the thorax front, at 0.60–1.10 m). Behind half cover only the head, the top of the thorax and aiming arms show.
+
+**Hitboxes for a prone soldier (draft: about 0.40 m tall; depth runs along the facing)**
+
+| Zone | Boxes | Size (width × depth × height) | Height above ground | Place along the body |
+| --- | --- | --- | --- | --- |
+| Head | 1 | 0.22 × 0.25 × 0.25 m (draft) | 0.15–0.40 m (draft) | Front end (draft) |
+| Thorax | 1 | 0.40 × 0.55 × 0.25 m (draft) | 0.00–0.25 m (draft) | Behind the head (draft) |
+| Left arm | 1 | 0.12 × 0.60 × 0.12 m (draft) | 0.05–0.17 m; aiming 0.10–0.22 m (draft) | Left of the thorax; aiming, reaching 0.30 m forward of the head (draft) |
+| Right arm | 1 | 0.12 × 0.60 × 0.12 m (draft) | 0.05–0.17 m; aiming 0.10–0.22 m (draft) | Right of the thorax; aiming, reaching 0.30 m forward of the head (draft) |
+| Left leg | 1 | 0.16 × 0.95 × 0.16 m (draft) | 0.00–0.16 m (draft) | Behind the thorax (draft) |
+| Right leg | 1 | 0.16 × 0.95 × 0.16 m (draft) | 0.00–0.16 m (draft) | Behind the thorax (draft) |
+
+From the front the legs sit behind the thorax, so only the head, the top of the thorax and aiming arms show, as described under Stance; from the side every box shows.
 
 **Health and effects per zone**
 
@@ -205,7 +231,7 @@ A zone at 0 HP stays as defined under Body zones (head or thorax: death; arm or 
 
 **Recovery after an op**
 
-- At an FOB, soldiers recover HP every hour: faster the better the squad's best Medical.
+- Outside battle, soldiers recover HP every hour in every zone, faster the better the squad's best Medical and twice as fast at an FOB (draft: 1 HP per hour per zone, +1 per full 25 points of the squad's best Medical; ×2 at an FOB).
 
 The medical items are listed in the [Item list](https://claude.ai/artifact/3ZE9h1z8kMDFDuWB4muJRJ).
 
@@ -292,7 +318,7 @@ Buildings appear only where the tile has a road, settlement, plant or crossing.
   - A locked door opens with bolt cutters, the POI key or a demolition charge.
 - **Destruction:** every cover edge has material HP (wood 40, brick 120, metal 200, vehicle 150, concrete 300). Bullets do not damage edges.
   - **Grenades:** a grenade hits every edge within its radius that has no full cover between it and the blast point (the first wall takes the blast), for 3 × its blast damage at that distance. A frag grenade (100 at the centre) breaks wood and doors nearby, dents brick and leaves concrete standing.
-  - **Demolition charges:** a charge always destroys the edge it is placed on.
+  - **Demolition charges:** a charge goes off only when its placer sets it off by remote trigger, a separate action (see Tactical actions); it always destroys the edge it is placed on, and its blast hurts soldiers nearby by the grenade blast rules (draft: as a frag grenade, 100 at the centre, radius 4 tiles).
   - An edge at 0 HP becomes rubble with no cover.
 
 **Concealment**
