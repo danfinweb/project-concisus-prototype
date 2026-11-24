@@ -6,7 +6,7 @@
 set -euo pipefail
 src="${1:?usage: refresh-design.sh <export-dir>}"
 root="$(cd "$(dirname "$0")/.." && pwd)"
-allowed=(design.md item-list.md tactical-actions.md strategic-actions.md world-events.md callsigns.md story-lore.md)
+allowed=(design.md strategic-layer.md tactical-layer.md management.md ai.md data-definitions.md presentation-tech.md item-list.md tactical-actions.md strategic-actions.md world-events.md callsigns.md story-lore.md README.md)
 copied=0
 for f in "${allowed[@]}"; do
   if [ -f "$src/$f" ]; then
