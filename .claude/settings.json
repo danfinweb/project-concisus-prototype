@@ -1,5 +1,8 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(bash scripts/refresh-design.sh *)"
+    ],
     "deny": [
       "Edit(/design/**)",
       "Write(/design/**)",

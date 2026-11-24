@@ -102,7 +102,7 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | Plate carrier, steel plates | 4 | 70 | 9.0 | 4 / 4 / 2 / 2 / 1 | Durable, heavy; also fills the vest slot |
 | Plate carrier, ceramic plates | 5 | 55 | 8.0 | 5 / 6 / 2 / 2 / 2 | Loses durability fast (wear ×1.5); also fills the vest slot |
 | 6B13 | 5 | 70 | 10.5 | — |  |
-| Heavy assault armour | 6 | 85 | 14.0 | — | Large stamina and AP penalties |
+| Heavy assault armour | 6 | 85 | 14.0 | — | −5 AP on every activation (draft); no stamina penalty |
 
 ## Load-bearing vests
 
@@ -153,6 +153,17 @@ Each load multiplies its calibre's damage by the standard modifier of its ammo t
 | --- | --- | --- | --- | --- | --- |
 | Frag grenade | 0.6 | Damage 100 at the point of impact, falling evenly to 0 at the edge; penetration class 2; full cover between the blast and a soldier blocks it, half cover halves it; the damage is split over the six body zones by their share of the silhouette, each checked against its own armour | 4 | Instant, on landing | Loud: heard across the map |
 | Smoke grenade | 0.5 | Smoke cloud that blocks sight into, out of and through it; no damage | 3 | 4 turns | Quiet |
+
+## Mods
+
+**Draft — placeholder values.** A first set of optics and one laser. Optics multiply the range part of shooter spread; a laser multiplies shooter spread on snap shots (see Hit model in the GDD). Which weapons each mod fits is set in the item editor.
+
+| Mod | Slot | Effect | Weight (kg) |
+| --- | --- | --- | --- |
+| Red dot sight | Optic | Range spread ×0.8 | 0.2 |
+| 4× scope | Optic | Range spread ×0.5 | 0.5 |
+| Sniper scope | Optic | Range spread ×0.3 | 0.7 |
+| Laser module | Tactical | Snap-shot spread ×0.8; visible to enemies | 0.15 |
 
 ## Barter goods
 

@@ -14,7 +14,7 @@ Nov 22, 2026 · @Dan
 | Set reaction (Fire, Take cover, Hold) | Free | Chosen during the activation, applied automatically; can be changed any number of times in the activation | Draft |
 | Hold overwatch | 4 AP | Lasts until the soldier's next activation, or ends early when the soldier is suppressed or has fewer rounds loaded than the fire mode fires; its Fire reactions use the weapon's current fire mode and get no snap-shot penalty. Without overwatch a Fire reaction is a single snap shot | Draft |
 | Reaction attempt | 1 stamina point | Success: 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%, adjusted for distance, the mover's stance, noise and the reactor's wounds. One attempt per mover per entry into the vision cone. Not possible while suppressed or at 0 stamina points | Defined |
-| Leave the map at an exit | Free | The soldier must be on an exit tile (ending a move there, or already standing there at the start of its activation) and the exit's condition must be met (fuel, a boat at a set turn, a paid crossing) | Draft |
+| Leave the map at an exit | Free | The soldier must be on an exit tile (ending a move there, or already standing there at the start of its activation) and the exit's condition must be met (fuel, a boat at a set turn, a paid crossing). Soldiers leave one by one; the battle ends for the player when none of its soldiers is left on the map | Draft |
 
 ## Movement
 
@@ -23,7 +23,7 @@ Nov 22, 2026 · @Dan
 | Walk one tile | 2 AP + terrain cost | Defined base. Draft: diagonal step 3 AP instead of 2. Terrain per tile: road, floor, grass +0; mud, shallow water, rubble, dense brush +1; stairs +1 | Base defined, terrain and diagonal draft |
 | Move crouched | Walk cost +1 AP per tile | — | Draft |
 | Crawl prone | Walk cost +3 AP per tile | No sprinting, vaulting or climbing | Draft |
-| Sprint | Walk cost −1 AP per tile (never below 1 per tile) | Upright only; +1 stamina point on that activation; not possible prone, with a leg fracture or in a large rucksack | Draft |
+| Sprint | Walk cost −1 AP per tile (never below 1 per tile) | Upright only; +1 stamina point on that activation (allowed with 2 stamina points; stamina never goes below 0); not possible prone, with a leg fracture or in a large rucksack | Draft |
 | Leg wounds | +1 AP per tile per wounded leg | A leg counts as wounded below 50% of its HP. A disabled leg (0 HP) doubles the base tile cost instead, once however many legs are disabled. A leg fracture multiplies the base tile cost by 1.5, also on top of a disabled leg (×2 × 1.5 = ×3) | Draft |
 | Change stance | Upright ↔ crouched 2 AP; crouched → prone 2 AP; prone → crouched 4 AP; prone → upright 6 AP; upright → prone 4 AP (through crouched, 2 + 2) | Getting up from prone costs the most | Draft |
 | Turn during an activation | 1 AP per 90° or part of it | Turning along a path while moving is free; the final facing is free | Draft |
@@ -34,7 +34,7 @@ Nov 22, 2026 · @Dan
 
 | Action | Cost | How it is calculated | Status |
 | --- | --- | --- | --- |
-| Fire (one shot action) | Default by weapon type: pistol 4, SMG 5, assault rifle 6, shotgun 6, battle rifle 7, DMR 7, LMG 8, bolt-action sniper rifle 9 AP | Burst (3 rounds) +2 AP; full auto (5 rounds) +4 AP; ergonomics 70+ −1 AP, 30 or below +1 AP. Each weapon can override its value in /data. A burst or auto mode with fewer rounds loaded fires what is left, at the full AP cost | Draft |
+| Fire (one shot action) | Default by weapon type: pistol 4, SMG 5, assault rifle 6, shotgun 6, battle rifle 7, DMR 7, LMG 8, bolt-action sniper rifle 9 AP | Burst (the weapon's own burst mode, e.g. 2 or 3 rounds) +2 AP; full auto (5 rounds) +4 AP; ergonomics 70+ −1 AP, 30 or below +1 AP. A weapon's own value in /data replaces only the weapon-type default; the modifiers still apply. A burst or auto mode with fewer rounds loaded fires what is left, at the full AP cost | Draft |
 | Aim longer | 2 AP per aim step, up to 3 steps | Each step multiplies shooter spread by 0.85 (placeholder; 3 steps ≈ −39%). Marksmanship 75+: 1 AP per step. +1 AP per step with pain | Draft |
 | Reload | Pistol 4, box magazine 5, stripper clip or bolt-action 6, belt-fed 10 AP; tube-fed shotgun 2 AP per shell, any number of shells (partial reload) | Marksmanship 70+ −1 AP; ergonomics 70+ −1 AP, 30 or below +1 AP; magazine from the backpack +4 AP; arm fracture ×1.5. The modifiers apply once per reload, also for a tube | Draft |
 | Swap between weapon 1 and 2 | 3 AP | 2 AP when either weapon is a pistol; Agility 70+ −1 AP | Draft |
@@ -70,7 +70,7 @@ Draft: an item used from the backpack costs +4 AP (the backpack surcharge, the s
 | Cut a lock with bolt cutters | 10 AP | Silent | Defined |
 | Place a demolition charge | 8 AP | Technical 50+: 6 AP | Draft |
 | Restrain a VIP (capture mission) | 6 AP | Adjacent tile; only once the VIP surrenders or is wounded | Draft |
-| Carry or drag a body | Lift 4 AP, put down 2 AP; carrying +2 AP per tile, dragging +3 AP per tile | The player chooses carry or drag; lift only from an adjacent tile. A wounded or dead squadmate, an enemy or a restrained VIP can be moved. The body and its gear count toward the carrier's encumbrance: carrying fails if that goes over carry capacity, dragging always works. Carrying: upright, no sprinting or climbing. Dragging: upright or crouched, not prone | Draft |
+| Carry or drag a body | Lift 4 AP, put down 2 AP; carrying +2 AP per tile, dragging +3 AP per tile | The player chooses carry or drag; lift only from an adjacent tile. A wounded or dead squadmate, an enemy or a restrained VIP can be moved. The body and its gear count toward the carrier's encumbrance: carrying fails if that goes over carry capacity, dragging always works. Carrying: upright, no sprinting, climbing or vaulting. Dragging: upright or crouched, not prone, no vaulting (put the body down first) | Draft |
 
 Draft: **Open a door** — walking through a closed, unlocked door opens it as part of the move, +1 AP on that step. **Close a door** on an adjacent tile edge: 1 AP. A locked door needs bolt cutters, the POI key or a demolition charge (see Tactical map generation in the GDD).
 
@@ -79,5 +79,5 @@ Draft: **Open a door** — walking through a closed, unlocked door opens it as p
 - **Suppressed:** −5 AP, wider spread, no reactions. A soldier is suppressed when hit, when an enemy shot hits its cover, or when one lands within 1 tile of it.
 - **Head hit:** chance to be stunned, losing 10 AP on the next activation (draft).
 - **Pain:** −4 AP until masked by painkillers (draft).
-- **Over-encumbered:** −5 AP over carry capacity, −10 AP over 125% of it (draft); Strength lowers the penalty for heavy kit.
+- **Over-encumbered:** −5 AP over carry capacity, −10 AP over 125% of it (draft); Strength lowers the penalty: × (1 − Strength ÷ 200), rounded down (draft). Heavy assault armour costs −5 AP on every activation (draft).
 - Wounds do not reduce the AP pool. Wounded or disabled legs raise movement cost; wounded or disabled arms widen the shooting cone and the grenade scatter instead of costing AP (see Body zones in the GDD).

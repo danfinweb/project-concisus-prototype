@@ -275,9 +275,9 @@ Combat alternates one soldier at a time between the sides. There are no rounds: 
 3. Every soldier **not** activated in a turn recovers stamina.
 4. A side with no soldier able to act must pass; its soldiers recover while the other side keeps acting. A side may also pass by choice.
 5. **Stall rule:** if no soldier sees or hears an enemy for 2 turns of passing, turns advance automatically (stamina recovers) until someone is seen or heard, or a soldier acts. The player can stop the advance at any time by activating a soldier.
-6. Effects with a duration (bleeding, smoke) are counted in turns. A soldier who is hit, whose cover is hit, or within 1 tile of whom an enemy shot lands, is **suppressed**: −5 AP, wider spread and no reactions, until one full turn passes without such hits.
+6. Effects with a duration (bleeding, smoke) are counted in turns. A soldier who is hit, whose cover is hit (any enemy round stopped by a cover edge the soldier is behind, facing the shooter, whoever it was aimed at), or within 1 tile of whom an enemy shot lands, is **suppressed**: −5 AP, wider spread and no reactions, until one full turn passes without such hits.
 
-A tactical map has the player's side — which can include allied units under AI control, such as defenders, a convoy or an escorted VIP — and one opponent. Units that are hostile to neither (a non-involved faction, civilians) form a third, neutral side controlled by the tactical AI; it turns hostile toward whoever attacks it. Until attacked, neutral units never activate: they only react (take cover, flee). A neutral unit that turns hostile joins the turn order as a third side, with its own activation after the opponent's in every turn, controlled by the tactical AI.
+A tactical map has the player's side — which can include allied units under AI control, such as defenders, a convoy or an escorted VIP — and one opponent. Units that are hostile to neither (a non-involved faction, civilians) form a third, neutral side controlled by the tactical AI; it turns hostile toward whoever attacks it. Until attacked, neutral units never activate: they only react, by a fixed rule. When shot at, or when a shot lands within 3 tiles, civilians flee (they move away from the shooter to the nearest exit and leave the map) and armed neutrals take cover. A neutral unit that turns hostile joins the turn order as a third side, with its own activation after the opponent's in every turn, controlled by the tactical AI.
 
 **Stamina**
 
@@ -286,7 +286,7 @@ Each soldier has a small stamina pool, counted in stamina points. Spending is tw
 | Rule | Draft value |
 | --- | --- |
 | Maximum stamina | 2 + Endurance ÷ 20, rounded down (2–7 stamina points). E.g. Endurance 50 → 4; 90 → 6 |
-| Activation | Costs 2 stamina points; +1 if the soldier sprinted or is over carry capacity |
+| Activation | Costs 2 stamina points; +1 if the soldier sprinted or is over carry capacity; stamina never goes below 0, so a soldier with 2 stamina points may still sprint |
 | Reaction attempt | Costs 1 stamina point, success or not |
 | Recovery | +1 stamina point for every turn the soldier is not activated |
 | Exhausted | Below 2 stamina points a soldier cannot be activated; at 0 they cannot react either |
@@ -320,11 +320,11 @@ Soldiers who hear a shot become alerted: at the start of their next activation t
 
 **Reactions**
 
-- **Trigger:** an opposing soldier moves into or through the reactor's vision cone with line of sight.
+- **Trigger:** an opposing soldier moves into or through the reactor's vision cone with line of sight, takes any visible action inside it (firing, reloading, using an item), or is newly exposed in it when destruction or an opened door opens a sightline.
 - **Reaction setting:** chosen per soldier during their activation — *Fire*, *Take cover* or *Hold* (stay hidden, no reaction). The game applies it automatically; no prompts mid-move.
 - **Cost and limit:** each attempt costs 1 stamina point; there is no other cap.
 - **Success chance:** 50 + (reactor's Perception − mover's Agility) / 2, limited to 10–90%. Adjusted before that limit (draft): distance −1 per 2 tiles beyond 10 tiles (at most −20); mover crouched −10, prone −20, sprinting +15; the mover's noise −(its Recon ÷ 10); reactor in pain −10 and −5 per wounded or disabled limb.
-- **On success:** the reaction resolves before the mover continues. *Fire* is a single shot with normal hit chance and a snap-shot penalty; a soldier on overwatch (see Tactical actions) fires in the weapon's current mode without that penalty. *Take cover* moves the reactor to the nearest tile with cover within 1 tile, or makes them crouch if there is none; a prone reactor with no cover tile stays prone. A reaction move never triggers reactions from other soldiers. The mover then spends any AP left.
+- **On success:** the reaction resolves before the mover continues. *Fire* is a single shot with normal hit chance and a snap-shot penalty; a soldier on overwatch (see Tactical actions) fires in the weapon's current mode without that penalty. *Take cover* moves the reactor to the nearest tile with cover within 1 tile (if several are equally near: full cover before half, then the tile farther from the mover, then a random pick), or makes them crouch if there is none; a prone reactor with no cover tile stays prone. A reaction move never triggers reactions from other soldiers. The mover then spends any AP left.
 - **On failure:** the mover passes unnoticed by that soldier; the stamina point is still spent.
 
 ### **Actions and costs (draft)**
@@ -497,7 +497,7 @@ Buildings appear only where the tile has a road, settlement, plant or crossing.
      - Countryside with a road gets a kolkhoz yard or a single hut.
    - **Levels:**
      - Every building has a playable ground floor.
-     - **Large buildings** (the multi-storey kinds listed in data: apartment blocks, offices, schools, landmarks, and the large halls) also have a playable flat **roof**, reached by an inside stairwell. Stairs cost +1 AP per tile.
+     - **Large buildings** (3 or more floors — apartment blocks, khrushchyovkas, offices, schools, hospitals, landmarks — plus warehouses and plant halls) also have a playable flat **roof**, reached by an inside stairwell next to the main entrance (in apartment blocks, their stairwell core). Stairs cost +1 AP per tile.
      - The roofs of small buildings are scenery.
      - Taller buildings show their real height, but only the playable levels can be entered.
      - A playable **second floor** for large buildings is OPTIONAL (left out of the first build iterations).
@@ -530,7 +530,7 @@ Buildings appear only where the tile has a road, settlement, plant or crossing.
   - Outer doors are locked at 25% on warehouses, plant buildings and buildings at points of interest, and at 10% on houses.
   - A locked door opens with bolt cutters, the POI key or a demolition charge.
 - **Destruction:** every cover edge has material HP (wood 40, brick 120, metal 200, vehicle 150, concrete 300). Bullets do not damage edges.
-  - **Grenades:** a grenade hits every edge within its radius for 3 × its blast damage at that distance. A frag grenade (100 at the centre) breaks wood and doors nearby, dents brick and leaves concrete standing.
+  - **Grenades:** a grenade hits every edge within its radius that has no full cover between it and the blast point (the first wall takes the blast), for 3 × its blast damage at that distance. A frag grenade (100 at the centre) breaks wood and doors nearby, dents brick and leaves concrete standing.
   - **Demolition charges:** a charge always destroys the edge it is placed on.
   - An edge at 0 HP becomes rubble with no cover.
 
@@ -538,7 +538,7 @@ Buildings appear only where the tile has a road, settlement, plant or crossing.
 
 Brush, trees and tall crops are **obscuring terrain**.
 
-- **When it applies:** the target stands on an obscuring tile, or the line of fire passes through one or more.
+- **When it applies:** the target stands on an obscuring tile, or the line of fire passes through one or more beyond the shooter's own tile (firing out of a bush does not shift the shooter's aim).
 - **The shift:** once the shot action is confirmed, the aim point (the centre of the spread cone) moves 2 MoA on the game scale (about 1 cm per tile of distance) in a random direction.
   - The direction comes from the battle's seeded random stream.
   - The shift happens once per shot action, so every round of a burst uses the same shifted cone.
@@ -615,7 +615,7 @@ Each derived value drives one thing and comes from at most two attributes: a mai
 | Action points | Agility | — | 25 + Agility ÷ 10, rounded down (25–35). All AP costs are whole numbers; walking costs 2 AP per tile |
 | Stamina pool | Endurance | — | 2 + Endurance ÷ 20, rounded down (2–7 stamina points) |
 | HP per zone | Endurance | — | Base HP × (0.5 + 0.75 × Endurance / 100) (see Body zones) |
-| Carry capacity | Strength | Endurance | Formula open |
+| Carry capacity | Strength | Endurance | 15 + 0.3 × Strength + 0.1 × Endurance kg (draft; 15–55 kg) |
 | Shooter spread | Marksmanship | Perception (at range) | Feeds the hit model's spread cone |
 | Recoil control | Marksmanship | Strength | Lowers the spread each follow-up round adds |
 | Reload and weapon swap cost | Marksmanship | Agility | Reload: Marksmanship and weapon ergonomics; swap: Agility and weapon weight (see Tactical actions) |
@@ -668,7 +668,7 @@ The Tarkov layer: what you carry in is at risk, what you carry out pays for the 
 | --- | --- | --- | --- | --- |
 | Retrieve and deliver items | Collect items at a location (a cache, a crash site, a depot, another faction's stash) and bring them to a destination | The items take storage weight; the location may be guarded or contested | Items handed over at the destination before the deadline | Items lost, sold elsewhere or late |
 | Escort a shipment | Protect a faction convoy along its route | The convoy moves with the player's squad on the strategic map; encounters on the way become tactical fights with the convoy's vehicles to protect | Convoy arrives with most of its cargo | Convoy destroyed or captured |
-| Escort a VIP | Bring a person (officer, official, Krug courier, journalist) safely to a destination | The VIP takes a seat in the vehicle and joins tactical fights as a lightly armed allied unit, controlled by the tactical AI by default; player control is a switchable option for testing | VIP arrives alive | VIP killed or captured |
+| Escort a VIP | Bring a person (officer, official, Krug courier, journalist) safely to a destination | The VIP takes a seat in the vehicle and joins tactical fights as a lightly armed allied unit, controlled by the tactical AI by default; player control is a switchable option for testing, set in the tactical map request: the player then moves the VIP, which never reacts | VIP arrives alive | VIP killed or captured |
 | Capture a VIP | Take a person alive and hand them to the employer | Find the target (intel helps), defeat or scatter the guards, then restrain the VIP once they surrender or are wounded; the VIP takes a seat until handed over | VIP delivered alive | VIP killed, escapes or is rescued |
 | Assassinate a VIP | Kill a person, usually guarded and on the move | Track the target's squad on the map and choose where to strike; proof comes from a soldier witnessing the kill or taking an item from the body | VIP confirmed dead | VIP survives the deadline |
 | Capture a territory | Take a point of interest or region from its current controller | Clear the defenders in a tactical fight, then hold the position for a number of hours until the employer's squad takes over | Control passes to the employer | Position lost before the handover |
@@ -781,7 +781,7 @@ Other factions evaluate contract offers with the same utility scoring. Faction p
 
 ### Tactical AI
 
-Enemy squads take roles: flank, suppress, retreat, call reinforcements. Units of non-hostile factions on the same map follow their own objectives and only engage under the faction behaviour rules above.
+Enemy squads take roles: flank, suppress, retreat, call reinforcements (OPTIONAL — later build; until then a side fights with what is on the map). Units of non-hostile factions on the same map follow their own objectives and only engage under the faction behaviour rules above.
 
 **Unit scoring.** Each unit scores its candidate actions, weighted in this order of importance:
 
@@ -790,7 +790,7 @@ Enemy squads take roles: flank, suppress, retreat, call reinforcements. Units of
 3. **Action fit:** how effective each action is in the current situation.
 4. **Coordination:** bonuses for answering squad requests, penalties for tiles or targets a squadmate has claimed.
 
-A squad leader sets the squad plan and roles: the highest-ranked soldier; if it dies, the next highest takes over at its next activation and keeps the plan. Units coordinate through a shared blackboard of requests and claims. The battle goal and an acceptable-loss threshold come from the strategic layer, through the tactical map request; the threshold is the share of the side's soldiers out of action (dead, disabled or fled), and once it is reached the side retreats to an exit and leaves the map. An AI soldier knows as much about a seen enemy's gear as the player would (weapon type, helmet and armour class).
+A squad leader sets the squad plan and roles: the highest-ranked soldier (on a tie, the one with the highest average attribute value); if it dies, the next highest takes over at its next activation and keeps the plan. Units coordinate through a shared blackboard of requests and claims. The battle goal and an acceptable-loss threshold come from the strategic layer, through the tactical map request; the threshold is the share of the side's soldiers out of action (dead, or left the map), and once it is reached the side retreats to an exit and leaves the map. A command the tactical layer rejects goes back to the AI with the reason, up to 3 times; then that activation ends. An AI soldier knows as much about a seen enemy's gear as the player would (weapon type, helmet and armour class).
 
 **Controller hand-off.** The Tactical Layer decides when a unit acts; `tactical-ai` decides what it does.
 
@@ -832,7 +832,7 @@ Static content the tools author into `/data`. Every module reads it; none change
 | --- | --- | --- | --- |
 | Weapon type | Category | Pistol, shotgun, sub-machine gun, assault rifle, battle rifle, designated marksman rifle, sniper rifle, light machine gun | Animations, AI role, trader and loot categories |
 | Calibre | Ammo type reference | The cartridge the gun fires; the loaded ammo defines its exact values | Which ammo fits; modifies the gun's Recoil |
-| Fire modes | List of rounds per trigger action, e.g. \[1, 3\] or \[1, auto\] | Semi-auto, burst and full-auto options (replaces a single Burst value) | Rounds and AP per shot action; recoil builds within a burst |
+| Fire modes | List of rounds per trigger action, e.g. \[1, 3\] or \[1, auto\] | Semi-auto, burst and full-auto options; the burst length is the weapon's own (e.g. 2 or 3 rounds) | Rounds and AP per shot action; recoil builds within a burst |
 | Magazine size | Rounds | Capacity of the standard magazine | Shots before reloading |
 | Barrel multiplier | Factor around 1.0 | Fixed per weapon by its barrel length, not changed by mods: short barrels below 1.0, long barrels above | Multiplies the calibre's damage |
 | Ergonomics | 1–100 | Handling and balance | AP cost to fire and reload (see Tactical actions) |
