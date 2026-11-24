@@ -1,0 +1,5 @@
+{
+  "conscription": { "id": "conscription", "kind": "measure", "typicalSigns": ["troopLoss", "littleTerritory"] },
+  "martialLaw": { "id": "martialLaw", "kind": "measure", "typicalSigns": ["resistanceGroups", "areaLoss"] },
+  "fuelShortage": { "id": "fuelShortage", "kind": "event" }
+}

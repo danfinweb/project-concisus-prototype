@@ -1,0 +1,10 @@
+{
+  "relationMin": -100,
+  "relationMax": 100,
+  "hostileAt": -50,
+  "alliedAt": 50,
+  "measureSignsMin": 2,
+  "nuclearSignsMin": 5,
+  "raiseSquad": { "costPerSoldierUsd": 2000, "readyHours": 12 },
+  "krugEscortPrice": { "baseUsd": 200, "perTileUsd": 50, "dangerFactor": 1.5 }
+}

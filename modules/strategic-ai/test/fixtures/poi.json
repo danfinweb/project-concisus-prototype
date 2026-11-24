@@ -1,0 +1,6 @@
+{
+  "town": { "id": "town", "name": "Town", "category": "town", "settlement": true, "krugMarketAllowed": true, "income": 300 },
+  "capital": { "id": "capital", "name": "Capital", "category": "largeCity", "settlement": true, "krugMarketAllowed": true, "income": 1500 },
+  "oil": { "id": "oil", "name": "Oil plant", "category": "plant", "plantKind": "oil", "income": 3000 },
+  "gas": { "id": "gas", "name": "Gas station", "category": "gasStation", "income": 0 }
+}

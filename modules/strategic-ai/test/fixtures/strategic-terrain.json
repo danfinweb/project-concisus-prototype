@@ -1,0 +1,5 @@
+{
+  "plain": { "id": "plain", "name": "Plain", "passable": true, "moveHours": 6, "visibility": "open", "biome": "steppe", "tacticalTerrainTable": "t-plain", "prefabTable": "p-plain" },
+  "forest": { "id": "forest", "name": "Forest", "passable": true, "moveHours": 9, "visibility": "low", "biome": "forest", "tacticalTerrainTable": "t-forest", "prefabTable": "p-forest" },
+  "water": { "id": "water", "name": "Water", "passable": false, "moveHours": null, "visibility": "far", "biome": "water", "tacticalTerrainTable": "t-water", "prefabTable": "p-water" }
+}

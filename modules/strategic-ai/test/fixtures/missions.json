@@ -1,0 +1,8 @@
+{
+  "retrieve_deliver": { "id": "retrieve_deliver", "payBand": [2000, 4000], "goals": ["supplyRun"] },
+  "escort_shipment": { "id": "escort_shipment", "payBand": [2500, 5000], "goals": ["supplyRun", "escort"] },
+  "assault_poi": { "id": "assault_poi", "payBand": [5000, 10000], "goals": ["attackPoi"] },
+  "hold_poi": { "id": "hold_poi", "payBand": [3000, 6000], "goals": ["holdPoi"] },
+  "hunt_squad": { "id": "hunt_squad", "payBand": [4000, 8000], "goals": ["hunt"] },
+  "patrol_area": { "id": "patrol_area", "payBand": [1000, 2000], "goals": ["patrol"] }
+}

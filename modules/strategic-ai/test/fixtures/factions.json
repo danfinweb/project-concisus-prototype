@@ -1,0 +1,12 @@
+{
+  "ssv": { "id": "ssv", "name": "SSV", "kind": "employer", "patron": "east", "doctrine": "ssv", "squadTemplate": { "size": 6, "gearTier": 1 }, "measures": ["conscription", "martialLaw"] },
+  "vdk": { "id": "vdk", "name": "VDK", "kind": "employer", "patron": "west", "doctrine": "vdk", "squadTemplate": { "size": 6, "gearTier": 1 }, "measures": ["conscription", "martialLaw"] },
+  "varyag": { "id": "varyag", "name": "Varyag", "kind": "rivalPmc", "patron": "ssv", "doctrine": "varyag", "rogueDoctrine": "rogue", "squadTemplate": { "size": 4, "gearTier": 2 } },
+  "aegis": { "id": "aegis", "name": "Aegis", "kind": "rivalPmc", "patron": "vdk", "doctrine": "aegis", "rogueDoctrine": "rogue", "squadTemplate": { "size": 4, "gearTier": 2 } },
+  "krug": { "id": "krug", "name": "Krug", "kind": "trader", "doctrine": "krug", "squadTemplate": { "size": 4, "gearTier": 1 } },
+  "player": { "id": "player", "name": "Player PMC", "kind": "player" },
+  "east": { "id": "east", "name": "East", "kind": "influence", "backs": "ssv" },
+  "west": { "id": "west", "name": "West", "kind": "influence", "backs": "vdk" },
+  "civilians": { "id": "civilians", "name": "Civilians", "kind": "civilian" },
+  "resistance": { "id": "resistance", "name": "Resistance", "kind": "resistance", "doctrine": "resistance", "squadTemplate": { "size": 4, "gearTier": 0 } }
+}
