@@ -222,4 +222,24 @@ fields, `launchOp` `fobId`, corrected descriptions, `debtsUsd` required. The sti
 2. **Q52 — recovery rate (MGT-010, MGT-076).** `healingTick` applies "TAC recovery", but no rate exists
    in spec or design. Leave healing out of tests until a rate is set.
 
-No new findings came up in this refresh.
+Found while writing the tests (`/test`, 2026-11-24):
+
+3. **Request payloads not defined.** MGT-076 covers only the types whose rule lives elsewhere. `hire`,
+   `trade`, `barter`, `vehicleTrade`, `handIn`, `hospital`, `repair`, `refuel`, `buyFob`, `opReturn` and
+   `localRecruits` have no payload fields (which candidate, which items, how many wounds or units, which city
+   size, which soldiers and loot). The tests call core functions directly for these.
+4. **`reputationAct` and battle acts underspecified.** `faction` is described only for payments (is it also
+   the affected faction of an act?); there is no count for `killSoldier`; `battle_result` `acts[].type` has no
+   enum (tests use the `repActs` keys), and `skillUse[]` items have no shape (MGT-023 uses).
+5. **Failed-contract loss (MGT-048).** A contract that fails at its deadline costs "a reputation loss with
+   the employer", but no amount is named (`missionFailed` per open mission? `contractBroken`?). The test only
+   checks that reputation falls.
+6. **Perks at hiring (MGT-009).** Does a soldier hired with a skill already at 50 or 80 have that perk?
+7. **Bundling (MGT-045).** `launchOp` names no missions, so Management cannot enforce "a mission is in at
+   most one op". Who owns that check?
+8. **"Always one affordable candidate" (MGT-002).** Affordable against the current balance? The test assumes a
+   balance of at least the recruit tier price.
+9. **War crime attribution (MGT-059, MGT-064).** Every faction loses 20, but does each faction need its own
+   surviving witness, or does one witness attribute it to all?
+10. **Untyped data shapes.** `traders.traders[].stockByStanding` (fixture: `basic` / `military` / `best`) and
+    the item instance ID field (fixture: `id`, used by `launchOp` `insuredItems`).
