@@ -3,7 +3,7 @@
   "$id": "tactical_perception_view.schema.json",
   "title": "Tactical perception view",
   "description": "What one side knows under fog of war at an AI-controlled activation. Built by tactical/core, passed to that side's controller as plain data: decide(view, rng) gets no query functions; path, line-of-sight and shot previews are precomputed in allowedActions (TAI-001). Spec: TAI-001, TAI-002, TAI-004, TAI-006, TAI-012.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "x-producer": "modules/tactical",
   "x-consumers": ["modules/tactical-ai"],
   "type": "object",
@@ -21,7 +21,7 @@
       "zoneHp": { "type": "object" }, "conditions": { "type": "array" }, "suppressed": { "type": "boolean" },
       "reaction": { "enum": ["fire", "takeCover", "hold"] }, "equipment": { "type": "object" }, "role": { "type": "string", "description": "TAI-014" },
       "rank": { "type": "integer", "description": "From the tactical map request; sets the squad leader (TAI-013)" }, "limbs": { "type": "object", "description": "zone → healthy | wounded | disabled" },
-      "overwatch": { "type": "boolean" }, "alerted": { "type": "boolean" }, "outOfAction": { "type": "boolean" },
+      "overwatch": { "type": "boolean" }, "weaponJammed": { "type": "boolean", "description": "TAC-083: the active weapon is jammed (clearJam)" }, "alerted": { "type": "boolean" }, "outOfAction": { "type": "boolean" },
       "carrying": { "type": ["string", "null"] }, "magazines": { "type": "array", "items": { "type": "object" } } } } },
     "squadMorale": { "type": "number", "description": "Squad-wide morale from the tactical map request sides[].morale; survival input (TAI-008)" },
     "squadPlan": { "type": "object" },
@@ -34,7 +34,7 @@
     "knownNeutrals": { "type": "array", "items": { "type": "object" } },
     "noises": { "type": "array", "items": { "type": "object", "properties": { "origin": { "type": "object" }, "direction": { "type": "number" }, "distance": { "type": "number" }, "turn": { "type": "integer" } } } },
     "map": { "type": "object", "description": "Known to the side only (TAI-004)", "properties": {
-      "tiles": { "type": "array", "items": { "type": "object" }, "description": "Known tiles: terrain cost, edge cover, level, doors, windows, destroyed state" },
+      "tiles": { "type": "array", "items": { "type": "object" }, "description": "Known tiles: terrain cost, impassable and obscuring flags (TAC-029, TAC-082), edge cover, level, doors with state open | closed | locked (TAC-084), windows, destroyed state" },
       "exits": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "tile": { "type": "object" }, "condition": { "type": "string" } } } },
       "containers": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "tile": { "type": "object" }, "searched": { "type": "boolean" }, "contents": { "type": "array", "description": "Only once searched by the side (TAC-070)" } } } },
       "bodies": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "tile": { "type": "object" }, "searched": { "type": "boolean" }, "contents": { "type": "array", "description": "Only once searched by the side (TAC-070)" } } } },
@@ -45,7 +45,7 @@
       "apCost": { "type": "integer" },
       "reachable": { "type": "array", "description": "move: tiles with path AP cost and AP left (TAC-037)", "items": { "type": "object", "properties": { "tile": { "type": "object" }, "apCost": { "type": "integer" }, "apLeft": { "type": "integer" } } } },
       "targets": { "type": "array", "description": "shoot / throwGrenade: targets in line of sight with the shot preview (TAC-046)", "items": { "type": "object", "properties": {
-        "unit": { "type": "string" }, "tile": { "type": "object" }, "hitChance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "unit": { "type": "string" }, "tile": { "type": "object" }, "hitChance": { "type": "number", "minimum": 0, "maximum": 1 }, "concealed": { "type": "boolean", "description": "TAC-046 / TAC-082: target concealed; hitChance is the best case (unshifted cone)" },
         "zoneShares": { "type": "object" }, "likelyZone": { "type": "string" }, "penetrates": { "type": "boolean" } } } } } } },
     "battleGoal": { "type": "object", "description": "The active unit's goal: its own from the request, else its side's (TAI-009, TAI-018)", "properties": { "goal": { "type": "string" }, "targets": { "type": "array", "items": { "type": "string" } }, "acceptableLoss": { "type": "number", "minimum": 0, "maximum": 1 } } },
     "objectives": { "type": "array", "items": { "type": "object" }, "description": "Tactical-map objectives of the battle known to the side (TAC-076)" }

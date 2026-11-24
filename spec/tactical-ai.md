@@ -48,15 +48,15 @@ Fields (schema: `spec/interfaces/tactical_perception_view.schema.json`):
 | `side`, `faction`, `doctrine` | Controlled side, faction ID, doctrine ID of the side (TAI-015) |
 | `turn`, `timeOfDay` | Turn number; `day` or `night` battle (TAC-003) |
 | `activeUnit` | Unit to act (null when choosing which unit to activate) |
-| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank`, `role` (TAI-014), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
+| `squad[]` | Own units: `id`, `position`, `level`, `facing`, `stance`, `rank`, `role` (TAI-014), `ap`, `stamina`, `staminaMax`, `zoneHp`, `limbs` (zone → healthy, wounded, disabled), `conditions`, `suppressed`, `overwatch`, `weaponJammed` (TAC-083), `alerted`, `reaction`, `carrying` (body ID or null), `equipment`, `magazines` (with round counts), `outOfAction` |
 | `squadMorale` | The side's squad morale (from the tactical map request `sides[].morale`; input to survival, TAI-008) |
 | `squadPlan` | Current plan set by the squad leader (TAI-013) and the current leader's unit ID |
 | `blackboard` | Squad requests and claims (TAI-012) |
 | `knownEnemies[]` | Opposing units: `id`, `position`, `level`, `seenTurn`, `visibleNow`; while `visibleNow`, also `stance`, `facing` and `visibleGear` (the gear the player would see: `weaponType`, `helmetClass`, `armourClass`); otherwise the last seen or heard position and turn |
 | `knownNeutrals[]` | Units of the neutral side known on the map (TAC-001) |
 | `noises[]` | Noise markers since the unit's last activation (TAC-019): `origin` tile, `direction` and `distance` from the active unit, `turn` |
-| `map` | Tiles known to the side: `tiles` (terrain cost, cover per tile edge, level, doors, windows, destroyed state), `exits` (`id`, tile, condition), `containers` and `bodies` (contents only once searched by the side, TAC-070), `smoke` (clouds with tile, `radiusTiles`, last turn) |
-| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with path AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates; TAC-046) |
+| `map` | Tiles known to the side: `tiles` (terrain cost, impassable and obscuring flags, cover per tile edge, level, doors with state open, closed or locked, windows, destroyed state; TAC-029, TAC-082, TAC-084), `exits` (`id`, tile, condition), `containers` and `bodies` (contents only once searched by the side, TAC-070), `smoke` (clouds with tile, `radiusTiles`, last turn) |
+| `allowedActions[]` | Precomputed answers to what the player UI would show (TAI-001): each legal command type for the active unit with its AP cost; for `move` the reachable tiles with path AP cost and the AP left (path preview, TAC-037); for `shoot` and `throwGrenade` the targets in line of sight with the shot preview (hit %, zone shares, likely zone, whether it penetrates, and `concealed` when the hit % is the best case; TAC-046, TAC-082) |
 | `battleGoal` | The active unit's aim in this battle: `goal` (attack, defend, escort, reach an exit, hold), `targets` and `acceptableLoss`, as set by the strategic layer in the tactical map request (TAI-009, TAI-018) |
 | `objectives[]` | The mission objectives of the battle that can be met on the tactical map (TAC-076), as known to the side |
 

@@ -5,6 +5,7 @@ line here. Each module and tool that uses the interface updates in its own sessi
 
 | Date | Interface | Version | Change | Affects |
 | --- | --- | --- | --- | --- |
+| 2026-11-24 | tactical_perception_view | 0.5.0 | `squad[].weaponJammed` (TAC-083); `allowedActions[].targets[].concealed` (TAC-082); `map.tiles` text: impassable and obscuring flags, door state (TAC-084) | tactical, tactical-ai |
 | 2026-11-24 | tactical_map_request | 0.7.0 | `vipControl` (`ai` / `player`, TAI-018) | strategic, tactical, tactical-ai |
 | 2026-11-24 | data/tactical-rules | 0.7.0 | `neutralReactRadiusTiles` (TAC-001), `commandRetries` (TAI-005), `encumbranceStrengthDivisor` replaces `encumbranceStrengthReduction` (TAC-027); `burstRounds` removed (burst length is the weapon's own mode) | tools, tactical, tactical-ai |
 | 2026-11-24 | data/management-rules | 0.5.1 | `carryCapacity` fields `base`, `strength`, `endurance` (MGT-029) | tools, management, tactical |
